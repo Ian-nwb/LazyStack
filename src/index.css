@@ -1,0 +1,565 @@
+@import "tailwindcss";
+
+:root {
+  --surface-950: #09090b;
+  --surface-900: #0e0e11;
+  --surface-850: #141418;
+  --surface-800: #18181c;
+  --surface-750: #202025;
+  --surface-700: #27272e;
+  --surface-650: #32323b;
+  --surface-600: #3f3f4a;
+
+  --text-primary: #f4f4f5;
+  --text-secondary: #d4d4d8;
+  --text-muted: #a1a1aa;
+  --text-subtle: #71717a;
+}
+
+/* ==============================================================
+   WARM CREAM PALETTE (ZERO COLD GREY)
+   ============================================================== */
+body.light-mode {
+  /* Warm harmonious cream, linen, and toasted biscuit surfaces */
+  --surface-950: #faf6ed;  /* Warm ivory cream canvas */
+  --surface-900: #f2ebdc;  /* Rich clotted cream panels & headers */
+  --surface-850: #e8deca;  /* Elevated warm parchment boxes */
+  --surface-800: #dfd3bd;  /* Warm biscuit buttons & pills */
+  --surface-750: #d4c5ab;  /* Warm dividers */
+  --surface-700: #c7b499;  /* Toasted caramel borders */
+  --surface-650: #baa486;  /* Input borders */
+  --surface-600: #ab9374;
+
+  /* Warm Espresso & Dark Roast text hierarchy (NO COLD GREY) */
+  --text-primary: #1f1a16;    /* Deep warm dark espresso */
+  --text-secondary: #352b22;  /* Rich warm dark roast */
+  --text-muted: #4e4033;      /* Warm dark umber */
+  --text-subtle: #6e5c4a;     /* Warm hazelnut subtext */
+}
+
+@theme {
+  --color-surface-950: var(--surface-950);
+  --color-surface-900: var(--surface-900);
+  --color-surface-850: var(--surface-850);
+  --color-surface-800: var(--surface-800);
+  --color-surface-750: var(--surface-750);
+  --color-surface-700: var(--surface-700);
+  --color-surface-650: var(--surface-650);
+  --color-surface-600: var(--surface-600);
+
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+* {
+  border-color: #27272e;
+}
+
+body {
+  background-color: var(--surface-950);
+  color: #f4f4f5;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* ==============================================================
+   LIGHT MODE: PURE CREAM & WARM ESPRESSO (ZERO COLD GREY)
+   ============================================================== */
+body.light-mode {
+  background-color: #faf6ed !important;
+  color: #1f1a16 !important;
+}
+
+body.light-mode * {
+  border-color: #c7b499;
+}
+
+/* Surface backgrounds (including any slash opacity variants) */
+body.light-mode .bg-surface-950,
+body.light-mode [class*="bg-surface-950"] {
+  background-color: #faf6ed !important;
+}
+
+body.light-mode .bg-surface-900,
+body.light-mode [class*="bg-surface-900"] {
+  background-color: #f2ebdc !important;
+}
+
+body.light-mode .bg-surface-850,
+body.light-mode [class*="bg-surface-850"] {
+  background-color: #e8deca !important;
+}
+
+body.light-mode .bg-surface-800,
+body.light-mode [class*="bg-surface-800"] {
+  background-color: #dfd3bd !important;
+}
+
+body.light-mode .bg-surface-750,
+body.light-mode [class*="bg-surface-750"] {
+  background-color: #d4c5ab !important;
+}
+
+body.light-mode .border-surface-700 {
+  border-color: #c7b499 !important;
+}
+
+body.light-mode .border-surface-750 {
+  border-color: #d4c5ab !important;
+}
+
+body.light-mode .border-surface-650 {
+  border-color: #baa486 !important;
+}
+
+body.light-mode .border-surface-800 {
+  border-color: #c7b499 !important;
+}
+
+/* ==============================================================
+   TEXT HIERARCHY — WARM ESPRESSO / NO GREY
+   ============================================================== */
+body.light-mode .text-white {
+  color: #1a1512 !important; /* Pure warm dark espresso */
+}
+
+body.light-mode .text-zinc-100 {
+  color: #1a1512 !important;
+}
+
+body.light-mode .text-zinc-200 {
+  color: #2a221b !important;
+}
+
+body.light-mode .text-zinc-300 {
+  color: #3d3227 !important; /* Warm dark roast */
+}
+
+body.light-mode .text-zinc-400 {
+  color: #4e4033 !important; /* Warm dark umber, NEVER grey */
+}
+
+body.light-mode .text-zinc-500 {
+  color: #685746 !important; /* Warm cinnamon hazelnut, NEVER grey */
+}
+
+body.light-mode .text-zinc-600 {
+  color: #826e5a !important; /* Warm toasted almond */
+}
+
+/* Mono labels */
+body.light-mode code,
+body.light-mode .font-mono {
+  color: #241c15 !important;
+}
+
+/* ==============================================================
+   INPUTS, SELECTS, AND TEXTAREAS — WARM LINEN BOND
+   ============================================================== */
+body.light-mode input,
+body.light-mode select,
+body.light-mode textarea {
+  background-color: #fffdf9 !important;
+  border-color: #c7b499 !important;
+  color: #1f1a16 !important;
+  box-shadow: 0 1px 2px rgba(45, 30, 15, 0.05);
+}
+
+body.light-mode input:focus,
+body.light-mode select:focus,
+body.light-mode textarea:focus {
+  border-color: #1f1a16 !important;
+  outline: none;
+}
+
+body.light-mode input::placeholder,
+body.light-mode select::placeholder {
+  color: #8a7864 !important;
+}
+
+/* ==============================================================
+   BUTTONS AND INTERACTIVE PILLS
+   ============================================================== */
+body.light-mode .bg-white {
+  background-color: #1f1a16 !important;
+  color: #faf6ed !important;
+  border-color: #1f1a16 !important;
+}
+
+body.light-mode .bg-white .text-zinc-950,
+body.light-mode .bg-white span,
+body.light-mode .bg-white svg {
+  color: #faf6ed !important;
+}
+
+body.light-mode .bg-white:hover {
+  background-color: #2e261f !important;
+}
+
+body.light-mode .bg-zinc-800 {
+  background-color: #e8deca !important;
+  color: #1f1a16 !important;
+  border-color: #c7b499 !important;
+}
+
+body.light-mode .bg-zinc-800:hover {
+  background-color: #dfd3bd !important;
+  color: #1a1512 !important;
+}
+
+body.light-mode .bg-zinc-800 * {
+  color: #1f1a16 !important;
+}
+
+body.light-mode .bg-zinc-200 {
+  background-color: #1f1a16 !important;
+  color: #faf6ed !important;
+}
+
+body.light-mode .bg-zinc-200 * {
+  color: #faf6ed !important;
+}
+
+body.light-mode .text-zinc-950 {
+  color: #faf6ed !important;
+}
+
+/* Active navigation tab button */
+body.light-mode .bg-zinc-100 {
+  background-color: #1f1a16 !important;
+  color: #faf6ed !important;
+}
+
+body.light-mode .bg-zinc-100 * {
+  color: #faf6ed !important;
+}
+
+body.light-mode .bg-zinc-100 .bg-surface-950 {
+  background-color: #352b22 !important;
+  color: #faf6ed !important;
+  border-color: #4e4033 !important;
+}
+
+/* ==============================================================
+   WARM NOTICE / WARNING BANNERS
+   ============================================================== */
+body.light-mode .bg-zinc-900 {
+  background-color: #fef5e0 !important;
+  border-color: #f0be52 !important;
+  color: #8c4e03 !important;
+}
+
+body.light-mode .bg-zinc-900 * {
+  color: #8c4e03 !important;
+}
+
+body.light-mode .bg-zinc-900 svg {
+  color: #b86900 !important;
+}
+
+/* ==============================================================
+   TECHNOLOGY & DATABASE BADGES (WARM RICH JEWEL TONES)
+   ============================================================== */
+body.light-mode .text-sky-300,
+body.light-mode .text-sky-400 {
+  color: #02598b !important;
+}
+body.light-mode .bg-sky-500\/20 {
+  background-color: #e1f2fc !important;
+  border-color: #8cd0f7 !important;
+}
+body.light-mode .border-sky-500\/40 {
+  border-color: #8cd0f7 !important;
+}
+
+body.light-mode .text-blue-300,
+body.light-mode .text-blue-400 {
+  color: #1642c5 !important;
+}
+body.light-mode .bg-blue-500\/20 {
+  background-color: #e2edfd !important;
+  border-color: #9cbff9 !important;
+}
+body.light-mode .border-blue-500\/40 {
+  border-color: #9cbff9 !important;
+}
+
+body.light-mode .text-amber-300,
+body.light-mode .text-amber-400 {
+  color: #944200 !important;
+}
+body.light-mode .bg-amber-500\/20,
+body.light-mode .bg-amber-600\/20 {
+  background-color: #fef2d6 !important;
+  border-color: #f5c458 !important;
+}
+body.light-mode .border-amber-500\/40,
+body.light-mode .border-amber-600\/40 {
+  border-color: #f5c458 !important;
+}
+
+body.light-mode .text-emerald-300,
+body.light-mode .text-emerald-400 {
+  color: #036348 !important;
+}
+body.light-mode .bg-emerald-500\/20 {
+  background-color: #d8f5e5 !important;
+  border-color: #72d99e !important;
+}
+body.light-mode .border-emerald-500\/40 {
+  border-color: #72d99e !important;
+}
+
+body.light-mode .text-purple-300,
+body.light-mode .text-purple-400 {
+  color: #5c1ca5 !important;
+}
+body.light-mode .bg-purple-500\/20 {
+  background-color: #f4e8fd !important;
+  border-color: #d7aaf7 !important;
+}
+body.light-mode .border-purple-500\/40 {
+  border-color: #d7aaf7 !important;
+}
+
+body.light-mode .text-orange-300,
+body.light-mode .text-orange-400 {
+  color: #a43305 !important;
+}
+body.light-mode .bg-orange-500\/20 {
+  background-color: #feedd7 !important;
+  border-color: #fcae68 !important;
+}
+body.light-mode .border-orange-500\/40 {
+  border-color: #fcae68 !important;
+}
+
+body.light-mode .text-red-300,
+body.light-mode .text-red-400 {
+  color: #a01414 !important;
+}
+body.light-mode .bg-red-500\/20 {
+  background-color: #fde5e5 !important;
+  border-color: #f99f9f !important;
+}
+body.light-mode .border-red-500\/40 {
+  border-color: #f99f9f !important;
+}
+
+body.light-mode .text-cyan-300,
+body.light-mode .text-cyan-400 {
+  color: #0b6780 !important;
+}
+body.light-mode .bg-cyan-500\/20 {
+  background-color: #d4f8fb !important;
+  border-color: #6fe4f0 !important;
+}
+body.light-mode .border-cyan-500\/40 {
+  border-color: #6fe4f0 !important;
+}
+
+body.light-mode .text-pink-300,
+body.light-mode .text-pink-400 {
+  color: #a6124f !important;
+}
+body.light-mode .bg-pink-500\/20 {
+  background-color: #fde8f2 !important;
+  border-color: #f584b4 !important;
+}
+body.light-mode .border-pink-500\/40 {
+  border-color: #f584b4 !important;
+}
+
+body.light-mode .text-teal-300,
+body.light-mode .text-teal-400 {
+  color: #0a655c !important;
+}
+body.light-mode .bg-teal-500\/20 {
+  background-color: #d3f9f2 !important;
+  border-color: #6fe4d5 !important;
+}
+body.light-mode .border-teal-500\/40 {
+  border-color: #6fe4d5 !important;
+}
+
+body.light-mode .text-green-300,
+body.light-mode .text-green-400 {
+  color: #126e34 !important;
+}
+body.light-mode .bg-green-500\/20 {
+  background-color: #dff8e7 !important;
+  border-color: #8ae4a6 !important;
+}
+body.light-mode .border-green-500\/40 {
+  border-color: #8ae4a6 !important;
+}
+
+body.light-mode .text-yellow-300,
+body.light-mode .text-yellow-400 {
+  color: #7a4603 !important;
+}
+body.light-mode .bg-yellow-500\/20 {
+  background-color: #fef8cc !important;
+  border-color: #f5d847 !important;
+}
+body.light-mode .border-yellow-500\/40 {
+  border-color: #f5d847 !important;
+}
+
+body.light-mode .text-indigo-300,
+body.light-mode .text-indigo-400 {
+  color: #372ca6 !important;
+}
+body.light-mode .bg-indigo-500\/20 {
+  background-color: #e5eafc !important;
+  border-color: #b0c0fa !important;
+}
+body.light-mode .border-indigo-500\/40 {
+  border-color: #b0c0fa !important;
+}
+
+body.light-mode .text-violet-300,
+body.light-mode .text-violet-400 {
+  color: #5c1ca5 !important;
+}
+body.light-mode .bg-violet-500\/20 {
+  background-color: #f0e6fd !important;
+  border-color: #cea3fa !important;
+}
+body.light-mode .border-violet-500\/40 {
+  border-color: #cea3fa !important;
+}
+
+body.light-mode .text-fuchsia-300,
+body.light-mode .text-fuchsia-400 {
+  color: #8a1396 !important;
+}
+body.light-mode .bg-fuchsia-500\/20 {
+  background-color: #fae4fd !important;
+  border-color: #ee9cf8 !important;
+}
+body.light-mode .border-fuchsia-500\/40 {
+  border-color: #ee9cf8 !important;
+}
+
+body.light-mode .text-rose-300,
+body.light-mode .text-rose-400 {
+  color: #a40f32 !important;
+}
+body.light-mode .bg-rose-500\/20 {
+  background-color: #fee1e7 !important;
+  border-color: #fa95ab !important;
+}
+body.light-mode .border-rose-500\/40 {
+  border-color: #fa95ab !important;
+}
+
+body.light-mode .text-slate-300,
+body.light-mode .text-slate-400 {
+  color: #352b22 !important;
+}
+body.light-mode .bg-slate-500\/20 {
+  background-color: #ede4d6 !important;
+  border-color: #c7b499 !important;
+}
+body.light-mode .border-slate-500\/40 {
+  border-color: #c7b499 !important;
+}
+
+body.light-mode .text-zinc-300,
+body.light-mode .text-zinc-400 {
+  color: #352b22 !important;
+}
+body.light-mode .bg-zinc-500\/20 {
+  background-color: #ede4d6 !important;
+  border-color: #c7b499 !important;
+}
+body.light-mode .border-zinc-500\/40 {
+  border-color: #c7b499 !important;
+}
+
+/* ==============================================================
+   PREREQUISITE PILLS IN LIGHT MODE
+   ============================================================== */
+body.light-mode .bg-emerald-950\/60,
+body.light-mode .bg-emerald-950\/70 {
+  background-color: #d8f5e5 !important;
+  border-color: #72d99e !important;
+  color: #036348 !important;
+}
+
+body.light-mode .bg-emerald-950\/60 *,
+body.light-mode .bg-emerald-950\/70 * {
+  color: #036348 !important;
+}
+
+body.light-mode .bg-amber-950\/40,
+body.light-mode .bg-amber-950\/60 {
+  background-color: #fef2d6 !important;
+  border-color: #f5c458 !important;
+  color: #944200 !important;
+}
+
+body.light-mode .bg-amber-950\/40 *,
+body.light-mode .bg-amber-950\/60 * {
+  color: #944200 !important;
+}
+
+/* ==============================================================
+   SCROLLBAR & GLASS PANELS
+   ============================================================== */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--surface-950);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--surface-700);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--surface-600);
+}
+
+body.light-mode ::-webkit-scrollbar-track {
+  background: #faf6ed;
+}
+body.light-mode ::-webkit-scrollbar-thumb {
+  background: #c7b499;
+}
+body.light-mode ::-webkit-scrollbar-thumb:hover {
+  background: #ab9374;
+}
+
+.glass-panel {
+  background: rgba(18, 18, 22, 0.85);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+body.light-mode .glass-panel {
+  background: rgba(242, 235, 220, 0.94);
+  border-color: rgba(60, 45, 30, 0.08);
+}
+
+body.light-mode .bg-black\/85 {
+  background-color: rgba(31, 26, 22, 0.5);
+}
+
+/* Smooth transitions */
+body.light-mode,
+body.light-mode .bg-surface-950,
+body.light-mode .bg-surface-900,
+body.light-mode .bg-surface-850 {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+/* Scaffolding progress bar animation */
+@keyframes grow {
+  0% { width: 10%; }
+  30% { width: 40%; }
+  60% { width: 65%; }
+  80% { width: 80%; }
+  100% { width: 95%; }
+}

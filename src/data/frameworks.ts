@@ -1,0 +1,715 @@
+import { TechItem } from '../types'
+
+export const TECH_CATALOG: TechItem[] = [
+  // --- SYSTEMS & LOW-LEVEL ---
+  {
+    id: 'assembly-nasm',
+    name: 'Assembly (x86_64 NASM)',
+    language: 'Assembly',
+    category: 'systems',
+    role: 'backend',
+    defaultPort: 8080,
+    description: 'Bare-metal Linux TCP socket server via direct kernel syscalls in pure Assembly. Containerized into <5MB scratch image.',
+    badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+    isHighlighted: true,
+    requires: [
+      { binary: 'nasm', label: 'NASM Assembler', installHint: 'apt install nasm / brew install nasm' },
+      { binary: 'docker', label: 'Docker Engine', installHint: 'https://docs.docker.com/get-docker/' }
+    ]
+  },
+  {
+    id: 'haskell-scotty',
+    name: 'Haskell (Scotty / Servant)',
+    language: 'Haskell',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 3000,
+    description: 'Purely functional, statically-typed, robust web service powered by GHC and Warp.',
+    badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
+    requires: [
+      { binary: 'ghc', label: 'GHC (Haskell)', installHint: 'https://www.haskell.org/ghcup/' },
+      { binary: 'cabal', label: 'Cabal', installHint: 'ghcup install cabal' },
+      { binary: 'stack', label: 'Stack (optional)', installHint: 'ghcup install stack' }
+    ]
+  },
+  {
+    id: 'c-microhttpd',
+    name: 'C (libmicrohttpd / POSIX)',
+    language: 'C',
+    category: 'systems',
+    role: 'backend',
+    defaultPort: 8080,
+    description: 'Ultra low-latency C server with CMake & GCC toolchain.',
+    badgeColor: 'bg-slate-500/20 text-slate-300 border-slate-500/40',
+    requires: [
+      { binary: 'gcc', label: 'GCC Compiler', installHint: 'apt install build-essential / brew install gcc' },
+      { binary: 'cmake', label: 'CMake', installHint: 'apt install cmake / brew install cmake' }
+    ]
+  },
+  {
+    id: 'cpp-drogon',
+    name: 'C++ (Drogon Framework)',
+    language: 'C++',
+    category: 'systems',
+    role: 'backend',
+    defaultPort: 8848,
+    description: 'Ultra high-performance non-blocking asynchronous C++ web application framework.',
+    badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
+    requires: [
+      { binary: 'g++', label: 'G++ Compiler', installHint: 'apt install build-essential / brew install gcc' },
+      { binary: 'cmake', label: 'CMake', installHint: 'apt install cmake / brew install cmake' }
+    ]
+  },
+  {
+    id: 'zig-http',
+    name: 'Zig (HTTP / Zap)',
+    language: 'Zig',
+    category: 'systems',
+    role: 'backend',
+    defaultPort: 3000,
+    description: 'Blazing fast, memory-safe systems backend with Zig build toolchain.',
+    badgeColor: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/40',
+    requires: [
+      { binary: 'zig', label: 'Zig Toolchain', installHint: 'https://ziglang.org/download/' }
+    ]
+  },
+  {
+    id: 'rust-actix',
+    name: 'Rust (Actix-Web)',
+    language: 'Rust',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 8080,
+    description: 'Extremely fast, robust actor-based web framework for Rust.',
+    badgeColor: 'bg-orange-500/20 text-orange-300 border-orange-500/40',
+    requires: [
+      { binary: 'rustc', label: 'Rust Compiler', installHint: 'https://rustup.rs' },
+      { binary: 'cargo', label: 'Cargo (Rust PM)', installHint: 'Installed with rustup' }
+    ]
+  },
+  {
+    id: 'rust-axum',
+    name: 'Rust (Axum)',
+    language: 'Rust',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 3000,
+    description: 'Ergonomic, modular web framework built with the Tokio ecosystem.',
+    badgeColor: 'bg-orange-500/20 text-orange-300 border-orange-500/40',
+    requires: [
+      { binary: 'rustc', label: 'Rust Compiler', installHint: 'https://rustup.rs' },
+      { binary: 'cargo', label: 'Cargo (Rust PM)', installHint: 'Installed with rustup' }
+    ]
+  },
+
+  // --- THE BASICS / VANILLA RUNTIMES ---
+  {
+    id: 'vanilla-html-css-js',
+    name: 'Vanilla HTML5 / CSS3 / JS',
+    language: 'HTML/CSS/JS',
+    category: 'frontend',
+    role: 'frontend',
+    defaultPort: 3000,
+    description: 'Zero bundler, zero framework. Pure standard HTML5, CSS3, and JavaScript served statically.',
+    badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+  },
+  {
+    id: 'vanilla-node',
+    name: 'Vanilla Node.js (http)',
+    language: 'Node.js',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 3000,
+    description: 'Pure Node.js standard library HTTP server with zero third-party dependencies.',
+    badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+    supportsFlavor: true,
+    requires: [
+      { binary: 'node', label: 'Node.js Runtime', installHint: 'https://nodejs.org or nvm install --lts' },
+      { binary: 'npm', label: 'npm (Node PM)', installHint: 'Installed with Node.js' }
+    ]
+  },
+  {
+    id: 'vanilla-php',
+    name: 'Vanilla PHP',
+    language: 'PHP',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 8000,
+    description: 'Native PHP scripts executed via PHP built-in server or fast-cgi.',
+    badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40',
+    requires: [
+      { binary: 'php', label: 'PHP Runtime', installHint: 'apt install php / brew install php' }
+    ]
+  },
+
+  // --- MODERN RUNTIMES: DENO & BUN ---
+  {
+    id: 'deno-native',
+    name: 'Deno 2.0 (Native Server / Oak)',
+    language: 'Deno (TS/JS)',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 8000,
+    description: 'Next-gen secure runtime with native TypeScript, Deno.serve(), and web standards.',
+    badgeColor: 'bg-teal-500/20 text-teal-300 border-teal-500/40',
+    supportsFlavor: true,
+    requires: [
+      { binary: 'deno', label: 'Deno Runtime', installHint: 'https://deno.land or curl -fsSL https://deno.land/install.sh | sh' }
+    ]
+  },
+  {
+    id: 'deno-fresh',
+    name: 'Deno (Fresh Framework)',
+    language: 'Deno (TS/JS)',
+    category: 'fullstack',
+    role: 'fullstack',
+    defaultPort: 8000,
+    description: 'Next-gen fullstack Deno web framework with instant loading and client islands.',
+    badgeColor: 'bg-teal-500/20 text-teal-300 border-teal-500/40',
+    supportsFlavor: true,
+    requires: [
+      { binary: 'deno', label: 'Deno Runtime', installHint: 'https://deno.land or curl -fsSL https://deno.land/install.sh | sh' }
+    ]
+  },
+  {
+    id: 'ts-elysia',
+    name: 'Bun (ElysiaJS)',
+    language: 'Bun (TS/JS)',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 3000,
+    description: 'Ergonomic, type-safe backend framework designed specifically for Bun runtime speed.',
+    badgeColor: 'bg-pink-500/20 text-pink-300 border-pink-500/40',
+    supportsFlavor: true,
+    requires: [
+      { binary: 'bun', label: 'Bun Runtime', installHint: 'https://bun.sh or curl -fsSL https://bun.sh/install | bash' }
+    ]
+  },
+
+  // --- GO ---
+  {
+    id: 'go-gin',
+    name: 'Go (Gin)',
+    language: 'Go',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 8080,
+    description: 'High-performance Martini-like Go API framework with fast routing.',
+    badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
+    requires: [
+      { binary: 'go', label: 'Go Toolchain', installHint: 'https://go.dev/dl/' }
+    ]
+  },
+  {
+    id: 'go-fiber',
+    name: 'Go (Fiber)',
+    language: 'Go',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 3000,
+    description: 'Express-inspired web framework built on top of Fasthttp in Go.',
+    badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
+    requires: [
+      { binary: 'go', label: 'Go Toolchain', installHint: 'https://go.dev/dl/' }
+    ]
+  },
+  {
+    id: 'go-echo',
+    name: 'Go (Echo)',
+    language: 'Go',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 1323,
+    description: 'High performance, extensible, minimalist Go web framework with built-in middleware.',
+    badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
+    requires: [
+      { binary: 'go', label: 'Go Toolchain', installHint: 'https://go.dev/dl/' }
+    ]
+  },
+  {
+    id: 'go-chi',
+    name: 'Go (Chi Router)',
+    language: 'Go',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 3000,
+    description: 'Lightweight, idiomatic, composable router for building Go HTTP services.',
+    badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
+    requires: [
+      { binary: 'go', label: 'Go Toolchain', installHint: 'https://go.dev/dl/' }
+    ]
+  },
+
+  // --- C# / .NET ---
+  {
+    id: 'csharp-aspnet',
+    name: 'C# (ASP.NET Core Web API)',
+    language: 'C#',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 5000,
+    description: 'Enterprise cross-platform RESTful Web API on .NET 9.',
+    badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
+    requires: [
+      { binary: 'dotnet', label: '.NET SDK', installHint: 'https://dot.net/download' }
+    ]
+  },
+  {
+    id: 'csharp-blazor',
+    name: 'C# (Blazor Server/WASM)',
+    language: 'C#',
+    category: 'fullstack',
+    role: 'fullstack',
+    defaultPort: 5001,
+    description: 'Fullstack C# interactive web UI using WebAssembly or Server-side SignalR.',
+    badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
+    requires: [
+      { binary: 'dotnet', label: '.NET SDK', installHint: 'https://dot.net/download' }
+    ]
+  },
+
+  // --- PYTHON ---
+  {
+    id: 'python-fastapi',
+    name: 'Python (FastAPI)',
+    language: 'Python',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 8000,
+    description: 'Modern, fast async Python web framework with automatic OpenAPI docs.',
+    badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+    requires: [
+      { binary: 'python3', label: 'Python 3', installHint: 'https://python.org or apt install python3' },
+      { binary: 'pip3', label: 'pip (Python PM)', installHint: 'apt install python3-pip' }
+    ]
+  },
+  {
+    id: 'python-django',
+    name: 'Python (Django)',
+    language: 'Python',
+    category: 'fullstack',
+    role: 'fullstack',
+    defaultPort: 8000,
+    description: 'Batteries-included fullstack Python framework with ORM and admin panel.',
+    badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+    requires: [
+      { binary: 'python3', label: 'Python 3', installHint: 'https://python.org or apt install python3' },
+      { binary: 'pip3', label: 'pip (Python PM)', installHint: 'apt install python3-pip' }
+    ]
+  },
+  {
+    id: 'python-flask',
+    name: 'Python (Flask)',
+    language: 'Python',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 5000,
+    description: 'Lightweight WSGI Python microframework.',
+    badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+    requires: [
+      { binary: 'python3', label: 'Python 3', installHint: 'https://python.org or apt install python3' },
+      { binary: 'pip3', label: 'pip (Python PM)', installHint: 'apt install python3-pip' }
+    ]
+  },
+
+  // --- NODE / TS BACKENDS ---
+  {
+    id: 'ts-express',
+    name: 'Express',
+    language: 'JS / TS',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 3000,
+    description: 'Classic fast, unopinionated, minimalist web framework for Node.js.',
+    badgeColor: 'bg-green-500/20 text-green-300 border-green-500/40',
+    supportsFlavor: true,
+    requires: [
+      { binary: 'node', label: 'Node.js Runtime', installHint: 'https://nodejs.org or nvm install --lts' },
+      { binary: 'npm', label: 'npm (Node PM)', installHint: 'Installed with Node.js' }
+    ]
+  },
+  {
+    id: 'ts-fastify',
+    name: 'Fastify',
+    language: 'JS / TS',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 3000,
+    description: 'Extremely fast Node.js web framework focused on low overhead and schema validation.',
+    badgeColor: 'bg-green-500/20 text-green-300 border-green-500/40',
+    supportsFlavor: true,
+    requires: [
+      { binary: 'node', label: 'Node.js Runtime', installHint: 'https://nodejs.org or nvm install --lts' },
+      { binary: 'npm', label: 'npm (Node PM)', installHint: 'Installed with Node.js' }
+    ]
+  },
+  {
+    id: 'ts-nestjs',
+    name: 'NestJS',
+    language: 'TypeScript',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 3000,
+    description: 'Progressive Node.js framework for scalable enterprise server-side applications.',
+    badgeColor: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
+    supportsFlavor: true,
+    requires: [
+      { binary: 'node', label: 'Node.js Runtime', installHint: 'https://nodejs.org or nvm install --lts' },
+      { binary: 'npm', label: 'npm (Node PM)', installHint: 'Installed with Node.js' }
+    ]
+  },
+  {
+    id: 'ts-hono',
+    name: 'Hono',
+    language: 'JS / TS',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 3000,
+    description: 'Ultrafast, lightweight standards-based web framework for Node, Bun, and Deno.',
+    badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+    supportsFlavor: true,
+    requires: [
+      { binary: 'node', label: 'Node.js Runtime', installHint: 'https://nodejs.org or nvm install --lts' },
+      { binary: 'npm', label: 'npm (Node PM)', installHint: 'Installed with Node.js' }
+    ]
+  },
+
+  // --- FULLSTACK & META-FRAMEWORKS ---
+  {
+    id: 'fullstack-nextjs',
+    name: 'Next.js (App Router)',
+    language: 'JS / TS',
+    category: 'fullstack',
+    role: 'fullstack',
+    defaultPort: 3000,
+    description: 'Production React framework with SSR, Server Components, and API routes.',
+    badgeColor: 'bg-sky-500/20 text-sky-300 border-sky-500/40',
+    supportsFlavor: true,
+    requires: [
+      { binary: 'node', label: 'Node.js Runtime', installHint: 'https://nodejs.org or nvm install --lts' },
+      { binary: 'npm', label: 'npm (Node PM)', installHint: 'Installed with Node.js' }
+    ]
+  },
+  {
+    id: 'fullstack-nuxt',
+    name: 'Nuxt 3 (Vue Fullstack)',
+    language: 'JS / TS',
+    category: 'fullstack',
+    role: 'fullstack',
+    defaultPort: 3000,
+    description: 'The intuitive Vue meta-framework with auto-imports, file-based routing, and SSR.',
+    badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+    supportsFlavor: true,
+    requires: [
+      { binary: 'node', label: 'Node.js Runtime', installHint: 'https://nodejs.org or nvm install --lts' },
+      { binary: 'npm', label: 'npm (Node PM)', installHint: 'Installed with Node.js' }
+    ]
+  },
+  {
+    id: 'fullstack-remix',
+    name: 'Remix / React Router v7',
+    language: 'JS / TS',
+    category: 'fullstack',
+    role: 'fullstack',
+    defaultPort: 3000,
+    description: 'Fast, resilient React fullstack framework focused on web standards and nested loaders.',
+    badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
+    supportsFlavor: true,
+    requires: [
+      { binary: 'node', label: 'Node.js Runtime', installHint: 'https://nodejs.org or nvm install --lts' },
+      { binary: 'npm', label: 'npm (Node PM)', installHint: 'Installed with Node.js' }
+    ]
+  },
+  {
+    id: 'fullstack-sveltekit',
+    name: 'SvelteKit',
+    language: 'JS / TS',
+    category: 'fullstack',
+    role: 'fullstack',
+    defaultPort: 5173,
+    description: 'Fullstack reactive framework with tiny bundles and zero-virtual-DOM overhead.',
+    badgeColor: 'bg-orange-500/20 text-orange-300 border-orange-500/40',
+    supportsFlavor: true,
+    requires: [
+      { binary: 'node', label: 'Node.js Runtime', installHint: 'https://nodejs.org or nvm install --lts' },
+      { binary: 'npm', label: 'npm (Node PM)', installHint: 'Installed with Node.js' }
+    ]
+  },
+  {
+    id: 'fullstack-astro',
+    name: 'Astro (Content & Islands)',
+    language: 'JS / TS',
+    category: 'fullstack',
+    role: 'fullstack',
+    defaultPort: 4321,
+    description: 'Content-driven island architecture supporting React, Vue, and Svelte.',
+    badgeColor: 'bg-fuchsia-500/20 text-fuchsia-300 border-fuchsia-500/40',
+    supportsFlavor: true,
+    requires: [
+      { binary: 'node', label: 'Node.js Runtime', installHint: 'https://nodejs.org or nvm install --lts' },
+      { binary: 'npm', label: 'npm (Node PM)', installHint: 'Installed with Node.js' }
+    ]
+  },
+  {
+    id: 'fullstack-laravel',
+    name: 'PHP (Laravel 11)',
+    language: 'PHP',
+    category: 'fullstack',
+    role: 'fullstack',
+    defaultPort: 8000,
+    description: 'The web artisan framework for PHP with Eloquent ORM and queues.',
+    badgeColor: 'bg-red-500/20 text-red-300 border-red-500/40',
+    requires: [
+      { binary: 'php', label: 'PHP Runtime', installHint: 'apt install php / brew install php' },
+      { binary: 'composer', label: 'Composer (PHP PM)', installHint: 'https://getcomposer.org/download/' }
+    ]
+  },
+
+  // --- FRONTEND SPA / HYPERMEDIA ---
+  {
+    id: 'react-vite',
+    name: 'React 19 + Vite',
+    language: 'JS / TS',
+    category: 'frontend',
+    role: 'frontend',
+    defaultPort: 5173,
+    description: 'Modern client-side React SPA with Vite, HMR, and Tailwind CSS utility styling.',
+    badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
+    supportsFlavor: true,
+    requires: [
+      { binary: 'node', label: 'Node.js Runtime', installHint: 'https://nodejs.org or nvm install --lts' },
+      { binary: 'npm', label: 'npm (Node PM)', installHint: 'Installed with Node.js' }
+    ]
+  },
+  {
+    id: 'react-mui',
+    name: 'React + MUI (Material UI)',
+    language: 'JS / TS',
+    category: 'frontend',
+    role: 'frontend',
+    defaultPort: 5173,
+    description: 'React SPA powered by Google Material Design component library.',
+    badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
+    supportsFlavor: true,
+    requires: [
+      { binary: 'node', label: 'Node.js Runtime', installHint: 'https://nodejs.org or nvm install --lts' },
+      { binary: 'npm', label: 'npm (Node PM)', installHint: 'Installed with Node.js' }
+    ]
+  },
+  {
+    id: 'vue-vite',
+    name: 'Vue.js 3 + Vite',
+    language: 'JS / TS',
+    category: 'frontend',
+    role: 'frontend',
+    defaultPort: 5173,
+    description: 'Composition API, Pinia state management, and blazing Vite dev server.',
+    badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+    supportsFlavor: true,
+    requires: [
+      { binary: 'node', label: 'Node.js Runtime', installHint: 'https://nodejs.org or nvm install --lts' },
+      { binary: 'npm', label: 'npm (Node PM)', installHint: 'Installed with Node.js' }
+    ]
+  },
+  {
+    id: 'angular-cli',
+    name: 'Angular 18+',
+    language: 'TypeScript',
+    category: 'frontend',
+    role: 'frontend',
+    defaultPort: 4200,
+    description: 'Enterprise TypeScript SPA with signals, hydration, and modular architecture.',
+    badgeColor: 'bg-red-500/20 text-red-300 border-red-500/40',
+    supportsFlavor: true,
+    requires: [
+      { binary: 'node', label: 'Node.js Runtime', installHint: 'https://nodejs.org or nvm install --lts' },
+      { binary: 'npm', label: 'npm (Node PM)', installHint: 'Installed with Node.js' }
+    ]
+  },
+  {
+    id: 'solidjs-vite',
+    name: 'SolidJS + Vite',
+    language: 'JS / TS',
+    category: 'frontend',
+    role: 'frontend',
+    defaultPort: 3000,
+    description: 'Fine-grained reactive frontend without virtual DOM, maximum runtime performance.',
+    badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
+    supportsFlavor: true,
+    requires: [
+      { binary: 'node', label: 'Node.js Runtime', installHint: 'https://nodejs.org or nvm install --lts' },
+      { binary: 'npm', label: 'npm (Node PM)', installHint: 'Installed with Node.js' }
+    ]
+  },
+  {
+    id: 'qwik-city',
+    name: 'Qwik + Qwik City',
+    language: 'JS / TS',
+    category: 'frontend',
+    role: 'frontend',
+    defaultPort: 5173,
+    description: 'Resumable, instant-loading web app architecture with zero-hydration cost.',
+    badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40',
+    supportsFlavor: true,
+    requires: [
+      { binary: 'node', label: 'Node.js Runtime', installHint: 'https://nodejs.org or nvm install --lts' },
+      { binary: 'npm', label: 'npm (Node PM)', installHint: 'Installed with Node.js' }
+    ]
+  },
+  {
+    id: 'html-htmx',
+    name: 'HTMX + Modern Web',
+    language: 'HTML/CSS',
+    category: 'frontend',
+    role: 'frontend',
+    defaultPort: 3000,
+    description: 'Hypermedia-driven interactive UI without heavy client-side JavaScript bundles.',
+    badgeColor: 'bg-teal-500/20 text-teal-300 border-teal-500/40'
+  },
+
+  // --- MOBILE & DESKTOP (TAURI, FLUTTER, ELECTRON) ---
+  {
+    id: 'tauri-app',
+    name: 'Tauri Desktop App (Rust + Web)',
+    language: 'Rust / Web',
+    category: 'mobile-desktop',
+    role: 'desktop-mobile',
+    defaultPort: 1420,
+    description: 'Lightweight, memory-efficient native desktop client built with Rust and any web frontend.',
+    badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
+    requires: [
+      { binary: 'rustc', label: 'Rust Compiler', installHint: 'https://rustup.rs' },
+      { binary: 'cargo', label: 'Cargo (Rust PM)', installHint: 'Installed with rustup' },
+      { binary: 'node', label: 'Node.js Runtime', installHint: 'https://nodejs.org' }
+    ]
+  },
+  {
+    id: 'dart-flutter',
+    name: 'Dart (Flutter Web & Multiplatform)',
+    language: 'Dart',
+    category: 'mobile-desktop',
+    role: 'desktop-mobile',
+    defaultPort: 8080,
+    description: 'Cross-platform native UI for Android, iOS, Linux, Windows, macOS, and Web.',
+    badgeColor: 'bg-sky-500/20 text-sky-300 border-sky-500/40',
+    requires: [
+      { binary: 'flutter', label: 'Flutter SDK', installHint: 'https://flutter.dev/docs/get-started/install' },
+      { binary: 'dart', label: 'Dart SDK', installHint: 'Installed with Flutter' }
+    ]
+  },
+  {
+    id: 'ionic-framework',
+    name: 'Ionic (Capacitor Mobile)',
+    language: 'JS / TS',
+    category: 'mobile-desktop',
+    role: 'desktop-mobile',
+    defaultPort: 8100,
+    description: 'Hybrid mobile & PWA suite powered by Capacitor.',
+    badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
+    supportsFlavor: true,
+    requires: [
+      { binary: 'node', label: 'Node.js Runtime', installHint: 'https://nodejs.org' },
+      { binary: 'npm', label: 'npm (Node PM)', installHint: 'Installed with Node.js' }
+    ]
+  },
+  {
+    id: 'electron-app',
+    name: 'Electron Desktop Client',
+    language: 'JS / TS',
+    category: 'mobile-desktop',
+    role: 'desktop-mobile',
+    defaultPort: 5173,
+    description: 'Cross-platform native desktop wrapper for Linux, Windows, and macOS.',
+    badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
+    supportsFlavor: true,
+    requires: [
+      { binary: 'node', label: 'Node.js Runtime', installHint: 'https://nodejs.org' },
+      { binary: 'npm', label: 'npm (Node PM)', installHint: 'Installed with Node.js' }
+    ]
+  },
+
+  // --- JVM & OTHER RUNTIMES ---
+  {
+    id: 'java-springboot',
+    name: 'Java (Spring Boot 3)',
+    language: 'Java',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 8080,
+    description: 'Enterprise Java application stack with Maven or Gradle.',
+    badgeColor: 'bg-red-500/20 text-red-300 border-red-500/40',
+    requires: [
+      { binary: 'java', label: 'Java JDK 17+', installHint: 'apt install openjdk-17-jdk / brew install openjdk@17' },
+      { binary: 'mvn', label: 'Maven (Java PM)', installHint: 'apt install maven / brew install maven' }
+    ]
+  },
+  {
+    id: 'kotlin-ktor',
+    name: 'Kotlin (Ktor / Spring Boot)',
+    language: 'Kotlin',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 8080,
+    description: 'Coroutines-first asynchronous backend built for Kotlin.',
+    badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
+    requires: [
+      { binary: 'java', label: 'Java JDK 17+', installHint: 'apt install openjdk-17-jdk / brew install openjdk@17' },
+      { binary: 'gradle', label: 'Gradle (optional)', installHint: 'https://gradle.org/install/' }
+    ]
+  },
+  {
+    id: 'elixir-phoenix',
+    name: 'Elixir (Phoenix LiveView)',
+    language: 'Elixir',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 4000,
+    description: 'BEAM virtual machine concurrency with real-time LiveView WebSockets.',
+    badgeColor: 'bg-violet-500/20 text-violet-300 border-violet-500/40',
+    requires: [
+      { binary: 'elixir', label: 'Elixir', installHint: 'https://elixir-lang.org/install.html' },
+      { binary: 'mix', label: 'Mix (Elixir PM)', installHint: 'Installed with Elixir' },
+      { binary: 'erl', label: 'Erlang/OTP', installHint: 'apt install erlang / brew install erlang' }
+    ]
+  },
+  {
+    id: 'ruby-rails',
+    name: 'Ruby (Ruby on Rails 7/8)',
+    language: 'Ruby',
+    category: 'fullstack',
+    role: 'fullstack',
+    defaultPort: 3000,
+    description: 'Convention-over-configuration rapid web development with Hotwire.',
+    badgeColor: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
+    requires: [
+      { binary: 'ruby', label: 'Ruby Runtime', installHint: 'https://www.ruby-lang.org/en/downloads/' },
+      { binary: 'gem', label: 'RubyGems', installHint: 'Installed with Ruby' },
+      { binary: 'bundler', label: 'Bundler', installHint: 'gem install bundler' }
+    ]
+  },
+
+  // --- SCRIPTING / AUTOMATION ---
+  {
+    id: 'bash-worker',
+    name: 'Bash Shell Worker / CLI Service',
+    language: 'Bash',
+    category: 'scripting',
+    role: 'worker',
+    defaultPort: 0,
+    description: 'Headless automation daemon, scheduled cron jobs, or pipeline runner.',
+    badgeColor: 'bg-zinc-500/20 text-zinc-300 border-zinc-500/40',
+    requires: [
+      { binary: 'bash', label: 'Bash Shell', installHint: 'Pre-installed on Linux/macOS' }
+    ]
+  },
+  {
+    id: 'sql-migrations',
+    name: 'SQL Migration & Seeder Service',
+    language: 'SQL',
+    category: 'scripting',
+    role: 'worker',
+    defaultPort: 0,
+    description: 'Automated database schema migration engine & test fixtures.',
+    badgeColor: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/40'
+  }
+]
