@@ -1,0 +1,66 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Production & Packaging Builds
+dist/
+dist-electron/
+release/
+build/*
+!build/icon.png
+out/
+
+# Environment and Secret Files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Editor & IDE Directories
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Testing & Coverage
+coverage/
+*.lcov
+.nyc_output/
+
+# Temporary / Scratch files
+tmp/
+temp/
+scratch/
+*.tsbuildinfo
+
+# Internal Planning & Development Docs
+BUILD_PLAN.md
+COMMANDS.md
+LazyStack.md
+*.plan.md
