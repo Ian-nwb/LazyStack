@@ -1,24 +1,24 @@
-# LazyStack ⚡
+# LazyStack
 
 > **Automated Polyglot Monorepo & Fullstack Architecture Scaffolder**  
 > Design, configure, and scaffold production-ready fullstack monorepos with unified gateway routing, container orchestration, and real-time host toolchain auditing.
 
 ---
 
-## 🚀 Key Highlights
+## Key Highlights
 
-- **🛒 Polyglot Shopping Cart**: Mix and match any frontend, backend, or fullstack framework. Support for 40+ technologies across TypeScript, JavaScript, Go, Rust, Python, PHP, Java, C#, Elixir, Ruby, Haskell, and C++.
-- **🌐 Reverse Proxy Gateway Generation**: Automatically provisions unified entrypoint configurations for **Nginx** (upstreams, WebSocket upgrades) or **Apache HTTP Server** (`mod_proxy`, `mod_proxy_wstunnel`), or direct port mappings.
-- **💾 Database & Cache Ecosystem**: 1-click Docker orchestration for **PostgreSQL 16**, **MySQL 8.4**, **MongoDB 7**, **Redis 7.2**, **Valkey 8 (Linux Foundation)**, **ClickHouse OLAP**, **Meilisearch**, and **SQLite**.
-- **🛠️ Host Environment Auditor**: Detects host toolchains (Node, Bun, Deno, Go, Cargo, Python, Composer, .NET SDK, Docker, etc.) in real time with quick-install commands and PATH helpers.
-- **🎨 Warm Cream & Sleek Dark Themes**: Monochromatic design featuring warm ivory cream (`#faf6ed`), rich parchment, and dark espresso typography.
-- **⚡ Turnkey Scaffolding**: Produces clean folder structures, Dockerfiles, docker-compose configs, `.env` files, and unified orchestrator tasks ready to run with `docker compose up`.
+- **Polyglot Shopping Cart**: Mix and match any frontend, backend, or fullstack framework. Support for 40+ technologies across TypeScript, JavaScript, Go, Rust, Python, PHP, Java, C#, Elixir, Ruby, Haskell, and C++.
+- **Reverse Proxy Gateway Generation**: Automatically provisions unified entrypoint configurations for **Nginx** (upstreams, WebSocket upgrades) or **Apache HTTP Server** (`mod_proxy`, `mod_proxy_wstunnel`), or direct port mappings.
+- **Database & Cache Ecosystem**: 1-click Docker orchestration for **PostgreSQL 16**, **MySQL 8.4**, **MongoDB 7**, **Redis 7.2**, **Valkey 8 (Linux Foundation)**, **ClickHouse OLAP**, **Meilisearch**, and **SQLite**.
+- **Host Environment Auditor**: Detects host toolchains (Node, Bun, Deno, Go, Cargo, Python, Composer, .NET SDK, Docker, etc.) in real time with quick-install commands and PATH helpers.
+- **Warm Cream & Sleek Dark Themes**: Monochromatic design featuring warm ivory cream (`#faf6ed`), rich parchment, and dark espresso typography.
+- **Turnkey Scaffolding**: Produces clean folder structures, Dockerfiles, docker-compose configs, `.env` files, and unified orchestrator tasks ready to run with `docker compose up`.
 
 ---
 
-## 🧰 Supported Frameworks & Runtimes
+## Supported Frameworks & Runtimes
 
-### 🌟 Fullstack Frameworks
+### Fullstack Frameworks
 - **Next.js 15** (App Router, React Server Components)
 - **Nuxt 3** (Vue 3, Nitro engine)
 - **Remix** (React Router 7 / Remix)
@@ -30,7 +30,7 @@
 - **Django 5** (Python 3.12, ASGI/WSGI)
 - **Ruby on Rails 7** (Ruby 3.3, Puma)
 
-### 🖥️ Frontend Frameworks
+### Frontend Frameworks
 - **React 19** + Vite (TypeScript / JavaScript)
 - **Vue 3** + Vite (TypeScript / JavaScript)
 - **Svelte 5** + Vite
@@ -38,7 +38,7 @@
 - **Angular 19**
 - **Vanilla HTML5 / Modern CSS / ESM JS**
 
-### ⚙️ Backend & API Services
+### Backend & API Services
 - **Go**: Echo v4, Chi v5, Gin
 - **Rust**: Axum 0.7, Actix-web 4
 - **Node.js**: Express 5, Fastify 5, NestJS 10, Vanilla Node HTTP
@@ -52,7 +52,7 @@
 - **Haskell**: Servant Web API
 - **High Performance / Systems**: C++ Drogon, x86-64 NASM Micro-server
 
-### 🗄️ Databases & Search Engines
+### Databases & Search Engines
 - **PostgreSQL 16** (Alpine)
 - **MySQL 8.4 LTS**
 - **MongoDB 7.0**
@@ -64,7 +64,7 @@
 
 ---
 
-## 📦 Getting Started
+## Getting Started
 
 ### Prerequisites
 - **Node.js**: v18.0.0 or higher (v20+ recommended)
@@ -94,7 +94,7 @@ npm start
 
 ---
 
-## 🛠️ Building for Windows, macOS, and Linux
+## Building for Windows, macOS, and Linux
 
 LazyStack is packaged using `electron-builder` with multi-target output configurations.
 
@@ -110,7 +110,7 @@ LazyStack is packaged using `electron-builder` with multi-target output configur
 
 ### Platform-Specific Build Notes
 
-#### 🐧 Linux
+#### Linux
 To build on Ubuntu / Debian / Fedora:
 ```bash
 npm run dist:linux
@@ -119,7 +119,7 @@ Produces:
 - `release/LazyStack-1.0.0.AppImage` (Universal portable Linux executable, `chmod +x` to run)
 - `release/lazystack_1.0.0_amd64.deb` (Debian/Ubuntu package installer)
 
-#### 🪟 Windows
+#### Windows
 To build Windows binaries from a Windows machine:
 ```bash
 npm run dist:win
@@ -129,7 +129,7 @@ Produces:
 - `release/LazyStack Setup 1.0.0.exe` (NSIS installer with desktop shortcuts)
 - `release/LazyStack 1.0.0.exe` (Standalone portable single-file executable)
 
-#### 🍏 macOS
+#### macOS
 To build macOS `.dmg`:
 ```bash
 npm run dist:mac
@@ -140,7 +140,7 @@ Produces:
 
 ---
 
-## 🏗️ Project Architecture
+## Project Architecture
 
 ```
 lazystack/
@@ -164,7 +164,7 @@ lazystack/
 │   │   ├── EnvironmentAuditor.tsx # Host runtime checker & package installer
 │   │   ├── BlueprintInspector.tsx # Real-time file tree & compose preview
 │   │   ├── ProjectConfigBar.tsx   # Project name & target directory selector
-│   │   ├── ValidationBanner.tsx   # Blueprint validation & 🚀 Scaffold button
+│   │   ├── ValidationBanner.tsx   # Blueprint validation & Scaffold button
 │   │   └── Header.tsx             # Theme toggle & branding
 │   ├── data/
 │   │   ├── frameworks.ts          # Framework catalog & requirements
@@ -179,6 +179,6 @@ lazystack/
 
 ---
 
-## 📜 License
+## License
 
 Distributed under the **MIT License**. See `LICENSE` for details.
