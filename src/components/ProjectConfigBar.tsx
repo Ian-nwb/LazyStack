@@ -78,11 +78,30 @@ export const ProjectConfigBar: React.FC<ProjectConfigBarProps> = ({
         if (selected) {
           setParentDir(selected)
         }
-        // In Electron, return immediately after dialog closes (do not trigger file input on cancel)
         return
       }
 
-      // 2. Modern Web File System Access API (Chrome / Edge on Windows)
+      // 2. Server-side native dialog via Vite dev API (Works on all OSes)
+      try {
+        const response = await fetch('/api/select-directory', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ defaultPath: parentDir || '' })
+        })
+        if (response.ok) {
+          const data = await response.json()
+          if (data?.selected) {
+            setParentDir(data.selected)
+            return
+          }
+          // User cancelled the dialog
+          return
+        }
+      } catch {
+        // Endpoint not available, fall through to browser APIs
+      }
+
+      // 3. Modern Web File System Access API (Chrome / Edge)
       if (typeof (window as any).showDirectoryPicker === 'function') {
         try {
           const dirHandle = await (window as any).showDirectoryPicker({ mode: 'read' })
@@ -96,7 +115,7 @@ export const ProjectConfigBar: React.FC<ProjectConfigBarProps> = ({
         }
       }
 
-      // 3. Browser fallback via hidden directory input
+      // 4. Browser fallback via hidden directory input
       if (fileInputRef.current) {
         fileInputRef.current.click()
       }
@@ -166,11 +185,6 @@ export const ProjectConfigBar: React.FC<ProjectConfigBarProps> = ({
               }`}
             />
           </div>
-          {hasNameError && (
-            <p className="text-[10px] text-rose-400 mt-1 flex items-center gap-1">
-              <AlertCircle className="w-2.5 h-2.5 shrink-0" /> {nameErrorText}
-            </p>
-          )}
         </div>
 
         {/* Parent Directory */}
@@ -206,11 +220,6 @@ export const ProjectConfigBar: React.FC<ProjectConfigBarProps> = ({
               Browse
             </button>
           </div>
-          {hasPathError && (
-            <p className="text-[10px] text-rose-400 mt-1 flex items-center gap-1">
-              <AlertCircle className="w-2.5 h-2.5 shrink-0" /> {pathErrorText}
-            </p>
-          )}
         </div>
 
         {/* Resolved Path Destination Contract */}

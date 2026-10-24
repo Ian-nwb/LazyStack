@@ -248,6 +248,45 @@ export default defineConfig({
             }
           })
         })
+        server.middlewares.use('/api/select-directory', async (req, res) => {
+          let body = ''
+          req.on('data', chunk => { body += chunk })
+          req.on('end', async () => {
+            try {
+              const { defaultPath } = JSON.parse(body || '{}')
+              const { exec } = await import('child_process')
+              const os = await import('os')
+              const fs = await import('fs-extra')
+              const path = await import('path')
+
+              let startDir = defaultPath || os.homedir()
+              try {
+                if (!(await fs.pathExists(startDir))) startDir = os.homedir()
+              } catch { startDir = os.homedir() }
+
+              let cmd: string
+              if (process.platform === 'win32') {
+                cmd = `powershell -NoProfile -Command "[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms') | Out-Null; $f = New-Object System.Windows.Forms.FolderBrowserDialog; $f.SelectedPath = '${startDir.replace(/'/g, "''")}'; $f.Description = 'Select Parent Directory'; if($f.ShowDialog() -eq 'OK'){Write-Output $f.SelectedPath}"`
+              } else if (process.platform === 'darwin') {
+                cmd = `osascript -e 'tell application "Finder" to set result to POSIX path of (choose folder with prompt "Select Parent Directory" default location POSIX file "${startDir}")'`
+              } else {
+                cmd = `zenity --file-selection --directory --title="Select Parent Directory" --filename="${startDir}/" 2>/dev/null || kdialog --getexistingdirectory "${startDir}" 2>/dev/null`
+              }
+
+              exec(cmd, { timeout: 120000 }, (error, stdout) => {
+                res.setHeader('Content-Type', 'application/json')
+                if (error || !stdout?.trim()) {
+                  res.end(JSON.stringify({ selected: null }))
+                } else {
+                  res.end(JSON.stringify({ selected: stdout.trim() }))
+                }
+              })
+            } catch (err: any) {
+              res.setHeader('Content-Type', 'application/json')
+              res.end(JSON.stringify({ selected: null, error: err.message }))
+            }
+          })
+        })
       }
     }
   ],

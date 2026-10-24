@@ -715,20 +715,6 @@ export const TECH_CATALOG: TechItem[] = [
 
   // --- MODERN FULLSTACK & RESUMABLE ---
   {
-    id: 'qwik-city',
-    name: 'Qwik (QwikCity)',
-    language: 'TypeScript',
-    category: 'fullstack',
-    role: 'fullstack',
-    defaultPort: 5173,
-    description: 'Resumable full-stack framework with zero hydration delay and instant page interactions.',
-    badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40',
-    isHighlighted: true,
-    requires: [
-      { binary: 'node', label: 'Node.js', installHint: 'https://nodejs.org/' }
-    ]
-  },
-  {
     id: 'tanstack-start',
     name: 'TanStack Start (React)',
     language: 'TypeScript',
@@ -900,32 +886,7 @@ export const TECH_CATALOG: TechItem[] = [
       { binary: 'crystal', label: 'Crystal Compiler', installHint: 'https://crystal-lang.org/install/' }
     ]
   },
-  {
-    id: 'hono-api',
-    name: 'Hono (Web Standards API)',
-    language: 'TypeScript',
-    category: 'backend',
-    role: 'backend',
-    defaultPort: 3000,
-    description: 'Ultrafast, lightweight web framework built on Web Standards, deployable to Node, Bun, Deno, and Cloudflare.',
-    badgeColor: 'bg-orange-500/20 text-orange-300 border-orange-500/40',
-    requires: [
-      { binary: 'node', label: 'Node.js', installHint: 'https://nodejs.org/' }
-    ]
-  },
-  {
-    id: 'go-fiber',
-    name: 'Go (Fiber v3)',
-    language: 'Go',
-    category: 'backend',
-    role: 'backend',
-    defaultPort: 3000,
-    description: 'Express-inspired web framework for Go running atop Fasthttp with zero memory allocation paths.',
-    badgeColor: 'bg-cyan-600/20 text-cyan-300 border-cyan-600/40',
-    requires: [
-      { binary: 'go', label: 'Go Toolchain', installHint: 'https://go.dev/dl/' }
-    ]
-  },
+
   {
     id: 'rust-poem',
     name: 'Rust (Poem OpenAPI)',

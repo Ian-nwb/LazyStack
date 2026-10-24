@@ -4,6 +4,7 @@ import { CartApp, TechItem, AppRole, SelectedDatabase, LanguageFlavor } from '..
 import { TECH_CATALOG } from '../data/frameworks'
 import { STACK_PRESETS, StackPreset } from '../data/presets'
 import { validateFolderName } from '../utils/pathValidation'
+import { getTechIconUrl } from '../utils/techIcons'
 
 interface CartBuilderProps {
   apps: CartApp[]
@@ -174,13 +175,14 @@ export const CartBuilder: React.FC<CartBuilderProps> = ({ apps, setApps, databas
     setApps(apps.map(a => a.id === id ? { ...a, ...updates } : a))
   }
 
-  // Filter catalog items
-  const filteredCatalog = TECH_CATALOG.filter(tech => {
+  // Filter catalog items — deduplicate by ID to prevent duplicates showing in the grid
+  const filteredCatalog = TECH_CATALOG.filter((tech, idx, arr) => {
     const matchesSearch = tech.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           tech.language.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           tech.description.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesCategory = selectedCategory === 'all' || tech.category === selectedCategory
-    return matchesSearch && matchesCategory
+    const isFirstOccurrence = arr.findIndex(t => t.id === tech.id) === idx
+    return matchesSearch && matchesCategory && isFirstOccurrence
   })
 
   // Check port collisions
@@ -317,6 +319,12 @@ export const CartBuilder: React.FC<CartBuilderProps> = ({ apps, setApps, databas
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                        {(() => {
+                          const iconUrl = tech ? getTechIconUrl(tech.id, tech.language) : null
+                          return iconUrl ? (
+                            <img src={iconUrl} alt="" className="w-4 h-4 shrink-0 object-contain" loading="lazy" />
+                          ) : null
+                        })()}
                         <span className={`text-[10px] font-mono px-2 py-0.5 rounded border ${tech?.badgeColor || 'bg-zinc-800 text-zinc-300 border-zinc-700'}`}>
                           {tech?.language || 'Custom'}
                         </span>
@@ -645,9 +653,17 @@ export const CartBuilder: React.FC<CartBuilderProps> = ({ apps, setApps, databas
                   >
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <span className={`text-[10px] font-mono px-2 py-0.5 rounded border ${tech.badgeColor}`}>
-                          {tech.supportsFlavor ? (selectedFlavor === 'typescript' ? 'TypeScript' : 'JavaScript') : tech.language}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          {(() => {
+                            const iconUrl = getTechIconUrl(tech.id, tech.language)
+                            return iconUrl ? (
+                              <img src={iconUrl} alt="" className="w-4 h-4 shrink-0 object-contain" loading="lazy" />
+                            ) : null
+                          })()}
+                          <span className={`text-[10px] font-mono px-2 py-0.5 rounded border ${tech.badgeColor}`}>
+                            {tech.supportsFlavor ? (selectedFlavor === 'typescript' ? 'TypeScript' : 'JavaScript') : tech.language}
+                          </span>
+                        </div>
                         {tech.defaultPort > 0 ? (
                           <span className="text-[10px] font-mono text-zinc-400 bg-surface-950 px-1.5 py-0.5 rounded border border-surface-750">
                             :{tech.defaultPort}
