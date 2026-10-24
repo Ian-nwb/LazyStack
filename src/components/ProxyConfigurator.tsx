@@ -131,7 +131,7 @@ export const ProxyConfigurator: React.FC<ProxyConfiguratorProps> = ({
             <div className="divide-y divide-surface-750">
               {apps.length === 0 ? (
                 <div className="p-6 text-center text-xs text-zinc-500 font-mono">
-                  No applications added to cart.
+                  No applications added to stack.
                 </div>
               ) : (
                 apps.map(app => {

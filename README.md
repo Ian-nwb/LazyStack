@@ -7,7 +7,7 @@
 
 ## Key Highlights
 
-- **Polyglot Shopping Cart**: Mix and match any frontend, backend, or fullstack framework. Support for 65+ technologies across 30+ languages (TypeScript, JavaScript, Go, Rust, Python, PHP, Java, C#, Elixir, Ruby, Haskell, Swift, Scala, Clojure, OCaml, Julia, Lua, R, Erlang, Nim, Crystal, C++, Assembly, and Zig).
+- **Polyglot Stack Builder**: Mix and match any frontend, backend, or fullstack framework. Support for 65+ technologies across 30+ languages (TypeScript, JavaScript, Go, Rust, Python, PHP, Java, C#, Elixir, Ruby, Haskell, Swift, Scala, Clojure, OCaml, Julia, Lua, R, Erlang, Nim, Crystal, C++, Assembly, and Zig).
 - **Reverse Proxy Gateway Generation**: Automatically provisions unified entrypoint configurations for **Nginx** (upstreams, WebSocket upgrades) or **Apache HTTP Server** (`mod_proxy`, `mod_proxy_wstunnel`), or direct port mappings.
 - **Database & Cache Ecosystem**: 1-click Docker orchestration for **PostgreSQL 16**, **MySQL 8.4**, **MongoDB 7**, **Redis 7.2**, **Valkey 8 (Linux Foundation)**, **ClickHouse OLAP**, **Meilisearch**, and **SQLite**.
 - **Host Environment Auditor**: Detects host toolchains (Node, Bun, Deno, Go, Cargo, Python, Composer, .NET SDK, Docker, etc.) in real time with quick-install commands and PATH helpers.
@@ -179,7 +179,7 @@ lazystack/
 │           └── starters.ts        # Polyglot framework project starters
 ├── src/
 │   ├── components/
-│   │   ├── CartBuilder.tsx        # Shopping cart & framework selector
+│   │   ├── CartBuilder.tsx        # Stack builder & framework selector
 │   │   ├── DatabasePicker.tsx     # Database orchestrator (Valkey, Postgres, etc.)
 │   │   ├── ProxyConfigurator.tsx  # Nginx / Apache reverse proxy config
 │   │   ├── EnvironmentAuditor.tsx # Host runtime checker & package installer

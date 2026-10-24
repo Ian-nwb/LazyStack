@@ -33,7 +33,7 @@ export const App: React.FC = () => {
   const [stackRunning, setStackRunning] = useState(false)
   const [stackError, setStackError] = useState<string | null>(null)
 
-  // Empty initial apps in Shopping Cart (pre-selected removed per user request)
+  // Empty initial apps in Stack (pre-selected removed per user request)
   const [apps, setApps] = useState<CartApp[]>([])
 
   // Empty initial databases (pre-selected removed per user request)
@@ -319,7 +319,7 @@ export const App: React.FC = () => {
             }`}
           >
             <Layers className="w-3.5 h-3.5" />
-            <span>App Cart</span>
+            <span>App Stack</span>
             <span className={`px-1.5 py-0.2 rounded text-[10px] font-mono border ${
               activeTab === 'cart'
                 ? 'bg-zinc-300/80 text-zinc-950 border-zinc-400/60 font-bold'

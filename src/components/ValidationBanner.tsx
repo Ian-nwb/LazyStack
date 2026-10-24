@@ -34,7 +34,7 @@ export const ValidationBanner: React.FC<ValidationBannerProps> = ({ settings, on
 
   // 4. Validate Apps count
   if (settings.apps.length === 0) {
-    warnings.push('No applications in cart. Add at least one app before generating.')
+    warnings.push('No applications in stack. Add at least one service before generating.')
   }
 
   // 5. Check duplicate folder names

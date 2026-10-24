@@ -132,7 +132,7 @@ export const CartBuilder: React.FC<CartBuilderProps> = ({ apps, setApps, databas
     setIsAddModalOpen(false)
   }
 
-  // Duplicate an app in cart
+  // Duplicate an app in stack
   const handleDuplicate = (app: CartApp) => {
     let copyName = `${app.folderName}-copy`
     let counter = 1
@@ -201,7 +201,7 @@ export const CartBuilder: React.FC<CartBuilderProps> = ({ apps, setApps, databas
           <div className="flex items-center gap-2">
             <h2 className="text-sm font-bold text-white uppercase tracking-wider">Application Services</h2>
             <span className="px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 text-xs font-mono font-medium border border-zinc-700">
-              {apps.length} in cart
+              {apps.length} in stack
             </span>
           </div>
           <p className="text-xs text-zinc-400 mt-0.5">
@@ -262,14 +262,14 @@ export const CartBuilder: React.FC<CartBuilderProps> = ({ apps, setApps, databas
         </div>
       )}
 
-      {/* Cart Items List */}
+      {/* Stack Services List */}
       <div className="flex-1 overflow-y-auto p-6 space-y-3">
         {apps.length === 0 ? (
           <div className="h-64 border border-dashed border-surface-700 rounded-xl flex flex-col items-center justify-center text-center p-6 bg-surface-900">
             <div className="w-10 h-10 rounded-lg bg-surface-850 flex items-center justify-center text-zinc-300 mb-3 border border-surface-700 shadow-sm">
               <Server className="w-5 h-5" />
             </div>
-            <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-100 dark:text-zinc-200">Shopping cart is empty</h3>
+            <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-100 dark:text-zinc-200">Stack is empty</h3>
             <p className="text-xs text-zinc-400 max-w-sm mt-1.5 leading-relaxed">
               Select languages and frameworks to begin scaffolding your custom monorepo.
             </p>
@@ -690,7 +690,7 @@ export const CartBuilder: React.FC<CartBuilderProps> = ({ apps, setApps, databas
                     <div className="mt-3 pt-2 border-t border-surface-800 flex items-center justify-between text-[11px] text-zinc-400">
                       <span className="capitalize">{tech.role}</span>
                       <span className="text-white opacity-0 group-hover:opacity-100 transition font-bold">
-                        Add to cart +
+                        Add to stack +
                       </span>
                     </div>
                   </div>
