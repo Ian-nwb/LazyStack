@@ -7,7 +7,7 @@
 
 ## Key Highlights
 
-- **Polyglot Shopping Cart**: Mix and match any frontend, backend, or fullstack framework. Support for 40+ technologies across TypeScript, JavaScript, Go, Rust, Python, PHP, Java, C#, Elixir, Ruby, Haskell, and C++.
+- **Polyglot Shopping Cart**: Mix and match any frontend, backend, or fullstack framework. Support for 65+ technologies across 30+ languages (TypeScript, JavaScript, Go, Rust, Python, PHP, Java, C#, Elixir, Ruby, Haskell, Swift, Scala, Clojure, OCaml, Julia, Lua, R, Erlang, Nim, Crystal, C++, Assembly, and Zig).
 - **Reverse Proxy Gateway Generation**: Automatically provisions unified entrypoint configurations for **Nginx** (upstreams, WebSocket upgrades) or **Apache HTTP Server** (`mod_proxy`, `mod_proxy_wstunnel`), or direct port mappings.
 - **Database & Cache Ecosystem**: 1-click Docker orchestration for **PostgreSQL 16**, **MySQL 8.4**, **MongoDB 7**, **Redis 7.2**, **Valkey 8 (Linux Foundation)**, **ClickHouse OLAP**, **Meilisearch**, and **SQLite**.
 - **Host Environment Auditor**: Detects host toolchains (Node, Bun, Deno, Go, Cargo, Python, Composer, .NET SDK, Docker, etc.) in real time with quick-install commands and PATH helpers.
@@ -23,6 +23,9 @@
 - **Nuxt 3** (Vue 3, Nitro engine)
 - **Remix** (React Router 7 / Remix)
 - **SvelteKit** (Svelte 5 runes)
+- **Qwik / QwikCity** (Resumable, zero hydration overhead)
+- **TanStack Start** (React, TanStack Router, Vite SSR)
+- **SolidStart** (Fine-grained reactive SSR)
 - **Astro 5** (Content islands & SSR)
 - **Laravel 11** (PHP 8.3, Composer)
 - **Deno Fresh** (Just-in-time rendering, Islands architecture)
@@ -36,11 +39,22 @@
 - **Svelte 5** + Vite
 - **SolidJS** + Vite
 - **Angular 19**
+- **Lit** (Google native Web Components)
 - **Vanilla HTML5 / Modern CSS / ESM JS**
 
 ### Backend & API Services
-- **Go**: Echo v4, Chi v5, Gin
-- **Rust**: Axum 0.7, Actix-web 4
+- **Go**: Fiber v3, Echo v4, Chi v5, Gin
+- **Rust**: Axum 0.7, Actix-web 4, Poem OpenAPI
+- **Swift**: Vapor 4 (Native async/await, Linux & macOS)
+- **Scala**: Play Framework / Akka / Netty (JVM)
+- **Clojure**: Ring / Compojure / Kit (JVM Lisp)
+- **OCaml**: Dream (Type-safe, async I/O, WebSockets)
+- **Julia**: Genie.jl (Scientific ML & high-performance computing)
+- **Lua**: OpenResty / Lapis (LuaJIT inside Nginx)
+- **R**: Plumber REST API
+- **Erlang**: Cowboy (Fault-tolerant OTP BEAM runtime)
+- **Nim**: HappyX (Pythonic syntax, C-speed compilation)
+- **Crystal**: Kemal (Ruby-like syntax, LLVM-compiled)
 - **Node.js**: Express 5, Fastify 5, NestJS 10, Vanilla Node HTTP
 - **Bun**: Elysia, Hono
 - **Deno**: Oak
@@ -50,17 +64,24 @@
 - **C#**: ASP.NET Core Web API (.NET 9)
 - **PHP**: Slim Framework 4, Symfony 7
 - **Haskell**: Servant Web API
-- **High Performance / Systems**: C++ Drogon, x86-64 NASM Micro-server
+- **High Performance / Systems**: C++ Drogon, x86-64 NASM Micro-server, Zig HTTP
 
-### Databases & Search Engines
+### Databases & Infrastructure
 - **PostgreSQL 16** (Alpine)
 - **MySQL 8.4 LTS**
+- **MariaDB 11**
 - **MongoDB 7.0**
-- **Redis 7.2**
+- **Redis 7.2** (Alpine)
 - **Valkey 8.0** *(Linux Foundation open source high-performance key-value datastore)*
-- **ClickHouse OLAP**
-- **Meilisearch**
-- **SQLite 3** (Shared volume, app-local, or Litestream replication)
+- **Qdrant Vector DB** *(AI embeddings, vector similarity search, and RAG pipelines)*
+- **Meilisearch** *(Instant, typo-tolerant full-text search engine)*
+- **MinIO** *(High-performance S3-compatible object storage with web console)*
+- **ScyllaDB** *(C++ rewrite of Apache Cassandra for ultra high-throughput NoSQL)*
+- **ClickHouse OLAP** *(Column-oriented analytical engine)*
+- **SurrealDB v2** *(Multi-model document, graph, and relational cloud database)*
+- **Neo4j** *(Graph database engine with Cypher query language)*
+- **RabbitMQ** *(AMQP message broker with web management dashboard)*
+- **SQLite 3** *(Shared volume, app-local, or Litestream replication)*
 
 ---
 

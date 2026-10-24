@@ -59,12 +59,17 @@ export type DatabaseType =
   | 'clickhouse'
   | 'surrealdb'
   | 'neo4j'
+  | 'qdrant'
+  | 'meilisearch'
+  | 'minio'
+  | 'scylladb'
+  | 'rabbitmq'
 
 export interface DatabaseOption {
   id: DatabaseType
   name: string
   defaultPort: number
-  category: 'relational' | 'document' | 'key-value' | 'olap' | 'graph' | 'embedded'
+  category: 'relational' | 'document' | 'key-value' | 'olap' | 'graph' | 'embedded' | 'vector' | 'search' | 'storage' | 'message-broker'
   description: string
   isHeavyMemory?: boolean
   imageTag: string

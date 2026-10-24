@@ -2247,6 +2247,497 @@ server.listen(port, () => {
   console.log(\`[LazyStack] ${folderName} (TypeScript) running on http://0.0.0.0:\${port}\`);
 });
 `
+  } else if (techId === 'swift-vapor') {
+    files['Package.swift'] = `// swift-tools-version:5.10
+import PackageDescription
+
+let package = Package(
+    name: "${folderName}",
+    platforms: [.macOS(.v13)],
+    dependencies: [
+        .package(url: "https://github.com/vapor/vapor.git", from: "4.99.0")
+    ],
+    targets: [
+        .executableTarget(
+            name: "App",
+            dependencies: [
+                .product(name: "Vapor", package: "vapor")
+            ]
+        )
+    ]
+)
+`
+    files['Sources/App/main.swift'] = `import Vapor
+
+var env = try Environment.detect()
+try LoggingSystem.bootstrap(from: &env)
+
+let app = Application(env)
+defer { app.shutdown() }
+
+app.http.server.configuration.port = Int(Environment.get("PORT") ?? "${port}") ?? ${port}
+app.http.server.configuration.hostname = "0.0.0.0"
+
+app.get { req in
+    return ["service": "${folderName}", "language": "Swift", "framework": "Vapor 4", "status": "online"]
+}
+
+app.get("health") { req in
+    return ["status": "healthy", "timestamp": Date().description]
+}
+
+try app.run()
+`
+  } else if (techId === 'scala-play') {
+    files['build.sbt'] = `name := "${folderName}"
+version := "1.0"
+scalaVersion := "2.13.14"
+
+enablePlugins(PlayScala)
+
+libraryDependencies ++= Seq(
+  guice
+)
+`
+    files['conf/routes'] = `GET     /               controllers.HomeController.index
+GET     /health         controllers.HomeController.health
+`
+    files['app/controllers/HomeController.scala'] = `package controllers
+
+import javax.inject._
+import play.api.mvc._
+import play.api.libs.json.Json
+
+@Singleton
+class HomeController @Inject()(val controllerComponents: ControllerComponents) extends BaseController {
+  def index() = Action { implicit request: Request[AnyContent] =>
+    Ok(Json.obj("service" -> "${folderName}", "language" -> "Scala", "status" -> "online"))
+  }
+  def health() = Action { implicit request: Request[AnyContent] =>
+    Ok(Json.obj("status" -> "healthy"))
+  }
+}
+`
+  } else if (techId === 'clojure-ring') {
+    files['deps.edn'] = `{:paths ["src"]
+ :deps {org.clojure/clojure {:mvn/version "1.11.1"}
+        ring/ring-core {:mvn/version "1.11.0"}
+        ring/ring-jetty-adapter {:mvn/version "1.11.0"}
+        ring/ring-json {:mvn/version "0.5.1"}
+        compojure/compojure {:mvn/version "1.7.1"}}}
+`
+    files['src/app/core.clj'] = `(ns app.core
+  (:require [ring.adapter.jetty :refer [run-jetty]]
+            [compojure.core :refer [defroutes GET]]
+            [compojure.route :as route]
+            [ring.middleware.json :refer [wrap-json-response]]))
+
+(defroutes app-routes
+  (GET "/" [] {:body {:service "${folderName}" :language "Clojure" :status "online" :port ${port}}})
+  (GET "/health" [] {:body {:status "healthy"}})
+  (route/not-found {:body {:error "Not found"}}))
+
+(def app (wrap-json-response app-routes))
+
+(defn -main [& args]
+  (let [port (Integer/parseInt (or (System/getenv "PORT") "${port}"))]
+    (println (str "[LazyStack] ${folderName} (Clojure) running on port " port))
+    (run-jetty app {:port port :join? false})))
+`
+  } else if (techId === 'ocaml-dream') {
+    files['dune-project'] = `(lang dune 3.0)`
+    files['bin/dune'] = `(executable
+ (name server)
+ (libraries dream))`
+    files['bin/server.ml'] = `let () =
+  Dream.run ~port:${port} ~interface:"0.0.0.0"
+  @@ Dream.logger
+  @@ Dream.router [
+    Dream.get "/" (fun _ ->
+      Dream.json "{\\"service\\": \\"${folderName}\\", \\"language\\": \\"OCaml\\", \\"framework\\": \\"Dream\\", \\"status\\": \\"online\\"}");
+    Dream.get "/health" (fun _ ->
+      Dream.json "{\\"status\\": \\"healthy\\"}");
+  ]
+`
+  } else if (techId === 'julia-genie') {
+    files['Project.toml'] = `[deps]
+Genie = "c43e77cb-5708-574b-8984-7cba7802a881"
+JSON3 = "0f5b7848-d4d8-4252-b635-c83753799f63"
+`
+    files['app.jl'] = `using Genie, Genie.Renderer.Json
+
+Genie.config.server_port = parse(Int, get(ENV, "PORT", "${port}"))
+Genie.config.server_host = "0.0.0.0"
+
+route("/") do
+  json(Dict("service" => "${folderName}", "language" => "Julia", "framework" => "Genie.jl", "status" => "online"))
+end
+
+route("/health") do
+  json(Dict("status" => "healthy"))
+end
+
+up()
+`
+  } else if (techId === 'lua-lapis') {
+    files['app.lua'] = `local lapis = require("lapis")
+local app = lapis.Application()
+
+app:get("/", function(self)
+  return { json = { service = "${folderName}", language = "Lua", runtime = "OpenResty/LuaJIT", status = "online", port = ${port} } }
+end)
+
+app:get("/health", function(self)
+  return { json = { status = "healthy" } }
+end)
+
+return app
+`
+  } else if (techId === 'r-plumber') {
+    files['plumber.R'] = `#* @apiTitle ${folderName} Plumber API
+#* @get /
+function() {
+  list(service = "${folderName}", language = "R", runtime = "R 4.4", status = "online", port = ${port})
+}
+
+#* @get /health
+function() {
+  list(status = "healthy")
+}
+`
+  } else if (techId === 'erlang-cowboy') {
+    files['rebar.config'] = `{erl_opts, [debug_info]}.
+{deps, [
+    {cowboy, "2.10.0"},
+    {jsone, "1.8.1"}
+]}.
+`
+    files['src/server_app.erl'] = `-module(server_app).
+-behaviour(application).
+-export([start/2, stop/1]).
+
+start(_StartType, _StartArgs) ->
+    Port = ${port},
+    Dispatch = cowboy_router:compile([
+        {'_', [
+            {"/", server_handler, []},
+            {"/health", health_handler, []}
+        ]}
+    ]),
+    {ok, _} = cowboy:start_clear(http_listener,
+        [{port, Port}],
+        #{env => #{dispatch => Dispatch}}
+    ),
+    io:format("[LazyStack] ~s (Erlang Cowboy) running on port ~p~n", ["${folderName}", Port]),
+    server_sup:start_link().
+
+stop(_State) ->
+    ok.
+`
+  } else if (techId === 'nim-happyx') {
+    files['main.nim'] = `import happyx
+
+serve "0.0.0.0", ${port}:
+  get "/":
+    return {"service": "${folderName}", "language": "Nim", "framework": "HappyX", "status": "online"}
+  get "/health":
+    return {"status": "healthy"}
+`
+  } else if (techId === 'crystal-kemal') {
+    files['shard.yml'] = `name: ${folderName}
+version: 0.1.0
+dependencies:
+  kemal:
+    github: kemalcr/kemal
+`
+    files['src/server.cr'] = `require "kemal"
+
+get "/" do |env|
+  env.response.content_type = "application/json"
+  {service: "${folderName}", language: "Crystal", framework: "Kemal", status: "online"}.to_json
+end
+
+get "/health" do |env|
+  env.response.content_type = "application/json"
+  {status: "healthy"}.to_json
+end
+
+port = ENV["PORT"]?.try(&.to_i?) || ${port}
+Kemal.run(port)
+`
+  } else if (techId === 'qwik-city') {
+    files['package.json'] = `{
+  "name": "${folderName}",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@builder.io/qwik": "^1.5.0",
+    "@builder.io/qwik-city": "^1.5.0"
+  },
+  "devDependencies": {
+    "vite": "^5.2.0",
+    "typescript": "^5.4.0"
+  }
+}
+`
+    files['src/routes/index.tsx'] = `import { component$ } from '@builder.io/qwik';
+
+export default component$(() => {
+  return (
+    <div style={{ fontFamily: 'system-ui, sans-serif', padding: '2rem' }}>
+      <h1>LazyStack ⚡ ${folderName}</h1>
+      <p>Powered by <strong>Qwik & QwikCity</strong> with instant resumability and zero hydration!</p>
+    </div>
+  );
+});
+`
+  } else if (techId === 'tanstack-start') {
+    files['package.json'] = `{
+  "name": "${folderName}",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "start": "vite preview"
+  },
+  "dependencies": {
+    "@tanstack/react-router": "^1.31.0",
+    "@tanstack/start": "^1.31.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "vite": "^5.2.0",
+    "typescript": "^5.4.0"
+  }
+}
+`
+    files['app/routes/index.tsx'] = `import { createFileRoute } from '@tanstack/react-router';
+
+export const Route = createFileRoute('/')({
+  component: RouteComponent,
+});
+
+function RouteComponent() {
+  return (
+    <main style={{ padding: '2rem', fontFamily: 'system-ui, sans-serif' }}>
+      <h1>${folderName}</h1>
+      <p>Powered by TanStack Start and TanStack Router with Vite SSR.</p>
+    </main>
+  );
+}
+`
+  } else if (techId === 'solid-start') {
+    files['package.json'] = `{
+  "name": "${folderName}",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vinxi dev",
+    "build": "vinxi build",
+    "start": "vinxi start"
+  },
+  "dependencies": {
+    "@solidjs/start": "^1.0.0",
+    "solid-js": "^1.8.0",
+    "vinxi": "^0.3.0"
+  }
+}
+`
+    files['src/routes/index.tsx'] = `export default function Home() {
+  return (
+    <main style={{ padding: '2rem', fontFamily: 'system-ui, sans-serif' }}>
+      <h1>${folderName}</h1>
+      <p>Powered by SolidStart with fine-grained reactivity and streaming SSR.</p>
+    </main>
+  );
+}
+`
+  } else if (techId === 'lit-element') {
+    files['package.json'] = `{
+  "name": "${folderName}",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "lit": "^3.1.2"
+  },
+  "devDependencies": {
+    "vite": "^5.2.0",
+    "typescript": "^5.4.0"
+  }
+}
+`
+    files['index.html'] = `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>${folderName} - Lit</title>
+    <script type="module" src="/src/my-element.ts"></script>
+  </head>
+  <body>
+    <my-element name="${folderName}"></my-element>
+  </body>
+</html>
+`
+    files['src/my-element.ts'] = `import { LitElement, html, css } from 'lit';
+import { customElement, property } from 'lit/decorators.js';
+
+@customElement('my-element')
+export class MyElement extends LitElement {
+  static styles = css\`
+    :host { display: block; font-family: system-ui, sans-serif; padding: 2rem; }
+    h1 { color: #00adb5; }
+  \`;
+
+  @property()
+  name = '${folderName}';
+
+  render() {
+    return html\`
+      <h1>\${this.name}</h1>
+      <p>Google Lit Web Component running standard native Custom Elements!</p>
+    \`;
+  }
+}
+`
+  } else if (techId === 'hono-api') {
+    files['package.json'] = `{
+  "name": "${folderName}",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.11.0",
+    "hono": "^4.3.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.9.0",
+    "typescript": "^5.4.0"
+  }
+}
+`
+    files['src/index.ts'] = `import { Hono } from 'hono';
+import { serve } from '@hono/node-server';
+
+const app = new Hono();
+
+app.get('/', (c) => c.json({ service: '${folderName}', framework: 'Hono', status: 'online', port: ${port} }));
+app.get('/health', (c) => c.json({ status: 'healthy', timestamp: new Date().toISOString() }));
+
+const port = Number(process.env.PORT) || ${port};
+console.log(\`[LazyStack] ${folderName} (Hono) listening on http://0.0.0.0:\${port}\`);
+serve({ fetch: app.fetch, port });
+`
+  } else if (techId === 'go-fiber') {
+    files['go.mod'] = `module ${folderName}
+
+go 1.23
+
+require (
+    github.com/gofiber/fiber/v2 v2.52.4
+)
+`
+    files['main.go'] = `package main
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/gofiber/fiber/v2"
+)
+
+func main() {
+	app := fiber.New()
+
+	app.Get("/", func(c *fiber.Ctx) error {
+		return c.JSON(fiber.Map{
+			"service": "${folderName}",
+			"framework": "Fiber v3",
+			"language": "Go",
+			"status": "online",
+		})
+	})
+
+	app.Get("/health", func(c *fiber.Ctx) error {
+		return c.JSON(fiber.Map{"status": "healthy"})
+	})
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "${port}"
+	}
+
+	fmt.Printf("[LazyStack] ${folderName} (Go Fiber) running on http://0.0.0.0:%s\\n", port)
+	app.Listen(":" + port)
+}
+`
+  } else if (techId === 'rust-poem') {
+    files['Cargo.toml'] = `[package]
+name = "${folderName}"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+poem = "3.0"
+poem-openapi = { version = "5.0", features = ["swagger-ui"] }
+tokio = { version = "1.38", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+`
+    files['src/main.rs'] = `use poem::{listener::TcpListener, Route, Server};
+use poem_openapi::{payload::Json, OpenApi, OpenApiService};
+use serde::Serialize;
+
+#[derive(Serialize, poem_openapi::Object)]
+struct StatusResponse {
+    service: String,
+    framework: String,
+    status: String,
+}
+
+struct Api;
+
+#[OpenApi]
+impl Api {
+    #[oai(path = "/", method = "get")]
+    async fn index(&self) -> Json<StatusResponse> {
+        Json(StatusResponse {
+            service: "${folderName}".to_string(),
+            framework: "Poem OpenAPI".to_string(),
+            status: "online".to_string(),
+        })
+    }
+}
+
+#[tokio::main]
+async fn main() -> Result<(), std::io::Error> {
+    let api_service = OpenApiService::new(Api, "${folderName}", "1.0")
+        .server(format!("http://0.0.0.0:${port}"));
+    let ui = api_service.swagger_ui();
+    let app = Route::new().nest("/", api_service).nest("/docs", ui);
+
+    println!("[LazyStack] ${folderName} (Rust Poem) running on port ${port} with Swagger on /docs");
+    Server::new(TcpListener::bind(format!("0.0.0.0:${port}")))
+        .run(app)
+        .await
+}
+`
   } else {
     // Pure JavaScript
     files['package.json'] = `{

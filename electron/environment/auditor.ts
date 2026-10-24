@@ -334,6 +334,79 @@ export const MONITORED_BINARIES: Array<{
       macosBrew: 'brew install --cask flutter',
       windowsWinget: 'winget install Google.Flutter'
     }
+  },
+  {
+    id: 'swift',
+    name: 'Swift Toolchain',
+    binary: 'swift',
+    category: 'compiler',
+    versionFlag: '--version',
+    installCommand: {
+      linuxApt: 'apt-get install -y swift',
+      macosBrew: 'xcode-select --install',
+      windowsWinget: 'winget install Swift.Swift'
+    }
+  },
+  {
+    id: 'sbt',
+    name: 'sbt (Scala Build Tool)',
+    binary: 'sbt',
+    category: 'package-manager',
+    versionFlag: '--version',
+    installCommand: {
+      linuxApt: 'apt-get install -y sbt',
+      linuxPacman: 'pacman -S --noconfirm sbt',
+      macosBrew: 'brew install sbt'
+    }
+  },
+  {
+    id: 'clojure',
+    name: 'Clojure CLI',
+    binary: 'clojure',
+    category: 'runtime',
+    versionFlag: '--version',
+    installCommand: {
+      linuxApt: 'apt-get install -y clojure',
+      macosBrew: 'brew install clojure/tools/clojure'
+    }
+  },
+  {
+    id: 'julia',
+    name: 'Julia Runtime',
+    binary: 'julia',
+    category: 'runtime',
+    versionFlag: '--version',
+    installCommand: {
+      linuxApt: 'apt-get install -y julia',
+      linuxPacman: 'pacman -S --noconfirm julia',
+      macosBrew: 'brew install --cask julia',
+      windowsWinget: 'winget install JuliaComputing.Julia'
+    }
+  },
+  {
+    id: 'nim',
+    name: 'Nim Compiler',
+    binary: 'nim',
+    category: 'compiler',
+    versionFlag: '--version',
+    installCommand: {
+      linuxApt: 'apt-get install -y nim',
+      linuxPacman: 'pacman -S --noconfirm nim',
+      macosBrew: 'brew install nim',
+      windowsWinget: 'winget install Nim.Nim'
+    }
+  },
+  {
+    id: 'crystal',
+    name: 'Crystal Compiler',
+    binary: 'crystal',
+    category: 'compiler',
+    versionFlag: '--version',
+    installCommand: {
+      linuxApt: 'apt-get install -y crystal',
+      linuxPacman: 'pacman -S --noconfirm crystal',
+      macosBrew: 'brew install crystal'
+    }
   }
 ]
 

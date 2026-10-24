@@ -103,5 +103,56 @@ export const DATABASE_CATALOG: DatabaseOption[] = [
     imageTag: 'neo4j:5.19',
     healthcheckCmd: 'cypher-shell "RETURN 1"',
     badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
+  },
+  {
+    id: 'qdrant',
+    name: 'Qdrant Vector DB (AI & Embeddings)',
+    defaultPort: 6333,
+    category: 'vector',
+    description: 'High-performance vector search engine & database for AI embeddings, semantic search, and RAG pipelines.',
+    imageTag: 'qdrant/qdrant:v1.9.0',
+    healthcheckCmd: 'bash -c "</dev/tcp/localhost/6333"',
+    badgeColor: 'bg-red-500/20 text-red-300 border-red-500/40'
+  },
+  {
+    id: 'meilisearch',
+    name: 'Meilisearch (Instant Full-Text)',
+    defaultPort: 7700,
+    category: 'search',
+    description: 'Ultra-fast, typo-tolerant full-text search engine with intuitive REST API and instant faceted filtering.',
+    imageTag: 'getmeili/meilisearch:v1.8',
+    healthcheckCmd: 'curl -f http://localhost:7700/health',
+    badgeColor: 'bg-fuchsia-500/20 text-fuchsia-300 border-fuchsia-500/40'
+  },
+  {
+    id: 'minio',
+    name: 'MinIO (S3-Compatible Object Store)',
+    defaultPort: 9000,
+    category: 'storage',
+    description: 'High-performance distributed S3 object storage suite with integrated web management console on :9001.',
+    imageTag: 'minio/minio:latest',
+    healthcheckCmd: 'curl -f http://localhost:9000/minio/health/live',
+    badgeColor: 'bg-rose-600/20 text-rose-300 border-rose-600/40'
+  },
+  {
+    id: 'scylladb',
+    name: 'ScyllaDB (Ultra-Fast Cassandra)',
+    defaultPort: 9042,
+    category: 'relational',
+    description: 'C++ rewrite of Apache Cassandra delivering sub-millisecond p99 latencies for high-throughput distributed NoSQL.',
+    isHeavyMemory: true,
+    imageTag: 'scylladb/scylla:5.4',
+    healthcheckCmd: 'nodetool status | grep -q "UN"',
+    badgeColor: 'bg-sky-600/20 text-sky-300 border-sky-600/40'
+  },
+  {
+    id: 'rabbitmq',
+    name: 'RabbitMQ (Message Broker + GUI)',
+    defaultPort: 5672,
+    category: 'message-broker',
+    description: 'Battle-tested AMQP message broker with web management dashboard on :15672 for event-driven decoupled systems.',
+    imageTag: 'rabbitmq:3-management-alpine',
+    healthcheckCmd: 'rabbitmq-diagnostics check_running',
+    badgeColor: 'bg-orange-500/20 text-orange-300 border-orange-500/40'
   }
 ]

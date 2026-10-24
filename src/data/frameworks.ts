@@ -711,5 +711,232 @@ export const TECH_CATALOG: TechItem[] = [
     defaultPort: 0,
     description: 'Automated database schema migration engine & test fixtures.',
     badgeColor: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/40'
+  },
+
+  // --- MODERN FULLSTACK & RESUMABLE ---
+  {
+    id: 'qwik-city',
+    name: 'Qwik (QwikCity)',
+    language: 'TypeScript',
+    category: 'fullstack',
+    role: 'fullstack',
+    defaultPort: 5173,
+    description: 'Resumable full-stack framework with zero hydration delay and instant page interactions.',
+    badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40',
+    isHighlighted: true,
+    requires: [
+      { binary: 'node', label: 'Node.js', installHint: 'https://nodejs.org/' }
+    ]
+  },
+  {
+    id: 'tanstack-start',
+    name: 'TanStack Start (React)',
+    language: 'TypeScript',
+    category: 'fullstack',
+    role: 'fullstack',
+    defaultPort: 3000,
+    description: 'Full-stack React framework powered by TanStack Router, Vite, and full-type RPC server functions.',
+    badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+    isHighlighted: true,
+    requires: [
+      { binary: 'node', label: 'Node.js', installHint: 'https://nodejs.org/' }
+    ]
+  },
+  {
+    id: 'solid-start',
+    name: 'SolidStart',
+    language: 'TypeScript',
+    category: 'fullstack',
+    role: 'fullstack',
+    defaultPort: 3000,
+    description: 'Fine-grained reactive fullstack framework for SolidJS with streaming SSR and Vinxi bundler.',
+    badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
+    requires: [
+      { binary: 'node', label: 'Node.js', installHint: 'https://nodejs.org/' }
+    ]
+  },
+  {
+    id: 'lit-element',
+    name: 'Lit (Web Components)',
+    language: 'TypeScript',
+    category: 'frontend',
+    role: 'frontend',
+    defaultPort: 5173,
+    description: 'Google lightweight library for building fast, reactive, framework-agnostic native Web Components.',
+    badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
+    requires: [
+      { binary: 'node', label: 'Node.js', installHint: 'https://nodejs.org/' }
+    ]
+  },
+
+  // --- POLYGLOT BACKENDS & NEW LANGUAGES ---
+  {
+    id: 'swift-vapor',
+    name: 'Swift (Vapor 4)',
+    language: 'Swift',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 8080,
+    description: 'High-concurrency server-side Swift framework with native Swift async/await and non-blocking I/O.',
+    badgeColor: 'bg-orange-600/20 text-orange-400 border-orange-600/40',
+    requires: [
+      { binary: 'swift', label: 'Swift Toolchain', installHint: 'https://www.swift.org/download/' }
+    ]
+  },
+  {
+    id: 'scala-play',
+    name: 'Scala (Play Framework)',
+    language: 'Scala',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 9000,
+    description: 'Reactive, highly scalable web framework for the JVM built on Akka/Pekko and Netty.',
+    badgeColor: 'bg-red-600/20 text-red-400 border-red-600/40',
+    requires: [
+      { binary: 'sbt', label: 'sbt (Scala Build Tool)', installHint: 'https://www.scala-sbt.org/download.html' }
+    ]
+  },
+  {
+    id: 'clojure-ring',
+    name: 'Clojure (Ring / Kit)',
+    language: 'Clojure',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 3000,
+    description: 'Simplicity-first, functional Lisp web services running atop the JVM with hot-reloading REPL.',
+    badgeColor: 'bg-emerald-600/20 text-emerald-400 border-emerald-600/40',
+    requires: [
+      { binary: 'clojure', label: 'Clojure CLI', installHint: 'https://clojure.org/guides/install_clojure' }
+    ]
+  },
+  {
+    id: 'ocaml-dream',
+    name: 'OCaml (Dream)',
+    language: 'OCaml',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 8080,
+    description: 'Tidy, type-safe web framework for OCaml with native async, WebSockets, and GraphQL.',
+    badgeColor: 'bg-amber-600/20 text-amber-300 border-amber-600/40',
+    requires: [
+      { binary: 'opam', label: 'OPAM (OCaml)', installHint: 'https://opam.ocaml.org/doc/Install.html' }
+    ]
+  },
+  {
+    id: 'julia-genie',
+    name: 'Julia (Genie.jl)',
+    language: 'Julia',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 8000,
+    description: 'High-performance scientific computing and machine learning web framework in pure Julia.',
+    badgeColor: 'bg-purple-600/20 text-purple-300 border-purple-600/40',
+    requires: [
+      { binary: 'julia', label: 'Julia Runtime', installHint: 'https://julialang.org/downloads/' }
+    ]
+  },
+  {
+    id: 'lua-lapis',
+    name: 'Lua (OpenResty / Lapis)',
+    language: 'Lua',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 8080,
+    description: 'Extreme-performance web application framework running inside Nginx with LuaJIT.',
+    badgeColor: 'bg-blue-600/20 text-blue-300 border-blue-600/40',
+    requires: [
+      { binary: 'luajit', label: 'LuaJIT', installHint: 'apt install luajit / brew install luajit' }
+    ]
+  },
+  {
+    id: 'r-plumber',
+    name: 'R (Plumber API)',
+    language: 'R',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 8000,
+    description: 'Convert R statistical models, data frames, and ggplot graphics into robust RESTful web services.',
+    badgeColor: 'bg-sky-500/20 text-sky-300 border-sky-500/40',
+    requires: [
+      { binary: 'R', label: 'R Runtime', installHint: 'https://cran.r-project.org/' }
+    ]
+  },
+  {
+    id: 'erlang-cowboy',
+    name: 'Erlang (Cowboy)',
+    language: 'Erlang',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 8080,
+    description: 'Small, fast, modular HTTP server running on the fault-tolerant Erlang/OTP BEAM runtime.',
+    badgeColor: 'bg-red-500/20 text-red-300 border-red-500/40',
+    requires: [
+      { binary: 'erl', label: 'Erlang/OTP', installHint: 'https://www.erlang.org/downloads' }
+    ]
+  },
+  {
+    id: 'nim-happyx',
+    name: 'Nim (HappyX)',
+    language: 'Nim',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 5000,
+    description: 'Ultra-fast macro-powered async web framework compiled to C with Pythonic elegance.',
+    badgeColor: 'bg-yellow-600/20 text-yellow-300 border-yellow-600/40',
+    requires: [
+      { binary: 'nim', label: 'Nim Compiler', installHint: 'https://nim-lang.org/install.html' }
+    ]
+  },
+  {
+    id: 'crystal-kemal',
+    name: 'Crystal (Kemal)',
+    language: 'Crystal',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 3000,
+    description: 'Lightning-fast Sinatra-like microframework with Ruby-like syntax and C-speed LLVM compilation.',
+    badgeColor: 'bg-stone-500/20 text-stone-300 border-stone-500/40',
+    requires: [
+      { binary: 'crystal', label: 'Crystal Compiler', installHint: 'https://crystal-lang.org/install/' }
+    ]
+  },
+  {
+    id: 'hono-api',
+    name: 'Hono (Web Standards API)',
+    language: 'TypeScript',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 3000,
+    description: 'Ultrafast, lightweight web framework built on Web Standards, deployable to Node, Bun, Deno, and Cloudflare.',
+    badgeColor: 'bg-orange-500/20 text-orange-300 border-orange-500/40',
+    requires: [
+      { binary: 'node', label: 'Node.js', installHint: 'https://nodejs.org/' }
+    ]
+  },
+  {
+    id: 'go-fiber',
+    name: 'Go (Fiber v3)',
+    language: 'Go',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 3000,
+    description: 'Express-inspired web framework for Go running atop Fasthttp with zero memory allocation paths.',
+    badgeColor: 'bg-cyan-600/20 text-cyan-300 border-cyan-600/40',
+    requires: [
+      { binary: 'go', label: 'Go Toolchain', installHint: 'https://go.dev/dl/' }
+    ]
+  },
+  {
+    id: 'rust-poem',
+    name: 'Rust (Poem OpenAPI)',
+    language: 'Rust',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 3000,
+    description: 'Ergonomic, type-safe async Rust web framework with automated Swagger/OpenAPI documentation.',
+    badgeColor: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
+    requires: [
+      { binary: 'cargo', label: 'Cargo / Rust', installHint: 'https://rustup.rs/' }
+    ]
   }
 ]

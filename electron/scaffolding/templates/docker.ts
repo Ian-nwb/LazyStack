@@ -85,6 +85,60 @@ export function generateDockerCompose(settings: ProjectSettings): string {
         yaml += `      test: ["CMD", "mongosh", "--eval", "db.runCommand({ping:1})"]\n`
         yaml += `      interval: 5s\n      timeout: 5s\n      retries: 5\n`
         break
+      case 'clickhouse':
+        yaml += `    image: clickhouse/clickhouse-server:24.3-alpine\n`
+        yaml += `    ports:\n      - "\${CLICKHOUSE_PORT:-${db.port}}:8123"\n      - "9000:9000"\n`
+        yaml += `    volumes:\n      - clickhouse_data:/var/lib/clickhouse\n`
+        yaml += `    healthcheck:\n      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8123/ping || exit 1"]\n      interval: 5s\n      timeout: 5s\n      retries: 5\n`
+        break
+      case 'surrealdb':
+        yaml += `    image: surrealdb/surrealdb:v2.0\n`
+        yaml += `    command: start --log trace --user root --pass root file:/data/database.db\n`
+        yaml += `    ports:\n      - "\${SURREALDB_PORT:-${db.port}}:8000"\n`
+        yaml += `    volumes:\n      - surrealdb_data:/data\n`
+        yaml += `    healthcheck:\n      test: ["CMD", "curl", "-s", "-o", "/dev/null", "-w", "%{http_code}", "http://localhost:8000/health"]\n      interval: 5s\n      timeout: 5s\n      retries: 5\n`
+        break
+      case 'neo4j':
+        yaml += `    image: neo4j:5.19\n`
+        yaml += `    environment:\n      NEO4J_AUTH: \${NEO4J_AUTH:-neo4j/secret_password}\n`
+        yaml += `    ports:\n      - "\${NEO4J_PORT:-${db.port}}:7474"\n      - "7687:7687"\n`
+        yaml += `    volumes:\n      - neo4j_data:/data\n`
+        yaml += `    healthcheck:\n      test: ["CMD", "cypher-shell", "RETURN 1"]\n      interval: 10s\n      timeout: 5s\n      retries: 5\n`
+        break
+      case 'qdrant':
+        yaml += `    image: qdrant/qdrant:v1.9.0\n`
+        yaml += `    ports:\n      - "\${QDRANT_PORT:-${db.port}}:6333"\n      - "6334:6334"\n`
+        yaml += `    volumes:\n      - qdrant_data:/qdrant/storage\n`
+        yaml += `    healthcheck:\n      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/6333'"]\n      interval: 5s\n      timeout: 5s\n      retries: 5\n`
+        break
+      case 'meilisearch':
+        yaml += `    image: getmeili/meilisearch:v1.8\n`
+        yaml += `    environment:\n      MEILI_MASTER_KEY: \${MEILI_MASTER_KEY:-masterKeySecret123}\n`
+        yaml += `    ports:\n      - "\${MEILISEARCH_PORT:-${db.port}}:7700"\n`
+        yaml += `    volumes:\n      - meilisearch_data:/meili_data\n`
+        yaml += `    healthcheck:\n      test: ["CMD", "curl", "-f", "http://localhost:7700/health"]\n      interval: 5s\n      timeout: 5s\n      retries: 5\n`
+        break
+      case 'minio':
+        yaml += `    image: minio/minio:latest\n`
+        yaml += `    command: server /data --console-address ":9001"\n`
+        yaml += `    environment:\n      MINIO_ROOT_USER: \${MINIO_ROOT_USER:-lazystack_admin}\n      MINIO_ROOT_PASSWORD: \${MINIO_ROOT_PASSWORD:-minio_secret_password}\n`
+        yaml += `    ports:\n      - "\${MINIO_PORT:-${db.port}}:9000"\n      - "9001:9001"\n`
+        yaml += `    volumes:\n      - minio_data:/data\n`
+        yaml += `    healthcheck:\n      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]\n      interval: 5s\n      timeout: 5s\n      retries: 5\n`
+        break
+      case 'scylladb':
+        yaml += `    image: scylladb/scylla:5.4\n`
+        yaml += `    ports:\n      - "\${SCYLLADB_PORT:-${db.port}}:9042"\n`
+        yaml += `    volumes:\n      - scylladb_data:/var/lib/scylla\n`
+        yaml += `    healthcheck:\n      test: ["CMD-SHELL", "nodetool status | grep -q 'UN'"]\n      interval: 10s\n      timeout: 5s\n      retries: 5\n`
+        break
+      case 'rabbitmq':
+        yaml += `    image: rabbitmq:3-management-alpine\n`
+        yaml += `    environment:\n      RABBITMQ_DEFAULT_USER: \${RABBITMQ_USER:-lazystack}\n      RABBITMQ_DEFAULT_PASS: \${RABBITMQ_PASS:-secret}\n`
+        yaml += `    ports:\n      - "\${RABBITMQ_PORT:-${db.port}}:5672"\n      - "15672:15672"\n`
+        yaml += `    volumes:\n      - rabbitmq_data:/var/lib/rabbitmq\n`
+        yaml += `    healthcheck:\n      test: ["CMD", "rabbitmq-diagnostics", "check_running"]\n      interval: 5s\n      timeout: 5s\n      retries: 5\n`
+        break
       default:
         yaml += `    image: ${db.type}:latest\n`
         yaml += `    ports:\n      - "${db.port}:${db.port}"\n`
@@ -194,6 +248,180 @@ EXPOSE ${port}
 CMD ["./drogon_service"]
 `,
       dockerignore: `build\n.git\n`
+    }
+  }
+
+  if (techId === 'swift-vapor') {
+    return {
+      dockerfile: `FROM swift:5.10-jammy AS builder
+WORKDIR /app
+COPY Package.* ./
+COPY Sources ./Sources
+RUN swift build -c release
+
+FROM swift:5.10-jammy-slim
+WORKDIR /app
+COPY --from=builder /app/.build/release/App /app/App
+EXPOSE ${port}
+ENV PORT=${port}
+CMD ["./App", "serve", "--hostname", "0.0.0.0", "--port", "${port}"]
+`,
+      dockerignore: `.build\n.git\n`
+    }
+  }
+
+  if (techId === 'scala-play') {
+    return {
+      dockerfile: `FROM sbtscala/scala-sbt:eclipse-temurin-17-alpine AS builder
+WORKDIR /app
+COPY build.sbt .
+COPY project ./project
+COPY app ./app
+COPY conf ./conf
+RUN sbt stage
+
+FROM eclipse-temurin:17-jre-alpine
+WORKDIR /app
+COPY --from=builder /app/target/universal/stage ./
+EXPOSE ${port}
+CMD ["./bin/server", "-Dhttp.port=${port}"]
+`,
+      dockerignore: `target\n.git\n`
+    }
+  }
+
+  if (techId === 'clojure-ring') {
+    return {
+      dockerfile: `FROM clojure:temurin-17-tools-deps-alpine AS builder
+WORKDIR /app
+COPY deps.edn .
+COPY src ./src
+RUN clj -T:build uber
+
+FROM eclipse-temurin:17-jre-alpine
+WORKDIR /app
+COPY --from=builder /app/target/app-standalone.jar app.jar
+EXPOSE ${port}
+ENV PORT=${port}
+CMD ["java", "-jar", "app.jar"]
+`,
+      dockerignore: `target\n.git\n`
+    }
+  }
+
+  if (techId === 'ocaml-dream') {
+    return {
+      dockerfile: `FROM ocaml/opam:debian-ocaml-5.1 AS builder
+WORKDIR /home/opam/src
+COPY dune-project dune *.opam ./
+RUN opam install . --deps-only
+COPY . .
+RUN eval $(opam env) && dune build
+
+FROM debian:bookworm-slim
+WORKDIR /app
+COPY --from=builder /home/opam/src/_build/default/bin/server.exe /app/server
+EXPOSE ${port}
+CMD ["./server"]
+`,
+      dockerignore: `_build\n.git\n`
+    }
+  }
+
+  if (techId === 'julia-genie') {
+    return {
+      dockerfile: `FROM julia:1.10-alpine
+WORKDIR /app
+COPY Project.toml .
+RUN julia -e 'using Pkg; Pkg.instantiate()'
+COPY . .
+EXPOSE ${port}
+ENV PORT=${port}
+CMD ["julia", "--project", "-e", "using Genie; Genie.up(${port}, \"0.0.0.0\", async=false)"]
+`,
+      dockerignore: `.git\n`
+    }
+  }
+
+  if (techId === 'lua-lapis') {
+    return {
+      dockerfile: `FROM openresty/openresty:alpine
+WORKDIR /app
+RUN apk add --no-cache luarocks && luarocks install lapis
+COPY . .
+EXPOSE ${port}
+CMD ["lapis", "server", "production"]
+`,
+      dockerignore: `.git\n`
+    }
+  }
+
+  if (techId === 'r-plumber') {
+    return {
+      dockerfile: `FROM r-base:4.4-alpine
+WORKDIR /app
+RUN R -e "install.packages('plumber', repos='https://cloud.r-project.org')"
+COPY . .
+EXPOSE ${port}
+CMD ["R", "-e", "pr <- plumber::plumb('plumber.R'); pr$run(host='0.0.0.0', port=${port})"]
+`,
+      dockerignore: `.git\n`
+    }
+  }
+
+  if (techId === 'erlang-cowboy') {
+    return {
+      dockerfile: `FROM erlang:26-alpine AS builder
+WORKDIR /app
+COPY rebar.config .
+COPY src ./src
+RUN rebar3 release
+
+FROM alpine:3.20
+RUN apk add --no-cache openssl ncurses-libs
+WORKDIR /app
+COPY --from=builder /app/_build/default/rel ./rel
+EXPOSE ${port}
+CMD ["./rel/server/bin/server", "foreground"]
+`,
+      dockerignore: `_build\n.git\n`
+    }
+  }
+
+  if (techId === 'nim-happyx') {
+    return {
+      dockerfile: `FROM nimlang/nim:alpine AS builder
+WORKDIR /app
+RUN nimble install -y happyx
+COPY . .
+RUN nim c -d:release -d:danger -o:server main.nim
+
+FROM alpine:3.20
+WORKDIR /app
+COPY --from=builder /app/server .
+EXPOSE ${port}
+CMD ["./server"]
+`,
+      dockerignore: `nimcache\n.git\n`
+    }
+  }
+
+  if (techId === 'crystal-kemal') {
+    return {
+      dockerfile: `FROM crystallang/crystal:1.12-alpine AS builder
+WORKDIR /app
+COPY shard.yml shard.lock* ./
+RUN shards install --production
+COPY . .
+RUN crystal build --release --static src/server.cr -o bin/server
+
+FROM alpine:3.20
+WORKDIR /app
+COPY --from=builder /app/bin/server .
+EXPOSE ${port}
+CMD ["./server", "-p", "${port}"]
+`,
+      dockerignore: `lib\n.git\n`
     }
   }
 
