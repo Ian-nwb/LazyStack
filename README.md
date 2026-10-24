@@ -12,6 +12,7 @@ Pre-built releases for **LazyStack v1.0.0** are available on the [GitHub Release
 | Operating System | Package Format | Direct Download | Notes |
 | :--- | :--- | :--- | :--- |
 | Linux (x64) | Universal AppImage | [LazyStack-1.0.0.AppImage](https://github.com/Ian-nwb/LazyStack/releases/download/v1.0.0/LazyStack-1.0.0.AppImage) | Portable, run `chmod +x` |
+| Windows (x64) | Standalone Executable | [LazyStack-1.0.0.exe](https://github.com/Ian-nwb/LazyStack/releases/download/v1.0.0/LazyStack-1.0.0.exe) | Portable single-file executable |
 | Windows (x64) | Portable ZIP | [LazyStack-1.0.0-windows-x64.zip](https://github.com/Ian-nwb/LazyStack/releases/download/v1.0.0/LazyStack-1.0.0-windows-x64.zip) | Extract and run `LazyStack.exe` |
 | macOS (x64 / Apple Silicon) | App Bundle ZIP | [LazyStack-1.0.0-mac.zip](https://github.com/Ian-nwb/LazyStack/releases/download/v1.0.0/LazyStack-1.0.0-mac.zip) | Extract and open `LazyStack.app` |
 
@@ -75,8 +76,11 @@ Pre-built releases for **LazyStack v1.0.0** are available on the [GitHub Release
 - **Elixir**: Phoenix Framework 1.7
 - **C#**: ASP.NET Core Web API (.NET 9)
 - **PHP**: Slim Framework 4, Symfony 7
-- **Haskell**: Servant Web API
-- **High Performance / Systems**: C++ Drogon, x86-64 NASM Micro-server, Zig HTTP
+- **High Performance Systems**: C++ Drogon, Zig HTTP, C POSIX (libmicrohttpd)
+
+### Experimental & Exploratory Templates
+LazyStack provides designated experimental templates for low-level systems research and benchmarking. These are clearly tagged to isolate them from battle-tested production tiers:
+- **Assembly (x86_64 NASM Micro-server)**: Bare-metal Linux TCP socket server via direct kernel syscalls in pure Assembly. Containerized into a sub-5MB scratch image. Provided for low-level education, curiosity, and binary size exploration (not recommended for production web applications).
 
 ### Databases & Infrastructure
 - **PostgreSQL 16** (Alpine)
@@ -124,6 +128,40 @@ npm run dev
 npm start
 ```
 > Launches the native Electron window with direct IPC access to host filesystem dialogs and child process auditors.
+
+---
+
+## LazyStack CLI & Blueprint Config Export
+
+LazyStack includes a headless Command Line Interface (`lazystack`) for terminal workflows, automated scripting, and CI/CD pipelines.
+
+### CLI Usage
+
+```bash
+# 1. List all 65+ supported frameworks, databases, and stack presets
+npx lazystack list
+
+# 2. View available 1-click stack presets
+npx lazystack presets
+
+# 3. Export a complete blueprint configuration to lazystack.json
+npx lazystack export --preset t3-stack --out lazystack.json
+
+# 4. Scaffold a monorepo headlessly from an exported config
+npx lazystack scaffold --config lazystack.json --out ./my-projects
+
+# 5. Or 1-click scaffold directly from a preset name
+npx lazystack scaffold --preset fastapi-react --name my-fullstack-app --out ./my-projects
+```
+
+### Blueprint Configuration (`lazystack.json`)
+
+The exported `lazystack.json` blueprint provides an infrastructure-as-code specification of your full monorepo:
+- Applications, ports, roles (`frontend`, `backend`, `fullstack`), run modes (`docker`, `host`), and language dialects (TypeScript/JavaScript).
+- Enabled databases, persistent volume bindings, and connection credentials.
+- Reverse proxy configurations (Nginx / Apache) with upstream path route mappings.
+
+Blueprints can be imported back into the LazyStack GUI at any time or checked into version control.
 
 ---
 
@@ -223,9 +261,25 @@ gh auth login
 # 2. Upload or update assets for the release tag
 gh release upload v1.0.0 --clobber \
   release/LazyStack-1.0.0.AppImage \
+  release/LazyStack-1.0.0.exe \
   release/LazyStack-1.0.0-windows-x64.zip \
   release/LazyStack-1.0.0-mac.zip
 ```
+
+---
+
+## Continuous Integration: Scaffold-and-Boot Matrix
+
+LazyStack maintains automated CI testing (`.github/workflows/ci.yml`) to verify that generated monorepo projects compile cleanly and produce syntactically valid Docker Compose infrastructure:
+
+1. **Build & TypeScript Validation**: Compiles the Vite renderer, Electron main process, preload layer, and the standalone CLI, followed by full TypeScript typechecking (`tsc --noEmit`).
+2. **Matrix Test Suite**: Automatically scaffolds and inspects popular presets:
+   - **T3 Stack**: Next.js 15 App Router + PostgreSQL + Nginx Gateway
+   - **FastAPI + React**: Python 3.12 FastAPI + React 19 + Redis + PostgreSQL
+   - **Modern MERN**: React 19 + Express 5 + MongoDB 7.0
+   - **Go + Vue**: Go Fiber v3 + Vue 3 + Redis 7.2
+   - **Rust Axum**: Rust Axum 0.7 + SQLite
+3. **Bootability Specification Check**: Runs `docker compose config --quiet` on every scaffolded stack to guarantee 100% syntactically valid container orchestration.
 
 ---
 

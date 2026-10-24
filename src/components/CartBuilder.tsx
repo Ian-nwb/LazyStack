@@ -180,7 +180,11 @@ export const CartBuilder: React.FC<CartBuilderProps> = ({ apps, setApps, databas
     const matchesSearch = tech.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           tech.language.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           tech.description.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesCategory = selectedCategory === 'all' || tech.category === selectedCategory
+    const matchesCategory = selectedCategory === 'all'
+      ? true
+      : selectedCategory === 'experimental'
+        ? tech.experimental === true
+        : tech.category === selectedCategory
     const isFirstOccurrence = arr.findIndex(t => t.id === tech.id) === idx
     return matchesSearch && matchesCategory && isFirstOccurrence
   })
@@ -331,6 +335,11 @@ export const CartBuilder: React.FC<CartBuilderProps> = ({ apps, setApps, databas
                         {app.role === 'fullstack' && (
                           <span className="text-[10px] font-mono px-2 py-0.5 rounded border bg-purple-500/20 text-purple-300 border-purple-500/40 uppercase font-bold">
                             Fullstack
+                          </span>
+                        )}
+                        {tech?.experimental && (
+                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded border border-amber-600/50 bg-amber-950/40 text-amber-300 font-semibold">
+                            Experimental
                           </span>
                         )}
                         <span className="text-xs font-bold text-zinc-200 truncate">
@@ -625,6 +634,7 @@ export const CartBuilder: React.FC<CartBuilderProps> = ({ apps, setApps, databas
                   { id: 'fullstack', label: 'Fullstack' },
                   { id: 'mobile-desktop', label: 'Client' },
                   { id: 'scripting', label: 'Scripting' },
+                  { id: 'experimental', label: 'Experimental' },
                 ].map(cat => (
                   <button
                     key={cat.id}
@@ -663,6 +673,11 @@ export const CartBuilder: React.FC<CartBuilderProps> = ({ apps, setApps, databas
                           <span className={`text-[10px] font-mono px-2 py-0.5 rounded border ${tech.badgeColor}`}>
                             {tech.supportsFlavor ? (selectedFlavor === 'typescript' ? 'TypeScript' : 'JavaScript') : tech.language}
                           </span>
+                          {tech.experimental && (
+                            <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded border border-amber-600/50 bg-amber-950/40 text-amber-300">
+                              Experimental
+                            </span>
+                          )}
                         </div>
                         {tech.defaultPort > 0 ? (
                           <span className="text-[10px] font-mono text-zinc-400 bg-surface-950 px-1.5 py-0.5 rounded border border-surface-750">

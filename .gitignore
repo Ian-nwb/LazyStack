@@ -6,6 +6,7 @@ node_modules/
 # Production & Packaging Builds
 dist/
 dist-electron/
+dist-cli/
 release/
 build/*
 !build/icon.png

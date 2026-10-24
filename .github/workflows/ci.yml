@@ -1,0 +1,97 @@
+name: CI & Scaffold-and-Boot Matrix
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build_and_typecheck:
+    name: Build & TypeScript Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Compile frontend and CLI
+        run: npm run build
+
+      - name: Typecheck TypeScript codebase
+        run: npx tsc --noEmit
+
+  scaffold_boot_matrix:
+    name: Scaffold & Boot (${{ matrix.preset }})
+    needs: build_and_typecheck
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - preset: t3-stack
+            name: T3 Next.js + Postgres
+            compose_file: infra/docker-compose.yml
+          - preset: fastapi-react
+            name: FastAPI + React + Redis
+            compose_file: infra/docker-compose.yml
+          - preset: modern-mern
+            name: React + Express + MongoDB
+            compose_file: infra/docker-compose.yml
+          - preset: go-vue
+            name: Go Fiber + Vue 3 + Redis
+            compose_file: infra/docker-compose.yml
+          - preset: rust-axum
+            name: Rust Axum + SQLite
+            compose_file: infra/docker-compose.yml
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build LazyStack CLI
+        run: npm run build:cli
+
+      - name: Export blueprint configuration
+        run: |
+          mkdir -p ./configs
+          node ./bin/lazystack.js export --preset ${{ matrix.preset }} --out ./configs/${{ matrix.preset }}.json --name test-${{ matrix.preset }}
+
+      - name: Scaffold monorepo stack
+        run: |
+          mkdir -p ./matrix-output
+          node ./bin/lazystack.js scaffold -c ./configs/${{ matrix.preset }}.json -o ./matrix-output
+
+      - name: Verify generated file tree
+        run: |
+          TARGET_DIR="./matrix-output/test-${{ matrix.preset }}"
+          echo "Verifying files in $TARGET_DIR..."
+          test -d "$TARGET_DIR"
+          test -f "$TARGET_DIR/package.json"
+          test -f "$TARGET_DIR/.env"
+          test -f "$TARGET_DIR/${{ matrix.compose_file }}"
+          echo "File tree verified successfully."
+
+      - name: Validate Docker Compose specification
+        run: |
+          TARGET_DIR="./matrix-output/test-${{ matrix.preset }}"
+          echo "Validating Docker Compose syntax..."
+          docker compose -f "$TARGET_DIR/${{ matrix.compose_file }}" config --quiet
+          echo "Docker compose configuration is valid and boot-ready."

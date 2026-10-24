@@ -9,9 +9,10 @@ export const TECH_CATALOG: TechItem[] = [
     category: 'systems',
     role: 'backend',
     defaultPort: 8080,
-    description: 'Bare-metal Linux TCP socket server via direct kernel syscalls in pure Assembly. Containerized into <5MB scratch image.',
+    description: '[Experimental / Research] Bare-metal Linux TCP socket server via direct kernel syscalls in pure Assembly. Containerized into <5MB scratch image. Provided for educational low-level experimentation.',
     badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
-    isHighlighted: true,
+    isHighlighted: false,
+    experimental: true,
     requires: [
       { binary: 'nasm', label: 'NASM Assembler', installHint: 'apt install nasm / brew install nasm' },
       { binary: 'docker', label: 'Docker Engine', installHint: 'https://docs.docker.com/get-docker/' }

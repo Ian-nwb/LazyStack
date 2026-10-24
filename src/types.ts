@@ -33,6 +33,8 @@ export interface TechItem {
   iconName?: string
   isHighlighted?: boolean
   supportsFlavor?: boolean
+  /** Marks non-production or exploratory templates (e.g. bare-metal NASM) */
+  experimental?: boolean
   /** Pre-requisite runtimes / package managers that must be installed on host */
   requires?: TechRequirement[]
 }

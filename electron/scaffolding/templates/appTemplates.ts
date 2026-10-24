@@ -10,8 +10,14 @@ export function getStarterFilesForTech(
   const isTS = (flavor || 'typescript') === 'typescript'
 
   if (techId === 'assembly-nasm') {
-    files['server.asm'] = `; LazyStack Assembly (x86_64 NASM) Micro HTTP Service
-; Low-latency bare-metal TCP socket server via direct Linux syscalls
+    files['server.asm'] = `; ==============================================================================
+; [EXPERIMENTAL / RESEARCH TEMPLATE]
+; LazyStack Assembly (x86_64 NASM) Micro HTTP Service
+; Low-latency bare-metal TCP socket server via direct Linux kernel syscalls.
+;
+; NOTE: Provided for systems curiosity and educational demonstration.
+; It is intentionally stripped-down and NOT intended for production workloads.
+; ==============================================================================
 global _start
 
 section .data
@@ -90,7 +96,7 @@ loop_accept:
     jmp loop_accept
 `
 
-    files['Makefile'] = `# Assembly Server Build
+    files['Makefile'] = `# Assembly Server Build (Experimental)
 ASM=nasm
 LD=ld
 FLAGS=-f elf64
@@ -109,8 +115,10 @@ release: server.o
 clean:
 	rm -f server.o server
 `
-    files['README.md'] = `# Assembly (x86_64 NASM) Microservice
-Compiled directly to machine code using pure Linux syscalls.
+    files['README.md'] = `# Assembly (x86_64 NASM) Microservice [Experimental]
+
+> **Disclaimer**: This bare-metal service is an educational / research template that issues raw Linux kernel system calls. It is designed for low-level systems exploration and binary size benchmarking, and is not recommended as a production web framework.
+
 Runs on port **${port}**.
 `
     return files

@@ -4,18 +4,23 @@
   "description": "Automated Tech Stack & Monorepo Boilerplate Generator",
   "type": "module",
   "main": "dist-electron/main.js",
+  "bin": {
+    "lazystack": "./bin/lazystack.js"
+  },
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build:cli": "esbuild src/cli/index.ts --bundle --platform=node --format=esm --target=node20 --outfile=dist-cli/cli.js --packages=external",
+    "build": "vite build && npm run build:cli",
     "preview": "vite preview",
+    "cli": "node ./bin/lazystack.js",
     "start": "electron .",
-    "pack": "vite build && electron-builder --dir",
-    "dist": "vite build && electron-builder",
-    "dist:linux": "vite build && electron-builder --linux AppImage",
-    "dist:deb": "vite build && electron-builder --linux deb",
-    "dist:win": "vite build && electron-builder --win nsis portable",
-    "dist:mac": "vite build && electron-builder --mac dmg",
-    "dist:all": "vite build && electron-builder -mwl"
+    "pack": "npm run build && electron-builder --dir",
+    "dist": "npm run build && electron-builder",
+    "dist:linux": "npm run build && electron-builder --linux AppImage",
+    "dist:deb": "npm run build && electron-builder --linux deb",
+    "dist:win": "npm run build && electron-builder --win portable",
+    "dist:mac": "npm run build && electron-builder --mac dmg",
+    "dist:all": "npm run build && electron-builder -mwl"
   },
   "keywords": [
     "electron",
