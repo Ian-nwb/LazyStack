@@ -10,6 +10,7 @@ import { ValidationBanner } from './components/ValidationBanner'
 import { ProjectSettings, CartApp, SelectedDatabase, ProxyConfig } from './types'
 import { Layers, Database, Globe, Eye, FolderOpen, ExternalLink, Copy, Check, CheckCircle2, AlertCircle, Loader2, Wrench, Terminal, Package, Play, Square } from 'lucide-react'
 import { StackPreset } from './data/presets'
+import { joinPaths } from './utils/pathValidation'
 
 export const App: React.FC = () => {
   const [projectName, setProjectName] = useState('')
@@ -127,7 +128,7 @@ export const App: React.FC = () => {
   const projectSettings: ProjectSettings = {
     projectName,
     parentDir,
-    targetDir: parentDir ? `${parentDir}/${projectName}` : projectName,
+    targetDir: parentDir.trim() && projectName.trim() ? joinPaths(parentDir, projectName) : (parentDir.trim() || projectName.trim()),
     proxy,
     databases,
     apps

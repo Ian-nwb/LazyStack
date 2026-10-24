@@ -1,6 +1,7 @@
 import React from 'react'
-import { AlertCircle, CheckCircle2, Rocket } from 'lucide-react'
+import { AlertCircle, CheckCircle2 } from 'lucide-react'
 import { ProjectSettings } from '../types'
+import { validateFolderName, validatePath } from '../utils/pathValidation'
 
 interface ValidationBannerProps {
   settings: ProjectSettings
@@ -11,26 +12,39 @@ export const ValidationBanner: React.FC<ValidationBannerProps> = ({ settings, on
   const errors: string[] = []
   const warnings: string[] = []
 
-  // Validate Project Name
-  if (!settings.projectName.trim()) {
-    errors.push('Project name cannot be empty')
-  } else if (!/^[a-zA-Z0-9_-]+$/.test(settings.projectName)) {
-    errors.push('Project name contains invalid characters')
+  // 1. Validate Project Name
+  const nameVal = validateFolderName(settings.projectName, 'project')
+  if (!nameVal.valid) {
+    errors.push(nameVal.error || 'Project name is invalid')
   }
 
-  // Validate Apps
+  // 2. Validate Parent Directory Location
+  const pathVal = validatePath(settings.parentDir)
+  if (!pathVal.valid) {
+    errors.push(`Parent location: ${pathVal.error}`)
+  }
+
+  // 3. Validate App Folder Names
+  settings.apps.forEach(app => {
+    const appVal = validateFolderName(app.folderName, 'app')
+    if (!appVal.valid) {
+      errors.push(`App folder '${app.folderName || 'unnamed'}': ${appVal.error}`)
+    }
+  })
+
+  // 4. Validate Apps count
   if (settings.apps.length === 0) {
     warnings.push('No applications in cart. Add at least one app before generating.')
   }
 
-  // Check duplicate folder names
-  const folderNames = settings.apps.map(a => a.folderName)
+  // 5. Check duplicate folder names
+  const folderNames = settings.apps.map(a => a.folderName?.trim().toLowerCase()).filter(Boolean)
   const duplicateFolders = folderNames.filter((item, index) => folderNames.indexOf(item) !== index)
   if (duplicateFolders.length > 0) {
     errors.push(`Duplicate app folder name: ${Array.from(new Set(duplicateFolders)).join(', ')}`)
   }
 
-  // Check port collisions
+  // 6. Check port collisions
   const usedPorts: { [port: number]: string[] } = {}
   settings.apps.forEach(a => {
     if (a.port > 0) {
@@ -59,10 +73,10 @@ export const ValidationBanner: React.FC<ValidationBannerProps> = ({ settings, on
     <div className="h-14 px-6 border-t border-surface-700 bg-surface-900 flex items-center justify-between shrink-0">
       <div className="flex items-center gap-3">
         {errors.length > 0 ? (
-          <div className="flex items-center gap-2 text-zinc-300 text-xs font-mono">
-            <AlertCircle className="w-4 h-4 text-zinc-400 shrink-0" />
-            <span className="font-bold text-white">{errors.length} Issue{errors.length > 1 ? 's' : ''}:</span>
-            <span className="truncate max-w-md text-zinc-400">{errors[0]}</span>
+          <div className="flex items-center gap-2 text-rose-300 text-xs font-mono">
+            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+            <span className="font-bold text-rose-200">{errors.length} Issue{errors.length > 1 ? 's' : ''}:</span>
+            <span className="truncate max-w-xl text-rose-300" title={errors.join(' | ')}>{errors[0]}</span>
           </div>
         ) : warnings.length > 0 ? (
           <div className="flex items-center gap-2 text-zinc-300 text-xs font-mono">

@@ -60,25 +60,62 @@ app.on('activate', () => {
 app.whenReady().then(() => {
   // IPC Handlers
   ipcMain.handle('get-default-path', async () => {
-    const defaultParent = path.join(os.homedir(), 'Projects')
-    return defaultParent
+    try {
+      const defaultParent = path.join(os.homedir(), 'Projects')
+      return path.normalize(defaultParent)
+    } catch {
+      return os.homedir()
+    }
   })
 
-  ipcMain.handle('select-directory', async (_event, defaultPath) => {
+  ipcMain.handle('select-directory', async (event, defaultPath) => {
     try {
-      const windowToAttach = win && !win.isDestroyed() ? win : undefined
-      const resolvedDefault = (defaultPath && typeof defaultPath === 'string' && fs.existsSync(defaultPath))
-        ? defaultPath
-        : os.homedir()
-      const result = await dialog.showOpenDialog(windowToAttach as any, {
+      // Find the window that made this request, or the active main window
+      const callerWin = BrowserWindow.fromWebContents(event.sender) || (win && !win.isDestroyed() ? win : null)
+
+      let resolvedDefault = os.homedir()
+      if (defaultPath && typeof defaultPath === 'string' && defaultPath.trim()) {
+        try {
+          const normalized = path.normalize(defaultPath.trim())
+          if (fs.existsSync(normalized)) {
+            resolvedDefault = normalized
+          } else {
+            // Find closest existing ancestor directory
+            let ancestor = path.dirname(normalized)
+            let prev = ''
+            while (ancestor && ancestor !== prev && !fs.existsSync(ancestor)) {
+              prev = ancestor
+              ancestor = path.dirname(ancestor)
+            }
+            if (ancestor && fs.existsSync(ancestor)) {
+              resolvedDefault = ancestor
+            }
+          }
+        } catch {
+          resolvedDefault = os.homedir()
+        }
+      }
+
+      const dialogProperties: Array<'openDirectory' | 'createDirectory' | 'promptToCreate' | 'dontAddToRecent'> =
+        process.platform === 'darwin'
+          ? ['openDirectory', 'createDirectory']
+          : ['openDirectory', 'promptToCreate', 'dontAddToRecent']
+
+      const dialogOptions: Electron.OpenDialogOptions = {
         title: 'Select Monorepo Parent Directory',
         defaultPath: resolvedDefault,
-        properties: ['openDirectory', 'createDirectory']
-      })
+        properties: dialogProperties
+      }
+
+      // Safe invocation: never pass undefined as first arg on Windows
+      const result = callerWin
+        ? await dialog.showOpenDialog(callerWin, dialogOptions)
+        : await dialog.showOpenDialog(dialogOptions)
+
       if (result.canceled || !result.filePaths || result.filePaths.length === 0) {
         return null
       }
-      return result.filePaths[0]
+      return path.normalize(result.filePaths[0])
     } catch (err) {
       console.error('Error in select-directory:', err)
       return null
@@ -87,24 +124,63 @@ app.whenReady().then(() => {
 
   ipcMain.handle('check-directory', async (_event, targetPath: string) => {
     try {
-      const exists = await fs.pathExists(targetPath)
-      if (!exists) {
-        return { exists: false, empty: true, writable: true }
+      if (!targetPath || typeof targetPath !== 'string') {
+        return { exists: false, empty: true, writable: false, error: 'Target path is empty' }
       }
-      const files = await fs.readdir(targetPath)
+      const normalized = path.normalize(targetPath.trim())
+      const exists = await fs.pathExists(normalized)
+
+      if (!exists) {
+        // Test writability of the closest existing ancestor
+        let ancestor = path.dirname(normalized)
+        let prev = ''
+        while (ancestor && ancestor !== prev && !(await fs.pathExists(ancestor))) {
+          prev = ancestor
+          ancestor = path.dirname(ancestor)
+        }
+
+        let writable = true
+        let error: string | undefined = undefined
+
+        if (ancestor && (await fs.pathExists(ancestor))) {
+          try {
+            const testFile = path.join(ancestor, `.lazystack_test_${Date.now()}`)
+            await fs.writeFile(testFile, 'test')
+            await fs.remove(testFile)
+          } catch (writeErr: any) {
+            writable = false
+            error = writeErr.code === 'EACCES' || writeErr.code === 'EPERM'
+              ? 'Permission denied: directory is read-only or requires administrator privileges'
+              : writeErr.message
+          }
+        } else {
+          writable = false
+          error = 'Drive or root path does not exist'
+        }
+
+        return { exists: false, empty: true, writable, error }
+      }
+
+      const files = await fs.readdir(normalized)
       let writable = true
+      let error: string | undefined = undefined
       try {
-        const testFile = path.join(targetPath, `.lazystack_test_${Date.now()}`)
+        const testFile = path.join(normalized, `.lazystack_test_${Date.now()}`)
         await fs.writeFile(testFile, 'test')
         await fs.remove(testFile)
-      } catch {
+      } catch (writeErr: any) {
         writable = false
+        error = writeErr.code === 'EACCES' || writeErr.code === 'EPERM'
+          ? 'Permission denied: directory is read-only or requires administrator privileges'
+          : writeErr.message
       }
+
       return {
         exists: true,
         empty: files.length === 0,
         fileCount: files.length,
-        writable
+        writable,
+        error
       }
     } catch (err: any) {
       return { exists: false, empty: false, writable: false, error: err.message }

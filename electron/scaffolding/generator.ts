@@ -1,6 +1,7 @@
 import path from 'path'
 import fs from 'fs-extra'
 import { ProjectSettings } from '../../src/types'
+import { validateFolderName, validatePath, joinPaths } from '../../src/utils/pathValidation'
 import { generateDockerCompose, generateDockerDevCompose, getDockerfileForTech } from './templates/docker'
 import { generateNginxConfig, generateApacheConfig } from './templates/proxies'
 import { getStarterFilesForTech } from './templates/appTemplates'
@@ -14,7 +15,42 @@ export interface ScaffoldResult {
 }
 
 export async function scaffoldProject(settings: ProjectSettings): Promise<ScaffoldResult> {
-  const targetDir = settings.targetDir || path.join(settings.parentDir, settings.projectName)
+  // Pre-flight checks on inputs
+  const nameVal = validateFolderName(settings.projectName, 'project')
+  if (!nameVal.valid) {
+    return {
+      success: false,
+      targetDir: '',
+      filesCreated: 0,
+      error: `Invalid project name: ${nameVal.error}`
+    }
+  }
+
+  const pathVal = validatePath(settings.parentDir)
+  if (!pathVal.valid) {
+    return {
+      success: false,
+      targetDir: '',
+      filesCreated: 0,
+      error: `Invalid parent location: ${pathVal.error}`
+    }
+  }
+
+  for (const app of settings.apps) {
+    const appVal = validateFolderName(app.folderName, 'app')
+    if (!appVal.valid) {
+      return {
+        success: false,
+        targetDir: '',
+        filesCreated: 0,
+        error: `Invalid app folder name '${app.folderName}': ${appVal.error}`
+      }
+    }
+  }
+
+  const targetDir = settings.targetDir
+    ? path.normalize(settings.targetDir)
+    : path.normalize(joinPaths(settings.parentDir, settings.projectName))
   let filesCreated = 0
 
   try {
@@ -135,11 +171,19 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
       filesCreated
     }
   } catch (error: any) {
+    let errorMsg = error.message || 'Scaffolding failed'
+    if (error.code === 'EACCES' || error.code === 'EPERM') {
+      errorMsg = `Permission denied writing to "${targetDir}". Try running with administrator privileges or choose a location in your user profile (e.g. C:\\Users\\<Username>\\Projects or ~/Projects).`
+    } else if (error.code === 'ENOENT') {
+      errorMsg = `Cannot write to destination "${targetDir}". Ensure that the drive letter and parent folders exist.`
+    } else if (error.code === 'EINVAL') {
+      errorMsg = `Destination path "${targetDir}" contains invalid characters for this operating system.`
+    }
     return {
       success: false,
       targetDir,
       filesCreated,
-      error: error.message || 'Scaffolding failed'
+      error: errorMsg
     }
   }
 }

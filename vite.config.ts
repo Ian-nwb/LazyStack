@@ -43,6 +43,80 @@ export default defineConfig({
     {
       name: 'lazystack-host-api',
       configureServer(server) {
+        server.middlewares.use('/api/get-default-path', async (_req, res) => {
+          try {
+            const os = await import('os')
+            const path = await import('path')
+            const defaultParent = path.normalize(path.join(os.homedir(), 'Projects'))
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ defaultPath: defaultParent }))
+          } catch (err: any) {
+            res.statusCode = 500
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ error: err.message }))
+          }
+        })
+
+        server.middlewares.use('/api/check-directory', async (req, res) => {
+          let body = ''
+          req.on('data', chunk => { body += chunk })
+          req.on('end', async () => {
+            try {
+              const { targetPath } = JSON.parse(body || '{}')
+              const fs = await import('fs-extra')
+              const path = await import('path')
+              if (!targetPath) {
+                res.setHeader('Content-Type', 'application/json')
+                return res.end(JSON.stringify({ exists: false, empty: true, writable: false, error: 'Path is empty' }))
+              }
+              const normalized = path.normalize(targetPath)
+              const exists = await fs.pathExists(normalized)
+              if (!exists) {
+                let ancestor = path.dirname(normalized)
+                let prev = ''
+                while (ancestor && ancestor !== prev && !(await fs.pathExists(ancestor))) {
+                  prev = ancestor
+                  ancestor = path.dirname(ancestor)
+                }
+                let writable = true
+                let error: string | undefined
+                if (ancestor && (await fs.pathExists(ancestor))) {
+                  try {
+                    const testFile = path.join(ancestor, `.lazystack_test_${Date.now()}`)
+                    await fs.writeFile(testFile, 'test')
+                    await fs.remove(testFile)
+                  } catch (wErr: any) {
+                    writable = false
+                    error = wErr.message
+                  }
+                } else {
+                  writable = false
+                  error = 'Root or drive does not exist'
+                }
+                res.setHeader('Content-Type', 'application/json')
+                return res.end(JSON.stringify({ exists: false, empty: true, writable, error }))
+              }
+              const files = await fs.readdir(normalized)
+              let writable = true
+              let error: string | undefined
+              try {
+                const testFile = path.join(normalized, `.lazystack_test_${Date.now()}`)
+                await fs.writeFile(testFile, 'test')
+                await fs.remove(testFile)
+              } catch (wErr: any) {
+                writable = false
+                error = wErr.message
+              }
+              res.setHeader('Content-Type', 'application/json')
+              res.end(JSON.stringify({ exists: true, empty: files.length === 0, fileCount: files.length, writable, error }))
+            } catch (err: any) {
+              res.statusCode = 500
+              res.setHeader('Content-Type', 'application/json')
+              res.end(JSON.stringify({ error: err.message }))
+            }
+          })
+        })
+
         server.middlewares.use('/api/audit', async (_req, res) => {
           try {
             const { auditEnvironment } = await import('./electron/environment/auditor')

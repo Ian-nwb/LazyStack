@@ -3,6 +3,7 @@ import { Plus, Trash2, Copy, ArrowUp, ArrowDown, Search, Server, Monitor, Check,
 import { CartApp, TechItem, AppRole, SelectedDatabase, LanguageFlavor } from '../types'
 import { TECH_CATALOG } from '../data/frameworks'
 import { STACK_PRESETS, StackPreset } from '../data/presets'
+import { validateFolderName } from '../utils/pathValidation'
 
 interface CartBuilderProps {
   apps: CartApp[]
@@ -355,22 +356,34 @@ export const CartBuilder: React.FC<CartBuilderProps> = ({ apps, setApps, databas
                         )}
                       </div>
 
-                      {/* Folder Name input */}
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-mono text-zinc-500">apps/</span>
-                        <input
-                          type="text"
-                          value={app.folderName}
-                          onChange={(e) => handleUpdate(app.id, { folderName: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') })}
-                          className={`bg-surface-950 border text-xs font-mono px-2.5 py-1 rounded w-44 text-white focus:outline-none ${
-                            duplicateFolder ? 'border-zinc-500' : 'border-surface-650 focus:border-zinc-400'
-                          }`}
-                          placeholder="subfolder-name"
-                        />
-                      </div>
-                      {duplicateFolder && (
-                        <p className="text-[10px] text-zinc-400 mt-0.5">Duplicate folder name</p>
-                      )}
+                      {/* Folder Name input with validation */}
+                      {(() => {
+                        const folderValidation = validateFolderName(app.folderName, 'app')
+                        const hasFolderError = !folderValidation.valid || duplicateFolder
+                        const folderErrorText = !folderValidation.valid ? folderValidation.error : 'Duplicate folder name'
+
+                        return (
+                          <>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-xs font-mono text-zinc-500">apps/</span>
+                              <input
+                                type="text"
+                                value={app.folderName}
+                                onChange={(e) => handleUpdate(app.id, { folderName: e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, '') })}
+                                className={`bg-surface-950 border text-xs font-mono px-2.5 py-1 rounded w-44 text-white focus:outline-none transition ${
+                                  hasFolderError ? 'border-rose-500/80 focus:border-rose-400 bg-rose-950/10' : 'border-surface-650 focus:border-zinc-400'
+                                }`}
+                                placeholder="subfolder-name"
+                              />
+                            </div>
+                            {hasFolderError && (
+                              <p className="text-[10px] text-rose-400 mt-0.5 flex items-center gap-1 truncate max-w-[200px]" title={folderErrorText}>
+                                <AlertTriangle className="w-2.5 h-2.5 shrink-0" /> {folderErrorText}
+                              </p>
+                            )}
+                          </>
+                        )
+                      })()}
                     </div>
                   </div>
 
