@@ -5,6 +5,18 @@
 
 ---
 
+## Downloads & Releases
+
+Pre-built releases for **LazyStack v1.0.0** are available on the [GitHub Releases](https://github.com/Ian-nwb/LazyStack/releases/tag/v1.0.0) page:
+
+| Operating System | Package Format | Direct Download | Notes |
+| :--- | :--- | :--- | :--- |
+| Linux (x64) | Universal AppImage | [LazyStack-1.0.0.AppImage](https://github.com/Ian-nwb/LazyStack/releases/download/v1.0.0/LazyStack-1.0.0.AppImage) | Portable, run `chmod +x` |
+| Windows (x64) | Portable ZIP | [LazyStack-1.0.0-windows-x64.zip](https://github.com/Ian-nwb/LazyStack/releases/download/v1.0.0/LazyStack-1.0.0-windows-x64.zip) | Extract and run `LazyStack.exe` |
+| macOS (x64 / Apple Silicon) | App Bundle ZIP | [LazyStack-1.0.0-mac.zip](https://github.com/Ian-nwb/LazyStack/releases/download/v1.0.0/LazyStack-1.0.0-mac.zip) | Extract and open `LazyStack.app` |
+
+---
+
 ## Key Highlights
 
 - **Polyglot Stack Builder**: Mix and match any frontend, backend, or fullstack framework. Support for 65+ technologies across 30+ languages (TypeScript, JavaScript, Go, Rust, Python, PHP, Java, C#, Elixir, Ruby, Haskell, Swift, Scala, Clojure, OCaml, Julia, Lua, R, Erlang, Nim, Crystal, C++, Assembly, and Zig).
@@ -119,45 +131,101 @@ npm start
 
 LazyStack is packaged using `electron-builder` with multi-target output configurations.
 
+### Prerequisites
+
+- **Node.js**: v20.x or higher
+- **npm**: v10.x or higher
+- **Git**
+
+```bash
+git clone https://github.com/Ian-nwb/LazyStack.git
+cd LazyStack
+npm install
+```
+
 ### Quick Build Commands
 
 | Target Platform | Command | Generated Artifacts | Output Location |
 | :--- | :--- | :--- | :--- |
-| **Linux** | `npm run dist:linux` | `.AppImage`, `.deb` (x64) | `release/` |
-| **Windows** | `npm run dist:win` | `.exe` (NSIS Installer & Portable) | `release/` |
-| **macOS** | `npm run dist:mac` | `.dmg` | `release/` |
+| **Linux** | `npm run dist:linux` | `.AppImage` (x64) | `release/LazyStack-1.0.0.AppImage` |
+| **Windows (Native)** | `npm run dist:win` | `.exe` (NSIS Installer & Portable) | `release/LazyStack Setup 1.0.0.exe` |
+| **Windows (Cross-platform ZIP)** | `npx electron-builder --win zip` | `.zip` (with `LazyStack.exe`) | `release/LazyStack-1.0.0-win.zip` |
+| **macOS (Native)** | `npm run dist:mac` | `.dmg` installer | `release/LazyStack-1.0.0.dmg` |
+| **macOS (Cross-platform ZIP)** | `npx electron-builder --mac zip` | `.zip` (with `LazyStack.app`) | `release/LazyStack-1.0.0-mac.zip` |
 | **All Platforms** | `npm run dist:all` | Builds for all supported targets | `release/` |
-| **Unpackaged Dir** | `npm run pack` | Prepares unpackaged binary directory | `release/linux-unpacked/` |
+| **Unpackaged Folder** | `npm run pack` | Prepares unpackaged binary folder | `release/linux-unpacked/` |
 
-### Platform-Specific Build Notes
+---
 
-#### Linux
-To build on Ubuntu / Debian / Fedora:
+### Step-by-Step Instructions
+
+#### 1. Linux Build
+To build universal Linux binaries:
 ```bash
+# 1. Compile Vite frontend and packaging bundle
 npm run dist:linux
-```
-Produces:
-- `release/LazyStack-1.0.0.AppImage` (Universal portable Linux executable, `chmod +x` to run)
-- `release/lazystack_1.0.0_amd64.deb` (Debian/Ubuntu package installer)
 
-#### Windows
-To build Windows binaries from a Windows machine:
-```bash
+# 2. Grant execution permissions
+chmod +x release/LazyStack-1.0.0.AppImage
+
+# 3. Launch LazyStack
+./release/LazyStack-1.0.0.AppImage
+```
+Output:
+- `release/LazyStack-1.0.0.AppImage` (Universal portable Linux executable)
+
+#### 2. Windows Build
+**Option A: Building natively on Windows**
+```powershell
+# In PowerShell or Command Prompt
+npm install
 npm run dist:win
 ```
-*(If cross-compiling from Linux or macOS, ensure `wine` and `mono` are installed or use Docker).*  
 Produces:
 - `release/LazyStack Setup 1.0.0.exe` (NSIS installer with desktop shortcuts)
 - `release/LazyStack 1.0.0.exe` (Standalone portable single-file executable)
 
-#### macOS
-To build macOS `.dmg`:
+**Option B: Cross-compiling Windows ZIP from Linux or macOS**
 ```bash
+# Packages full Windows x64 binary without requiring Wine:
+npx electron-builder --win zip
+```
+Produces:
+- `release/LazyStack-1.0.0-win.zip` (Extract on Windows and run `LazyStack.exe`)
+
+#### 3. macOS Build
+**Option A: Building natively on macOS**
+```bash
+# In Terminal on macOS
+npm install
 npm run dist:mac
 ```
-*(Note: Building macOS DMGs natively requires macOS. For code signing and notarization, configure Apple Developer credentials in your environment).*  
 Produces:
-- `release/LazyStack-1.0.0.dmg`
+- `release/LazyStack-1.0.0.dmg` (Drag-and-drop installer)
+
+**Option B: Cross-compiling macOS ZIP from Linux or Windows**
+```bash
+# Packages full macOS app bundle without requiring Apple developer tools:
+npx electron-builder --mac zip
+```
+Produces:
+- `release/LazyStack-1.0.0-mac.zip` (Extract on macOS and run `LazyStack.app`)
+
+---
+
+### Publishing Releases to GitHub
+
+To upload newly built release binaries to GitHub:
+```bash
+# 1. Authenticate with GitHub CLI
+gh auth login
+
+# 2. Upload or update assets for the release tag
+gh release upload v1.0.0 --clobber \
+  release/LazyStack-1.0.0.AppImage \
+  release/LazyStack-1.0.0-windows-x64.zip \
+  release/LazyStack-1.0.0-mac.zip
+```
 
 ---
 
