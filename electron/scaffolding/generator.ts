@@ -48,9 +48,7 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
     }
   }
 
-  const targetDir = settings.targetDir
-    ? path.normalize(settings.targetDir)
-    : path.normalize(joinPaths(settings.parentDir, settings.projectName))
+  const targetDir = path.normalize(joinPaths(settings.parentDir, settings.projectName))
   let filesCreated = 0
 
   try {

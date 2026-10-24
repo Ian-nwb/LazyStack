@@ -220,6 +220,8 @@ export async function runCli(args: string[] = process.argv.slice(2)) {
         if (outDir !== process.cwd()) {
           settings.parentDir = path.resolve(process.cwd(), outDir)
         }
+        // Always recompute targetDir from parentDir and projectName
+        settings.targetDir = path.join(settings.parentDir, settings.projectName)
       } catch (err: any) {
         console.error(`Error parsing config file ${resolvedConfig}: ${err.message}`)
         process.exit(1)
