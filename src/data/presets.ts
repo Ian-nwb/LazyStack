@@ -178,5 +178,73 @@ export const STACK_PRESETS: StackPreset[] = [
       { type: 'valkey', enabled: true, port: 6379 }
     ],
     proxy: { type: 'nginx', httpPort: 80 }
+  },
+
+  // ─── Cloud & BaaS Presets ──────────────────────────────────────────
+
+  {
+    id: 'supabase-nextjs',
+    name: 'Supabase + Next.js',
+    tagline: 'Managed Postgres + Auth + Realtime with Next.js App Router',
+    icon: '⚡',
+    badgeColor: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300',
+    apps: [
+      {
+        folderName: 'web',
+        role: 'fullstack',
+        techId: 'fullstack-nextjs',
+        port: 3000,
+        runMode: 'docker',
+        routePrefix: '/',
+        flavor: 'typescript' as const
+      }
+    ],
+    databases: [
+      { type: 'supabase', enabled: true, port: 0 }
+    ],
+    proxy: { type: 'none', httpPort: 80 }
+  },
+  {
+    id: 'firebase-react',
+    name: 'Firebase + React SPA',
+    tagline: 'Firestore + Auth + Storage with React Vite frontend',
+    icon: '🔥',
+    badgeColor: 'border-amber-500/40 bg-amber-500/10 text-amber-300',
+    apps: [
+      {
+        folderName: 'app',
+        role: 'frontend',
+        techId: 'react-vite',
+        port: 3000,
+        runMode: 'docker',
+        routePrefix: '/'
+      }
+    ],
+    databases: [
+      { type: 'firebase', enabled: true, port: 0 }
+    ],
+    proxy: { type: 'none', httpPort: 80 }
+  },
+  {
+    id: 'turso-sveltekit',
+    name: 'Turso + SvelteKit Edge',
+    tagline: 'Edge SQLite with SvelteKit for ultra-low-latency full-stack apps',
+    icon: '🌊',
+    badgeColor: 'border-teal-500/40 bg-teal-500/10 text-teal-300',
+    apps: [
+      {
+        folderName: 'web',
+        role: 'fullstack',
+        techId: 'sveltekit-vite',
+        port: 3000,
+        runMode: 'docker',
+        routePrefix: '/'
+      }
+    ],
+    databases: [
+      { type: 'turso', enabled: true, port: 0 },
+      { type: 'upstash', enabled: true, port: 0 }
+    ],
+    proxy: { type: 'none', httpPort: 80 }
   }
 ]

@@ -6,6 +6,7 @@ import { generateDockerCompose, generateDockerDevCompose, getDockerfileForTech }
 import { generateNginxConfig, generateApacheConfig } from './templates/proxies'
 import { getStarterFilesForTech } from './templates/appTemplates'
 import { generateMetaFiles } from './templates/meta'
+import { generateCloudServiceFiles, generateCloudEnvVars } from './templates/cloudServices'
 
 export interface ScaffoldResult {
   success: boolean
@@ -120,6 +121,38 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
       await fs.ensureDir(sqliteDir)
       await fs.writeFile(path.join(sqliteDir, 'README.md'), '# SQLite Shared Volume\nStores persistent database files (e.g. data.db) mounted across Docker containers and local apps.\n', 'utf8')
       filesCreated++
+    }
+
+    // 6b. Cloud & BaaS service SDK files
+    const cloudFiles = generateCloudServiceFiles(settings.databases)
+    if (Object.keys(cloudFiles).length > 0) {
+      for (const [relPath, content] of Object.entries(cloudFiles)) {
+        const fullPath = path.join(targetDir, relPath)
+        await fs.ensureDir(path.dirname(fullPath))
+        await fs.writeFile(fullPath, content, 'utf8')
+        filesCreated++
+      }
+    }
+
+    // 6c. Cloud env vars appended to .env and .env.example
+    const cloudEnv = generateCloudEnvVars(settings.databases)
+    if (cloudEnv.env) {
+      const envPath = path.join(targetDir, '.env')
+      const envExamplePath = path.join(targetDir, '.env.example')
+      // Append to existing .env (created by meta generator)
+      if (await fs.pathExists(envPath)) {
+        await fs.appendFile(envPath, cloudEnv.env, 'utf8')
+      } else {
+        await fs.writeFile(envPath, cloudEnv.env, 'utf8')
+        filesCreated++
+      }
+      // Create/append .env.example
+      if (await fs.pathExists(envExamplePath)) {
+        await fs.appendFile(envExamplePath, cloudEnv.envExample, 'utf8')
+      } else {
+        await fs.writeFile(envExamplePath, cloudEnv.envExample, 'utf8')
+        filesCreated++
+      }
     }
 
     // 7. Scaffold each Application Service

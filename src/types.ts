@@ -66,16 +66,34 @@ export type DatabaseType =
   | 'minio'
   | 'scylladb'
   | 'rabbitmq'
+  // Cloud & BaaS providers
+  | 'supabase'
+  | 'firebase'
+  | 'planetscale'
+  | 'neon'
+  | 'turso'
+  | 'upstash'
+  | 'appwrite'
+  | 'convex'
+  | 'pocketbase'
 
 export interface DatabaseOption {
   id: DatabaseType
   name: string
   defaultPort: number
-  category: 'relational' | 'document' | 'key-value' | 'olap' | 'graph' | 'embedded' | 'vector' | 'search' | 'storage' | 'message-broker'
+  category: 'relational' | 'document' | 'key-value' | 'olap' | 'graph' | 'embedded' | 'vector' | 'search' | 'storage' | 'message-broker' | 'baas' | 'cloud-db'
   description: string
   isHeavyMemory?: boolean
-  imageTag: string
-  healthcheckCmd: string
+  imageTag?: string
+  healthcheckCmd?: string
+  /** True for managed cloud services that don't need Docker containers */
+  isCloud?: boolean
+  /** SDK packages per ecosystem — keys: npm, pip, go, cargo, nuget, composer, etc. */
+  sdkPackages?: Record<string, string>
+  /** Required environment variables for this service */
+  envVars?: string[]
+  /** URL to the provider's dashboard or docs */
+  docsUrl?: string
   badgeColor?: string
 }
 

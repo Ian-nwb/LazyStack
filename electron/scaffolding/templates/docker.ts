@@ -1,7 +1,14 @@
 import { ProjectSettings, CartApp, SelectedDatabase } from '../../../src/types'
+import { DATABASE_CATALOG } from '../../../src/data/databases'
 
 export function generateDockerCompose(settings: ProjectSettings): string {
-  const activeDbs = settings.databases.filter(d => d.enabled)
+  // Filter out cloud-only databases — they don't need Docker containers
+  const activeDbs = settings.databases.filter(d => {
+    if (!d.enabled) return false
+    const def = DATABASE_CATALOG.find(c => c.id === d.type)
+    // Cloud services without imageTag don't get Docker containers
+    return !def?.isCloud || def?.imageTag
+  })
   const dockerApps = settings.apps.filter(a => a.runMode === 'docker')
 
   let yaml = `version: '3.8'\n\nnetworks:\n  lazystack_net:\n    driver: bridge\n\nvolumes:\n`
@@ -138,6 +145,12 @@ export function generateDockerCompose(settings: ProjectSettings): string {
         yaml += `    ports:\n      - "\${RABBITMQ_PORT:-${db.port}}:5672"\n      - "15672:15672"\n`
         yaml += `    volumes:\n      - rabbitmq_data:/var/lib/rabbitmq\n`
         yaml += `    healthcheck:\n      test: ["CMD", "rabbitmq-diagnostics", "check_running"]\n      interval: 5s\n      timeout: 5s\n      retries: 5\n`
+        break
+      case 'pocketbase':
+        yaml += `    image: ghcr.io/muchobien/pocketbase:latest\n`
+        yaml += `    ports:\n      - "\${POCKETBASE_PORT:-${db.port}}:8090"\n`
+        yaml += `    volumes:\n      - pocketbase_data:/pb_data\n`
+        yaml += `    healthcheck:\n      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8090/api/health || exit 1"]\n      interval: 5s\n      timeout: 5s\n      retries: 5\n`
         break
       default:
         yaml += `    image: ${db.type}:latest\n`

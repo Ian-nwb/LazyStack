@@ -48,7 +48,10 @@ export const BlueprintInspector: React.FC<BlueprintInspectorProps> = ({ settings
   const generateComposePreview = () => {
     let yaml = `version: '3.8'\n\nnetworks:\n  lazystack_net:\n    driver: bridge\n\nvolumes:\n`
     
+    // Only allocate volumes for containerized databases
     activeDatabases.forEach(d => {
+      const def = DATABASE_CATALOG.find(c => c.id === d.type)
+      if (def?.isCloud && d.type !== 'pocketbase') return
       if (d.type !== 'sqlite') {
         yaml += `  ${d.type}_data:\n`
       }
@@ -58,8 +61,17 @@ export const BlueprintInspector: React.FC<BlueprintInspectorProps> = ({ settings
 
     activeDatabases.forEach(d => {
       const def = DATABASE_CATALOG.find(c => c.id === d.type)
-      if (d.type === 'sqlite') {
+      if (def?.isCloud && d.type !== 'pocketbase') {
+        yaml += `  # ${def?.name || d.type}: Managed Cloud Service (no local container needed)\n`
+      } else if (d.type === 'sqlite') {
         yaml += `  # SQLite: Storage in shared volume /infra/sqlite/data.db\n`
+      } else if (d.type === 'pocketbase') {
+        yaml += `  pocketbase:\n`
+        yaml += `    image: ghcr.io/muchobien/pocketbase:latest\n`
+        yaml += `    restart: unless-stopped\n`
+        yaml += `    ports:\n      - "${d.port}:8090"\n`
+        yaml += `    networks:\n      - lazystack_net\n`
+        yaml += `    volumes:\n      - pocketbase_data:/pb_data\n\n`
       } else {
         yaml += `  ${d.type}:\n`
         yaml += `    image: ${def?.imageTag}\n`
@@ -79,9 +91,13 @@ export const BlueprintInspector: React.FC<BlueprintInspectorProps> = ({ settings
         yaml += `    ports:\n      - "${a.port}:${a.port}"\n`
       }
       yaml += `    env_file:\n      - ../.env\n      - ../apps/${a.folderName}/.env\n`
-      if (activeDatabases.length > 0) {
+      const containerDbs = activeDatabases.filter(d => {
+        const def = DATABASE_CATALOG.find(c => c.id === d.type)
+        return d.type !== 'sqlite' && (!def?.isCloud || d.type === 'pocketbase')
+      })
+      if (containerDbs.length > 0) {
         yaml += `    depends_on:\n`
-        activeDatabases.filter(d => d.type !== 'sqlite').forEach(d => {
+        containerDbs.forEach(d => {
           yaml += `      ${d.type}:\n        condition: service_healthy\n`
         })
       }
@@ -106,13 +122,39 @@ export const BlueprintInspector: React.FC<BlueprintInspectorProps> = ({ settings
       const varName = `${a.folderName.toUpperCase().replace(/[^A-Z0-9]/g, '_')}_PORT`
       env += `${varName}=${a.port}\n`
     })
-    env += `\n# Database Configurations\n`
-    activeDatabases.forEach(d => {
-      env += `${d.type.toUpperCase()}_PORT=${d.port}\n`
-      env += `${d.type.toUpperCase()}_USER=lazystack_user\n`
-      env += `${d.type.toUpperCase()}_PASSWORD=secret_${Math.random().toString(36).substring(2, 8)}\n`
-      env += `${d.type.toUpperCase()}_DB=lazystack_${d.type}\n`
+
+    const selfHostedDbs = activeDatabases.filter(d => {
+      const def = DATABASE_CATALOG.find(c => c.id === d.type)
+      return !def?.isCloud
     })
+    const cloudDbs = activeDatabases.filter(d => {
+      const def = DATABASE_CATALOG.find(c => c.id === d.type)
+      return def?.isCloud
+    })
+
+    if (selfHostedDbs.length > 0) {
+      env += `\n# Self-Hosted Database Configurations\n`
+      selfHostedDbs.forEach(d => {
+        env += `${d.type.toUpperCase()}_PORT=${d.port}\n`
+        env += `${d.type.toUpperCase()}_USER=lazystack_user\n`
+        env += `${d.type.toUpperCase()}_PASSWORD=secret_${Math.random().toString(36).substring(2, 8)}\n`
+        env += `${d.type.toUpperCase()}_DB=lazystack_${d.type}\n`
+      })
+    }
+
+    if (cloudDbs.length > 0) {
+      env += `\n# Cloud / BaaS Provider Configurations\n`
+      cloudDbs.forEach(d => {
+        const def = DATABASE_CATALOG.find(c => c.id === d.type)
+        if (def) {
+          env += `# ${def.name}\n`
+          def.envVars?.forEach(v => {
+            env += `${v}=your_${v.toLowerCase()}_here\n`
+          })
+          env += `\n`
+        }
+      })
+    }
     return env
   }
 
@@ -204,6 +246,26 @@ export const BlueprintInspector: React.FC<BlueprintInspectorProps> = ({ settings
                   </div>
                 ))}
               </div>
+              {settings.databases.some(d => {
+                if (!d.enabled) return false
+                const def = DATABASE_CATALOG.find(c => c.id === d.type)
+                return def?.isCloud
+              }) && (
+                <div>
+                  <div>├── 📁 packages/cloud/ <span className="text-zinc-500 font-sans text-[11px]">(SDK clients for Cloud / BaaS)</span></div>
+                  <div className="pl-4 border-l border-surface-700 space-y-1">
+                    {settings.databases.filter(d => {
+                      if (!d.enabled) return false
+                      const def = DATABASE_CATALOG.find(c => c.id === d.type)
+                      return def?.isCloud
+                    }).map(d => (
+                      <div key={d.type} className="text-zinc-400">
+                        ├── 📄 {d.type}.ts
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div>├── 📁 docs/ <span className="text-zinc-500 font-sans text-[11px]">(architecture & port diagrams)</span></div>
               <div>├── 📁 infra/ <span className="text-zinc-500 font-sans text-[11px]">(orchestration & proxies)</span></div>
               <div className="pl-4 border-l border-surface-700 space-y-1">
@@ -253,15 +315,38 @@ export const BlueprintInspector: React.FC<BlueprintInspectorProps> = ({ settings
                     <td className="p-3 capitalize">{a.runMode}</td>
                   </tr>
                 ))}
-                {activeDatabases.map(d => (
-                  <tr key={d.type} className="hover:bg-surface-850">
-                    <td className="p-3 font-semibold text-white">{d.type}</td>
-                    <td className="p-3 text-zinc-400">Database</td>
-                    <td className="p-3 font-bold text-white font-mono">:{d.port}</td>
-                    <td className="p-3 font-mono">:{d.port}</td>
-                    <td className="p-3">Docker Container</td>
-                  </tr>
-                ))}
+                {activeDatabases.map(d => {
+                  const def = DATABASE_CATALOG.find(c => c.id === d.type)
+                  const isCloud = def?.isCloud && d.type !== 'pocketbase'
+                  return (
+                    <tr key={d.type} className="hover:bg-surface-850">
+                      <td className="p-3 font-semibold text-white flex items-center gap-2">
+                        {def?.name || d.type}
+                        {def?.isCloud && (
+                          <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                            Cloud
+                          </span>
+                        )}
+                      </td>
+                      <td className="p-3 text-zinc-400 capitalize">{def?.category || 'Database'}</td>
+                      <td className="p-3 font-bold text-white font-mono">
+                        {isCloud ? <span className="text-zinc-500 font-sans text-xs">Cloud Hosted</span> : `:${d.port}`}
+                      </td>
+                      <td className="p-3 font-mono">
+                        {isCloud ? <span className="text-zinc-500 font-sans text-xs">HTTPS / API</span> : `:${d.port}`}
+                      </td>
+                      <td className="p-3 text-xs">
+                        {isCloud ? (
+                          <span className="text-emerald-400">Managed Provider</span>
+                        ) : d.type === 'pocketbase' ? (
+                          <span className="text-amber-400">Docker Container (Self-hosted)</span>
+                        ) : (
+                          'Docker Container'
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
                 {settings.proxy.type !== 'none' && (
                   <tr className="hover:bg-surface-850">
                     <td className="p-3 font-semibold text-white">Gateway ({settings.proxy.type})</td>

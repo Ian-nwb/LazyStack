@@ -1,4 +1,5 @@
 import { ProjectSettings } from '../../../src/types'
+import { DATABASE_CATALOG } from '../../../src/data/databases'
 import crypto from 'crypto'
 
 export function generateMetaFiles(settings: ProjectSettings): Record<string, string> {
@@ -15,7 +16,13 @@ export function generateMetaFiles(settings: ProjectSettings): Record<string, str
     envExample += `${key}=${app.port}\n`
   })
 
-  activeDbs.forEach(db => {
+  // Only generate local credentials for self-hosted databases
+  const selfHostedDbs = activeDbs.filter(d => {
+    const def = DATABASE_CATALOG.find(c => c.id === d.type)
+    return !def?.isCloud
+  })
+
+  selfHostedDbs.forEach(db => {
     const prefix = db.type.toUpperCase()
     const randPass = crypto.randomBytes(8).toString('hex')
     env += `\n# ${db.type.toUpperCase()} Database Credentials\n`
@@ -306,8 +313,13 @@ On Windows (PowerShell):
 
 | Service | Technology | Port | Run Mode | Proxy Route |
 | :--- | :--- | :--- | :--- | :--- |
-${settings.apps.map(a => `| \`apps/${a.folderName}\` | ${a.techId} | \`${a.port}\` | \`${a.runMode}\` | \`${a.routePrefix}\` |`).join('\n')}
-${activeDbs.map(d => `| \`${d.type}\` | Database | \`${d.port}\` | Docker Container | Internal |`).join('\n')}
+${activeDbs.map(d => {
+  const def = DATABASE_CATALOG.find(c => c.id === d.type)
+  if (def?.isCloud && d.type !== 'pocketbase') {
+    return `| \`${def?.name || d.type}\` | Cloud / BaaS | Managed | Cloud API | External |`
+  }
+  return `| \`${d.type}\` | Database | \`${d.port}\` | Docker Container | Internal |`
+}).join('\n')}
 
 ---
 

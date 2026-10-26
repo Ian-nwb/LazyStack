@@ -154,5 +154,157 @@ export const DATABASE_CATALOG: DatabaseOption[] = [
     imageTag: 'rabbitmq:3-management-alpine',
     healthcheckCmd: 'rabbitmq-diagnostics check_running',
     badgeColor: 'bg-orange-500/20 text-orange-300 border-orange-500/40'
+  },
+
+  // ─── Cloud & BaaS Providers ────────────────────────────────────────
+
+  {
+    id: 'supabase',
+    name: 'Supabase (Postgres + Auth + Realtime)',
+    defaultPort: 0,
+    category: 'baas',
+    description: 'Open-source Firebase alternative with managed Postgres, real-time subscriptions, authentication, edge functions, and S3-compatible storage.',
+    isCloud: true,
+    sdkPackages: {
+      npm: '@supabase/supabase-js',
+      pip: 'supabase',
+      go: 'github.com/supabase-community/supabase-go',
+      cargo: 'postgrest-rs',
+      nuget: 'Supabase',
+      composer: 'supabase/supabase-php'
+    },
+    envVars: ['SUPABASE_URL', 'SUPABASE_ANON_KEY', 'SUPABASE_SERVICE_ROLE_KEY'],
+    docsUrl: 'https://supabase.com/dashboard',
+    badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+  },
+  {
+    id: 'firebase',
+    name: 'Firebase (Firestore + Auth + Storage)',
+    defaultPort: 0,
+    category: 'baas',
+    description: 'Google\'s app development platform with Firestore NoSQL database, Authentication, Cloud Storage, Hosting, and Cloud Functions.',
+    isCloud: true,
+    sdkPackages: {
+      npm: 'firebase firebase-admin',
+      pip: 'firebase-admin',
+      go: 'firebase.google.com/go/v4',
+      nuget: 'FirebaseAdmin',
+      composer: 'kreait/firebase-php'
+    },
+    envVars: ['FIREBASE_PROJECT_ID', 'FIREBASE_API_KEY', 'FIREBASE_AUTH_DOMAIN', 'FIREBASE_STORAGE_BUCKET'],
+    docsUrl: 'https://console.firebase.google.com',
+    badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+  },
+  {
+    id: 'planetscale',
+    name: 'PlanetScale (Serverless MySQL)',
+    defaultPort: 0,
+    category: 'cloud-db',
+    description: 'Serverless MySQL platform built on Vitess with branching, non-blocking schema changes, and unlimited scale.',
+    isCloud: true,
+    sdkPackages: {
+      npm: '@planetscale/database',
+      pip: 'planetscale-connector-python',
+      go: 'github.com/planetscale/planetscale-go'
+    },
+    envVars: ['DATABASE_URL'],
+    docsUrl: 'https://app.planetscale.com',
+    badgeColor: 'bg-slate-400/20 text-slate-200 border-slate-400/40'
+  },
+  {
+    id: 'neon',
+    name: 'Neon (Serverless Postgres)',
+    defaultPort: 0,
+    category: 'cloud-db',
+    description: 'Serverless Postgres with autoscaling, branching, and bottomless storage. Scale to zero when inactive.',
+    isCloud: true,
+    sdkPackages: {
+      npm: '@neondatabase/serverless',
+      pip: 'psycopg2-binary',
+      go: 'github.com/jackc/pgx/v5'
+    },
+    envVars: ['DATABASE_URL', 'NEON_DATABASE_URL'],
+    docsUrl: 'https://console.neon.tech',
+    badgeColor: 'bg-green-400/20 text-green-300 border-green-400/40'
+  },
+  {
+    id: 'turso',
+    name: 'Turso (Edge SQLite / libSQL)',
+    defaultPort: 0,
+    category: 'cloud-db',
+    description: 'Edge-hosted SQLite-compatible database built on libSQL with multi-region replication and embedded replicas.',
+    isCloud: true,
+    sdkPackages: {
+      npm: '@libsql/client',
+      pip: 'libsql-experimental',
+      go: 'github.com/tursodatabase/libsql-client-go',
+      cargo: 'libsql'
+    },
+    envVars: ['TURSO_DATABASE_URL', 'TURSO_AUTH_TOKEN'],
+    docsUrl: 'https://turso.tech/app',
+    badgeColor: 'bg-teal-400/20 text-teal-300 border-teal-400/40'
+  },
+  {
+    id: 'upstash',
+    name: 'Upstash (Serverless Redis + Kafka)',
+    defaultPort: 0,
+    category: 'cloud-db',
+    description: 'Serverless Redis and Kafka with per-request pricing, REST API, and global replication. Perfect for edge functions.',
+    isCloud: true,
+    sdkPackages: {
+      npm: '@upstash/redis @upstash/ratelimit',
+      pip: 'upstash-redis',
+      go: 'github.com/upstash/redis-go'
+    },
+    envVars: ['UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN'],
+    docsUrl: 'https://console.upstash.com',
+    badgeColor: 'bg-red-400/20 text-red-300 border-red-400/40'
+  },
+  {
+    id: 'appwrite',
+    name: 'Appwrite (Open-Source BaaS)',
+    defaultPort: 0,
+    category: 'baas',
+    description: 'Self-hosted or cloud backend server with databases, auth, functions, storage, and real-time events out of the box.',
+    isCloud: true,
+    sdkPackages: {
+      npm: 'appwrite node-appwrite',
+      pip: 'appwrite',
+      go: 'github.com/appwrite/sdk-for-go',
+      composer: 'appwrite/appwrite'
+    },
+    envVars: ['APPWRITE_ENDPOINT', 'APPWRITE_PROJECT_ID', 'APPWRITE_API_KEY'],
+    docsUrl: 'https://cloud.appwrite.io',
+    badgeColor: 'bg-pink-500/20 text-pink-300 border-pink-500/40'
+  },
+  {
+    id: 'convex',
+    name: 'Convex (Reactive Backend)',
+    defaultPort: 0,
+    category: 'baas',
+    description: 'Full-stack TypeScript backend with real-time reactive queries, serverless functions, file storage, and automatic caching.',
+    isCloud: true,
+    sdkPackages: {
+      npm: 'convex'
+    },
+    envVars: ['CONVEX_URL', 'CONVEX_DEPLOY_KEY'],
+    docsUrl: 'https://dashboard.convex.dev',
+    badgeColor: 'bg-violet-500/20 text-violet-300 border-violet-500/40'
+  },
+  {
+    id: 'pocketbase',
+    name: 'Pocketbase (Single-Binary BaaS)',
+    defaultPort: 8090,
+    category: 'baas',
+    description: 'Open-source backend in a single Go binary: embedded SQLite database, real-time subscriptions, auth, file storage, and admin dashboard.',
+    imageTag: 'ghcr.io/muchobien/pocketbase:latest',
+    healthcheckCmd: 'wget --no-verbose --tries=1 --spider http://localhost:8090/api/health || exit 1',
+    sdkPackages: {
+      npm: 'pocketbase',
+      pip: 'pocketbase'
+    },
+    envVars: ['POCKETBASE_URL'],
+    docsUrl: 'https://pocketbase.io/docs',
+    badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40'
   }
 ]

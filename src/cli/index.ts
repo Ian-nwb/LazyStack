@@ -114,7 +114,8 @@ export async function runCli(args: string[] = process.argv.slice(2)) {
 
     console.log(`--- DATABASES & CACHES (${DATABASE_CATALOG.length}) ---`)
     DATABASE_CATALOG.forEach(db => {
-      console.log(`  • ${db.name.padEnd(30)} Default Port: :${db.defaultPort}`)
+      const portOrCloud = db.isCloud ? '[Cloud / BaaS API]' : `Default Port: :${db.defaultPort}`
+      console.log(`  • ${db.name.padEnd(35)} ${portOrCloud}`)
     })
 
     console.log('\n--- 1-CLICK STACK PRESETS ---')
