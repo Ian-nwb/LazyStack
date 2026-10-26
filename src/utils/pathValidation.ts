@@ -198,6 +198,24 @@ export function validatePath(pathStr: string): ValidationResult {
   return { valid: true }
 }
 
+/** Validates a project-relative directory path without permitting traversal outside the scaffold root. */
+export function validateRelativeProjectPath(pathStr: string): ValidationResult {
+  const value = pathStr?.trim().replace(/\\/g, '/') || ''
+  if (!value) return { valid: false, error: 'Relative folder path cannot be empty' }
+  if (value.startsWith('/') || /^[a-zA-Z]:/.test(value)) {
+    return { valid: false, error: 'Folder paths must stay inside the generated project' }
+  }
+  const segments = value.split('/')
+  if (segments.some(segment => !segment || segment === '.' || segment === '..')) {
+    return { valid: false, error: 'Folder paths cannot contain empty, ".", or ".." segments' }
+  }
+  for (const segment of segments) {
+    const result = validateFolderName(segment)
+    if (!result.valid) return result
+  }
+  return { valid: true }
+}
+
 /**
  * Normalizes a directory path by stripping redundant trailing slashes
  * while preserving drive roots (e.g. "C:\" or "/")

@@ -4,6 +4,7 @@ import { ProjectSettings, SelectedDatabase, FolderStructureConfig } from '../typ
 import { DATABASE_CATALOG } from '../data/databases'
 import { resolveStructurePaths } from '../data/structurePresets'
 import { StructureCustomizer } from './StructureCustomizer'
+import { resolveServiceConnectionUrl } from '../utils/serviceConnections'
 
 interface BlueprintInspectorProps {
   settings: ProjectSettings
@@ -109,14 +110,17 @@ export const BlueprintInspector: React.FC<BlueprintInspectorProps> = ({
     // Microservice Applications
     const dockerApps = settings.apps.filter(a => a.runMode === 'docker')
     dockerApps.forEach(a => {
-      const appRelPath = paths.getAppRelativePath(a.folderName, a.id)
+      const appRelPath = paths.getAppRelativePath(a.folderName, a.id, a.role)
       yaml += `  ${a.folderName}:\n`
       yaml += `    build:\n      context: ../${appRelPath}\n      dockerfile: Dockerfile\n`
       yaml += `    restart: unless-stopped\n`
       if (a.port > 0) {
         yaml += `    ports:\n      - "${a.port}:${a.port}"\n`
       }
-      yaml += `    env_file:\n      - ../.env\n      - ../${appRelPath}/.env\n`
+      yaml += `    env_file:\n      - ../${appRelPath}/.env\n`
+      if ((a.connections || []).some(connection => settings.apps.find(target => target.id === connection.targetAppId)?.runMode === 'host')) {
+        yaml += `    extra_hosts:\n      - "host.docker.internal:host-gateway"\n`
+      }
 
       // Microservice DB dependencies
       const relevantDbs = activeDatabases.filter(d => {
@@ -128,11 +132,24 @@ export const BlueprintInspector: React.FC<BlueprintInspectorProps> = ({
         return true
       })
 
-      if (relevantDbs.length > 0) {
+      const dependencies = new Map<string, 'service_healthy' | 'service_started'>()
+      relevantDbs.forEach(d => dependencies.set(getDbServiceName(d, settings.databases.indexOf(d)), 'service_healthy'))
+      ;(a.connections || []).forEach(connection => {
+        const target = settings.apps.find(app => app.id === connection.targetAppId)
+        if (target?.runMode === 'docker') dependencies.set(target.folderName, target.healthCheck?.enabled ? 'service_healthy' : 'service_started')
+      })
+      if (dependencies.size > 0) {
         yaml += `    depends_on:\n`
-        relevantDbs.forEach((d, idx) => {
-          yaml += `      ${getDbServiceName(d, idx)}:\n        condition: service_healthy\n`
+        dependencies.forEach((condition, serviceName) => {
+          yaml += `      ${serviceName}:\n        condition: ${condition}\n`
         })
+      }
+      if (a.healthCheck?.enabled) {
+        const health = a.healthCheck
+        const command = health.type === 'http'
+          ? `wget --no-verbose --tries=1 --spider http://127.0.0.1:${a.port}${health.path || '/health'}`
+          : (health.command || '').replaceAll('${PORT}', String(a.port))
+        yaml += `    healthcheck:\n      test: ["CMD-SHELL", ${JSON.stringify(command)}]\n      interval: ${health.intervalSeconds}s\n      timeout: ${health.timeoutSeconds}s\n      retries: ${health.retries}\n      start_period: ${health.startPeriodSeconds}s\n`
       }
       yaml += `    networks:\n      - lazystack_net\n\n`
     })
@@ -141,7 +158,7 @@ export const BlueprintInspector: React.FC<BlueprintInspectorProps> = ({
       yaml += `  gateway:\n`
       yaml += `    image: ${settings.proxy.type === 'nginx' ? 'nginx:alpine' : 'httpd:alpine'}\n`
       yaml += `    ports:\n      - "${settings.proxy.httpPort}:${settings.proxy.httpPort}"\n`
-      yaml += `    volumes:\n      - ./${paths.infraDir}/${settings.proxy.type}:/etc/${settings.proxy.type}/conf.d:ro\n`
+      yaml += `    volumes:\n      - ./${settings.proxy.type}:/etc/${settings.proxy.type}/conf.d:ro\n`
       yaml += `    networks:\n      - lazystack_net\n`
     }
 
@@ -154,6 +171,11 @@ export const BlueprintInspector: React.FC<BlueprintInspectorProps> = ({
     settings.apps.forEach(a => {
       const varName = `${a.folderName.toUpperCase().replace(/[^A-Z0-9]/g, '_')}_PORT`
       env += `${varName}=${a.port}\n`
+      ;(a.connections || []).forEach(connection => {
+        const target = settings.apps.find(app => app.id === connection.targetAppId)
+        if (!target) return
+        env += `${connection.envVar}=${resolveServiceConnectionUrl(a, target, settings.proxy, connection) || '<configure-url>'}\n`
+      })
     })
 
     const selfHostedDbs = activeDatabases.filter(d => {
@@ -292,33 +314,30 @@ export const BlueprintInspector: React.FC<BlueprintInspectorProps> = ({
               <div>├── 📁 .github/workflows/ <span className="text-zinc-500 font-sans text-[11px]">(CI/CD workflows)</span></div>
               <div>├── 📁 .vscode/ <span className="text-zinc-500 font-sans text-[11px]">(recommended extensions)</span></div>
 
-              {/* Application / Microservices directory */}
-              <div>├── 📁 {paths.appsDir}/ <span className="text-zinc-500 font-sans text-[11px]">({settings.apps.length} microservices / apps)</span></div>
-              <div className="pl-4 border-l border-surface-700 space-y-1.5">
-                {settings.apps.map(a => {
-                  const assignedDbs = activeDatabases.filter(d => d.assignedAppId === a.id)
-                  return (
-                    <div key={a.id} className="text-zinc-100">
-                      <div>
-                        ├── 📁 {a.folderName}/
-                        <span className="text-zinc-500 font-sans text-[11px] ml-2">
-                          ({a.techId} {a.flavor ? `[${a.flavor}]` : ''} • port {a.port} • {a.runMode})
-                        </span>
-                      </div>
-                      <div className="pl-4 border-l border-surface-750 text-zinc-400 space-y-0.5">
-                        <div>├── 📁 src/</div>
-                        {assignedDbs.length > 0 && paths.databaseIsolation === 'service-isolated' && (
-                          <div className="text-emerald-400">
-                            ├── 📁 db/ <span className="text-zinc-500 font-sans text-[11px]">(schema, migrations for {assignedDbs.map(d => d.customName || d.type).join(', ')})</span>
+              {/* Role-aware app directory roots */}
+              {settings.apps.length === 0 ? (
+                <div>├── 📁 {paths.appsDir}/ <span className="text-zinc-500 font-sans text-[11px]">(applications)</span></div>
+              ) : [...new Set(settings.apps.map(app => paths.getAppRelativePath(app.folderName, app.id, app.role).split('/').slice(0, -1).join('/') || paths.appsDir))].map(root => (
+                <React.Fragment key={root}>
+                  <div>├── 📁 {root}/</div>
+                  <div className="pl-4 border-l border-surface-700 space-y-1.5">
+                    {settings.apps.filter(app => (paths.getAppRelativePath(app.folderName, app.id, app.role).split('/').slice(0, -1).join('/') || paths.appsDir) === root).map(a => {
+                      const assignedDbs = activeDatabases.filter(d => d.assignedAppId === a.id)
+                      return (
+                        <div key={a.id} className="text-zinc-100">
+                          <div>├── 📁 {a.folderName}/ <span className="text-zinc-500 font-sans text-[11px] ml-2">({a.role} · {a.techId} {a.flavor ? `[${a.flavor}]` : ''} · port {a.port} · {a.runMode})</span></div>
+                          <div className="pl-4 border-l border-surface-750 text-zinc-400 space-y-0.5">
+                            <div>├── 📁 src/</div>
+                            {assignedDbs.length > 0 && paths.databaseIsolation === 'service-isolated' && <div className="text-emerald-400">├── 📁 db/ <span className="text-zinc-500 font-sans text-[11px]">(schema, migrations for {assignedDbs.map(d => d.customName || d.type).join(', ')})</span></div>}
+                            <div>├── 📄 Dockerfile</div>
+                            <div>└── 📄 .env <span className="text-zinc-500 font-sans text-[11px]">(service config and connections)</span></div>
                           </div>
-                        )}
-                        <div>├── 📄 Dockerfile</div>
-                        <div>└── 📄 .env <span className="text-zinc-500 font-sans text-[11px]">(service secrets & isolated DB URL)</span></div>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </React.Fragment>
+              ))}
 
               {/* Shared Packages / Core */}
               <div>├── 📁 {paths.packagesDir}/ <span className="text-zinc-500 font-sans text-[11px]">(shared packages & contracts)</span></div>
@@ -360,6 +379,9 @@ export const BlueprintInspector: React.FC<BlueprintInspectorProps> = ({
 
               <div>├── 📁 {paths.docsDir}/ <span className="text-zinc-500 font-sans text-[11px]">(architecture & port diagrams)</span></div>
               <div>├── 📁 {paths.scriptsDir}/ <span className="text-zinc-500 font-sans text-[11px]">(dev.sh, dev.ps1)</span></div>
+              {settings.structureConfig?.customFolders?.map(folder => (
+                <div key={folder}>├── 📁 {folder}/ <span className="text-zinc-500 font-sans text-[11px]">(custom root folder)</span></div>
+              ))}
               <div>├── 📁 tests/ <span className="text-zinc-500 font-sans text-[11px]">(integration test harness)</span></div>
               <div>├── 📄 .env</div>
               <div>├── 📄 .gitignore</div>
@@ -390,7 +412,7 @@ export const BlueprintInspector: React.FC<BlueprintInspectorProps> = ({
               <tbody className="divide-y divide-surface-700 text-zinc-300">
                 {settings.apps.map(a => (
                   <tr key={a.id} className="hover:bg-surface-850">
-                    <td className="p-3 font-semibold text-white">{paths.getAppRelativePath(a.folderName, a.id)}</td>
+                    <td className="p-3 font-semibold text-white">{paths.getAppRelativePath(a.folderName, a.id, a.role)}</td>
                     <td className="p-3 text-zinc-400 capitalize">{a.role}</td>
                     <td className="p-3 text-zinc-400 font-sans text-xs">Self (Microservice)</td>
                     <td className="p-3 font-bold text-white font-mono">:{a.port}</td>

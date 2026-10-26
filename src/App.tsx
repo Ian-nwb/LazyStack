@@ -408,6 +408,7 @@ export const App: React.FC = () => {
             apps={apps}
             setApps={setApps}
             databases={databases}
+            structureConfig={structureConfig}
             onApplyPreset={handleApplyPreset}
           />
         )}

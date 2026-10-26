@@ -350,6 +350,18 @@ export const DatabasePicker: React.FC<DatabasePickerProps> = ({ databases, setDa
                             <p className="text-[10px] text-red-400 truncate font-mono">{portCollision}</p>
                           )}
 
+                          {['postgres', 'mysql', 'mariadb', 'mongodb'].includes(db.id) && (
+                            <div className="grid grid-cols-2 gap-2 pt-1">
+                              <label className="text-[10px] text-zinc-400">Database name
+                                <input value={inst.databaseName || `lazystack_${inst.type}`} onChange={(e) => updateInstance(instKey, { databaseName: e.target.value })} className="mt-1 w-full bg-surface-900 border border-surface-700 rounded px-2 py-1 text-[11px] font-mono text-white focus:outline-none focus:border-zinc-400" />
+                              </label>
+                              <label className="text-[10px] text-zinc-400">Database user
+                                <input value={inst.username || 'lazystack_user'} onChange={(e) => updateInstance(instKey, { username: e.target.value })} className="mt-1 w-full bg-surface-900 border border-surface-700 rounded px-2 py-1 text-[11px] font-mono text-white focus:outline-none focus:border-zinc-400" />
+                              </label>
+                              <p className="col-span-2 text-[10px] text-zinc-500">A unique password is generated into the local .env file when the project is created.</p>
+                            </div>
+                          )}
+
                           {/* SQLite Storage Option */}
                           {db.id === 'sqlite' && (
                             <div className="pt-1">

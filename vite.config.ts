@@ -44,17 +44,8 @@ export default defineConfig({
       name: 'lazystack-host-api',
       configureServer(server) {
         server.middlewares.use('/api/get-default-path', async (_req, res) => {
-          try {
-            const os = await import('os')
-            const path = await import('path')
-            const defaultParent = path.normalize(path.join(os.homedir(), 'Projects'))
-            res.setHeader('Content-Type', 'application/json')
-            res.end(JSON.stringify({ defaultPath: defaultParent }))
-          } catch (err: any) {
-            res.statusCode = 500
-            res.setHeader('Content-Type', 'application/json')
-            res.end(JSON.stringify({ error: err.message }))
-          }
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify({ defaultPath: '' }))
         })
 
         server.middlewares.use('/api/check-directory', async (req, res) => {

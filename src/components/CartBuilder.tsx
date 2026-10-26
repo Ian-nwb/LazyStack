@@ -1,19 +1,21 @@
 import React, { useState, useEffect } from 'react'
 import { Plus, Trash2, Copy, ArrowUp, ArrowDown, Search, Server, Monitor, Check, AlertTriangle, RefreshCw, Code2, Download, CheckCircle2, ShieldAlert, Sparkles } from 'lucide-react'
-import { CartApp, TechItem, AppRole, SelectedDatabase, LanguageFlavor } from '../types'
+import { CartApp, TechItem, AppRole, SelectedDatabase, LanguageFlavor, FolderStructureConfig } from '../types'
 import { TECH_CATALOG } from '../data/frameworks'
 import { STACK_PRESETS, StackPreset } from '../data/presets'
 import { validateFolderName } from '../utils/pathValidation'
 import { getTechIconUrl } from '../utils/techIcons'
+import { ServiceOptionsPanel } from './ServiceOptionsPanel'
 
 interface CartBuilderProps {
   apps: CartApp[]
   setApps: React.Dispatch<React.SetStateAction<CartApp[]>>
   databases: SelectedDatabase[]
+  structureConfig?: FolderStructureConfig
   onApplyPreset?: (preset: StackPreset) => void
 }
 
-export const CartBuilder: React.FC<CartBuilderProps> = ({ apps, setApps, databases, onApplyPreset }) => {
+export const CartBuilder: React.FC<CartBuilderProps> = ({ apps, setApps, databases, structureConfig, onApplyPreset }) => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
@@ -382,7 +384,7 @@ export const CartBuilder: React.FC<CartBuilderProps> = ({ apps, setApps, databas
                         return (
                           <>
                             <div className="flex items-center gap-1.5">
-                              <span className="text-xs font-mono text-zinc-500">apps/</span>
+                              <span className="text-xs font-mono text-zinc-500">{structureConfig?.appDirectories?.[app.role] || structureConfig?.appsDir || 'apps'}/</span>
                               <input
                                 type="text"
                                 value={app.folderName}
@@ -554,6 +556,11 @@ export const CartBuilder: React.FC<CartBuilderProps> = ({ apps, setApps, databas
                     })}
                   </div>
                 )}
+                <ServiceOptionsPanel
+                  app={app}
+                  apps={apps}
+                  onUpdate={(updates) => handleUpdate(app.id, updates)}
+                />
               </div>
             )
           })

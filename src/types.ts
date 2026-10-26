@@ -48,6 +48,33 @@ export interface CartApp {
   runMode: RunMode
   routePrefix: string
   flavor?: LanguageFlavor
+  connections?: ServiceConnection[]
+  healthCheck?: AppHealthCheck
+  testingTools?: string[]
+  customTestingTools?: CustomTestingTool[]
+}
+
+export interface ServiceConnection {
+  targetAppId: string
+  envVar: string
+  protocol: 'http' | 'https' | 'grpc' | 'custom'
+  customUrl?: string
+}
+
+export interface AppHealthCheck {
+  enabled: boolean
+  type: 'http' | 'command'
+  path?: string
+  command?: string
+  intervalSeconds: number
+  timeoutSeconds: number
+  retries: number
+  startPeriodSeconds: number
+}
+
+export interface CustomTestingTool {
+  name: string
+  packageName?: string
 }
 
 export type DatabaseType = 
@@ -105,6 +132,7 @@ export interface SelectedDatabase {
   customName?: string          // e.g. 'Auth Service DB', 'Orders DB'
   assignedAppId?: string       // ID of the microservice app it is assigned to, or 'global'
   databaseName?: string        // Custom DB name (e.g. 'auth_db', 'orders_db')
+  username?: string            // Database login name; secret password is generated into .env
   sqliteStorage?: 'shared-volume' | 'app-local' | 'litestream'
 }
 
@@ -127,12 +155,14 @@ export interface FolderStructureConfig {
   preset: ArchitecturePreset
   isCustom: boolean
   appsDir: string         // e.g. 'apps', 'services', 'domains', 'backend/services'
+  appDirectories?: Partial<Record<AppRole, string>>
   infraDir: string        // e.g. 'infra', 'deploy'
   packagesDir: string     // e.g. 'packages', 'shared', 'libs', 'core'
   docsDir: string         // e.g. 'docs'
   scriptsDir: string      // e.g. 'scripts'
   databaseIsolation: DatabaseIsolationMode
   customAppPaths?: Record<string, string> // Map appId -> custom relative directory
+  customFolders?: string[]  // Additional root-level directories to create
 }
 
 export type ProxyType = 'nginx' | 'apache' | 'none'

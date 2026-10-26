@@ -60,12 +60,7 @@ app.on('activate', () => {
 app.whenReady().then(() => {
   // IPC Handlers
   ipcMain.handle('get-default-path', async () => {
-    try {
-      const defaultParent = path.join(os.homedir(), 'Projects')
-      return path.normalize(defaultParent)
-    } catch {
-      return os.homedir()
-    }
+    return ''
   })
 
   ipcMain.handle('select-directory', async (event, defaultPath) => {

@@ -1,7 +1,8 @@
-import React from 'react'
-import { FolderTree, Sliders, Check, Sparkles, Database, Layers } from 'lucide-react'
+import React, { useState } from 'react'
+import { FolderTree, Sliders, Check, Sparkles, Database, Layers, Plus, X } from 'lucide-react'
 import { ArchitecturePreset, FolderStructureConfig, ProjectSettings } from '../types'
 import { ARCHITECTURE_PRESETS, getDefaultStructureConfig } from '../data/structurePresets'
+import { validateFolderName } from '../utils/pathValidation'
 
 interface StructureCustomizerProps {
   settings: ProjectSettings
@@ -10,6 +11,39 @@ interface StructureCustomizerProps {
 
 export const StructureCustomizer: React.FC<StructureCustomizerProps> = ({ settings, onUpdateStructure }) => {
   const currentConfig: FolderStructureConfig = settings.structureConfig || getDefaultStructureConfig()
+  const [newFolderName, setNewFolderName] = useState('')
+  const [folderError, setFolderError] = useState('')
+
+  const handleAddFolder = () => {
+    const name = newFolderName.trim()
+    const validation = validateFolderName(name)
+    if (!validation.valid) {
+      setFolderError(validation.error || 'Enter a valid folder name.')
+      return
+    }
+    const existing = [currentConfig.appsDir, currentConfig.infraDir, currentConfig.packagesDir,
+      currentConfig.docsDir, currentConfig.scriptsDir, ...(currentConfig.customFolders || [])]
+      .map(folder => folder.toLowerCase())
+    if (existing.includes(name.toLowerCase())) {
+      setFolderError('This folder is already part of the structure.')
+      return
+    }
+    onUpdateStructure({
+      ...currentConfig,
+      isCustom: true,
+      customFolders: [...(currentConfig.customFolders || []), name]
+    })
+    setNewFolderName('')
+    setFolderError('')
+  }
+
+  const handleRemoveFolder = (name: string) => {
+    onUpdateStructure({
+      ...currentConfig,
+      isCustom: true,
+      customFolders: (currentConfig.customFolders || []).filter(folder => folder !== name)
+    })
+  }
 
   const handleSelectPreset = (presetId: ArchitecturePreset) => {
     const meta = ARCHITECTURE_PRESETS.find(p => p.id === presetId)
@@ -17,7 +51,8 @@ export const StructureCustomizer: React.FC<StructureCustomizerProps> = ({ settin
     onUpdateStructure({
       ...meta.config,
       isCustom: presetId === 'custom',
-      customAppPaths: presetId === 'custom' ? currentConfig.customAppPaths : undefined
+      customAppPaths: presetId === 'custom' ? currentConfig.customAppPaths : undefined,
+      customFolders: currentConfig.customFolders
     })
   }
 
@@ -219,6 +254,44 @@ export const StructureCustomizer: React.FC<StructureCustomizerProps> = ({ settin
             </div>
           </div>
 
+          <div className="pt-3 border-t border-surface-800">
+            <label className="block text-[11px] font-semibold text-zinc-300 mb-2">
+              Additional Root Folders:
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newFolderName}
+                onChange={(e) => { setNewFolderName(e.target.value); setFolderError('') }}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleAddFolder() }}
+                placeholder="e.g. configs, data, tools"
+                aria-label="Custom folder name"
+                className="flex-1 bg-surface-950 border border-surface-700 focus:border-zinc-400 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={handleAddFolder}
+                className="px-3 py-1.5 rounded-lg bg-zinc-100 text-zinc-950 text-xs font-semibold flex items-center gap-1.5 hover:bg-white transition"
+              >
+                <Plus className="w-3.5 h-3.5" /> Add folder
+              </button>
+            </div>
+            {folderError && <p className="mt-1.5 text-[11px] text-red-400">{folderError}</p>}
+            {(currentConfig.customFolders || []).length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {currentConfig.customFolders?.map(folder => (
+                  <span key={folder} className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-surface-950 border border-surface-700 text-xs text-zinc-200 font-mono">
+                    {folder}/
+                    <button type="button" onClick={() => handleRemoveFolder(folder)} aria-label={`Remove ${folder} folder`} className="text-zinc-500 hover:text-white">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+            <p className="mt-1.5 text-[10px] text-zinc-500">Added folders are created at the project root.</p>
+          </div>
+
           {/* Per-Service Custom Path Overrides */}
           {settings.apps.length > 0 && (
             <div className="pt-3 border-t border-surface-800">
@@ -228,7 +301,11 @@ export const StructureCustomizer: React.FC<StructureCustomizerProps> = ({ settin
               </label>
               <div className="space-y-2">
                 {settings.apps.map(app => {
-                  const defaultPath = `${currentConfig.appsDir}/${app.folderName}`
+                  const defaultPath = (currentConfig.customAppPaths?.[app.id] || (
+                    currentConfig.appDirectories?.[app.role]
+                      ? `${currentConfig.appDirectories[app.role]}/${app.folderName}`
+                      : `${currentConfig.appsDir}/${app.folderName}`
+                  ))
                   const currentPath = currentConfig.customAppPaths?.[app.id] || ''
 
                   return (

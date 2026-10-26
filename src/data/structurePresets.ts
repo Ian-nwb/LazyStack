@@ -108,28 +108,36 @@ export const ARCHITECTURE_PRESETS: ArchitecturePresetMeta[] = [
   },
   {
     id: 'polyglot',
-    name: 'Polyglot Full-Stack Split',
-    tagline: 'Explicit backend vs frontend separation with deploy orchestration',
-    description: 'Separates backend microservices into backend/services and user interfaces into frontend/clients, with deployment configs in deploy/.',
+    name: 'Frontend / Backend Split',
+    tagline: 'Keep client apps and backend services in clearly separate roots',
+    description: 'A polyglot-friendly layout: frontend clients go in frontend/clients, backend services in backend/services, with shared code and deployment configuration alongside them.',
     icon: '🌐',
     badgeColor: 'border-cyan-500/40 bg-cyan-500/10 text-cyan-300',
     config: {
       preset: 'polyglot',
       isCustom: false,
-      appsDir: 'backend/services',
+      appsDir: 'apps',
+      appDirectories: {
+        frontend: 'frontend/clients',
+        backend: 'backend/services',
+        fullstack: 'apps/fullstack',
+        worker: 'backend/workers',
+        'desktop-mobile': 'clients/desktop',
+        other: 'apps/other'
+      },
       infraDir: 'deploy',
       packagesDir: 'shared',
       docsDir: 'docs',
       scriptsDir: 'scripts',
       databaseIsolation: 'service-isolated'
     },
-    previewTree: `├── 📁 backend/
-│   └── 📁 services/
-│       ├── 📁 api-gateway/
-│       └── 📁 user-service/
-├── 📁 frontend/
-│   └── 📁 clients/
-│       └── 📁 web-dashboard/
+    previewTree: `├── 📁 frontend/clients/
+│   └── 📁 web-dashboard/
+├── 📁 backend/services/
+│   ├── 📁 api-gateway/
+│   └── 📁 user-service/
+├── 📁 backend/workers/
+├── 📁 apps/fullstack/
 ├── 📁 deploy/
 │   ├── 📄 docker-compose.yml
 │   └── 📁 k8s/
@@ -261,15 +269,18 @@ export function resolveStructurePaths(settings: ProjectSettings) {
   const config = settings.structureConfig || getDefaultStructureConfig()
   return {
     appsDir: (config.appsDir || 'apps').replace(/^\/+|\/+$/g, ''),
+    appDirectories: config.appDirectories || {},
     infraDir: (config.infraDir || 'infra').replace(/^\/+|\/+$/g, ''),
     packagesDir: (config.packagesDir || 'packages').replace(/^\/+|\/+$/g, ''),
     docsDir: (config.docsDir || 'docs').replace(/^\/+|\/+$/g, ''),
     scriptsDir: (config.scriptsDir || 'scripts').replace(/^\/+|\/+$/g, ''),
     databaseIsolation: config.databaseIsolation || 'centralized',
-    getAppRelativePath: (folderName: string, appId?: string) => {
+    getAppRelativePath: (folderName: string, appId?: string, role?: import('../types').AppRole) => {
       if (config.customAppPaths && appId && config.customAppPaths[appId]) {
         return config.customAppPaths[appId].replace(/^\/+|\/+$/g, '')
       }
+      const roleRoot = role ? config.appDirectories?.[role] : undefined
+      if (roleRoot) return `${roleRoot.replace(/^\/+|\/+$/g, '')}/${folderName}`
       const base = (config.appsDir || 'apps').replace(/^\/+|\/+$/g, '')
       return `${base}/${folderName}`
     }

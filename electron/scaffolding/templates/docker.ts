@@ -14,6 +14,8 @@ export function getDbServiceName(db: SelectedDatabase, idx: number, apps?: CartA
   return idx > 0 ? `${db.type}_${idx + 1}` : db.type
 }
 
+const yamlQuote = (value: string) => JSON.stringify(value)
+
 export function generateDockerCompose(settings: ProjectSettings): string {
   const paths = resolveStructurePaths(settings)
 
@@ -47,7 +49,7 @@ export function generateDockerCompose(settings: ProjectSettings): string {
       case 'postgres':
         yaml += `    image: postgres:16-alpine\n`
         yaml += `    environment:\n`
-        yaml += `      POSTGRES_USER: \${${sName.toUpperCase()}_USER:-lazystack_user}\n`
+        yaml += `      POSTGRES_USER: \${${sName.toUpperCase()}_USER:-${db.username || 'lazystack_user'}}\n`
         yaml += `      POSTGRES_PASSWORD: \${${sName.toUpperCase()}_PASSWORD:-secret}\n`
         yaml += `      POSTGRES_DB: \${${sName.toUpperCase()}_DB:-${db.databaseName || 'lazystack_postgres'}}\n`
         yaml += `    ports:\n      - "\${${sName.toUpperCase()}_PORT:-${db.port}}:5432"\n`
@@ -60,7 +62,7 @@ export function generateDockerCompose(settings: ProjectSettings): string {
         yaml += `    image: mysql:8.4\n`
         yaml += `    environment:\n`
         yaml += `      MYSQL_ROOT_PASSWORD: \${MYSQL_ROOT_PASSWORD:-root_secret}\n`
-        yaml += `      MYSQL_USER: \${${sName.toUpperCase()}_USER:-lazystack_user}\n`
+        yaml += `      MYSQL_USER: \${${sName.toUpperCase()}_USER:-${db.username || 'lazystack_user'}}\n`
         yaml += `      MYSQL_PASSWORD: \${${sName.toUpperCase()}_PASSWORD:-secret}\n`
         yaml += `      MYSQL_DATABASE: \${${sName.toUpperCase()}_DB:-${db.databaseName || 'lazystack_mysql'}}\n`
         yaml += `    ports:\n      - "\${${sName.toUpperCase()}_PORT:-${db.port}}:3306"\n`
@@ -73,7 +75,7 @@ export function generateDockerCompose(settings: ProjectSettings): string {
         yaml += `    image: mariadb:11\n`
         yaml += `    environment:\n`
         yaml += `      MARIADB_ROOT_PASSWORD: \${MARIADB_ROOT_PASSWORD:-root_secret}\n`
-        yaml += `      MARIADB_USER: \${${sName.toUpperCase()}_USER:-lazystack_user}\n`
+        yaml += `      MARIADB_USER: \${${sName.toUpperCase()}_USER:-${db.username || 'lazystack_user'}}\n`
         yaml += `      MARIADB_PASSWORD: \${${sName.toUpperCase()}_PASSWORD:-secret}\n`
         yaml += `      MARIADB_DATABASE: \${${sName.toUpperCase()}_DB:-${db.databaseName || 'lazystack_mariadb'}}\n`
         yaml += `    ports:\n      - "\${${sName.toUpperCase()}_PORT:-${db.port}}:3306"\n`
@@ -101,8 +103,9 @@ export function generateDockerCompose(settings: ProjectSettings): string {
       case 'mongodb':
         yaml += `    image: mongo:7.0\n`
         yaml += `    environment:\n`
-        yaml += `      MONGO_INITDB_ROOT_USERNAME: \${${sName.toUpperCase()}_USER:-lazystack_user}\n`
+        yaml += `      MONGO_INITDB_ROOT_USERNAME: \${${sName.toUpperCase()}_USER:-${db.username || 'lazystack_user'}}\n`
         yaml += `      MONGO_INITDB_ROOT_PASSWORD: \${${sName.toUpperCase()}_PASSWORD:-secret}\n`
+        yaml += `      MONGO_INITDB_DATABASE: \${${sName.toUpperCase()}_DB:-${db.databaseName || 'lazystack_mongodb'}}\n`
         yaml += `    ports:\n      - "\${${sName.toUpperCase()}_PORT:-${db.port}}:27017"\n`
         yaml += `    volumes:\n      - ${sName}_data:/data/db\n`
         yaml += `    healthcheck:\n`
@@ -158,7 +161,7 @@ export function generateDockerCompose(settings: ProjectSettings): string {
         break
       case 'rabbitmq':
         yaml += `    image: rabbitmq:3-management-alpine\n`
-        yaml += `    environment:\n      RABBITMQ_DEFAULT_USER: \${RABBITMQ_USER:-lazystack}\n      RABBITMQ_DEFAULT_PASS: \${RABBITMQ_PASS:-secret}\n`
+        yaml += `    environment:\n      RABBITMQ_DEFAULT_USER: \${${sName.toUpperCase()}_USER:-lazystack}\n      RABBITMQ_DEFAULT_PASS: \${${sName.toUpperCase()}_PASSWORD:-secret}\n`
         yaml += `    ports:\n      - "\${${sName.toUpperCase()}_PORT:-${db.port}}:5672"\n      - "15672:15672"\n`
         yaml += `    volumes:\n      - ${sName}_data:/var/lib/rabbitmq\n`
         yaml += `    healthcheck:\n      test: ["CMD", "rabbitmq-diagnostics", "check_running"]\n      interval: 5s\n      timeout: 5s\n      retries: 5\n`
@@ -197,14 +200,17 @@ export function generateDockerCompose(settings: ProjectSettings): string {
 
   // Docker Apps
   dockerApps.forEach(app => {
-    const appRelPath = paths.getAppRelativePath(app.folderName, app.id)
+    const appRelPath = paths.getAppRelativePath(app.folderName, app.id, app.role)
     yaml += `  ${app.folderName}:\n`
     yaml += `    build:\n      context: ../${appRelPath}\n      dockerfile: Dockerfile\n`
     yaml += `    restart: unless-stopped\n`
     if (app.port > 0) {
       yaml += `    ports:\n      - "${app.port}:${app.port}"\n`
     }
-    yaml += `    env_file:\n      - ../.env\n      - ../${appRelPath}/.env\n`
+    yaml += `    env_file:\n      - ../${appRelPath}/.env\n`
+    if ((app.connections || []).some(connection => settings.apps.find(target => target.id === connection.targetAppId)?.runMode === 'host')) {
+      yaml += `    extra_hosts:\n      - "host.docker.internal:host-gateway"\n`
+    }
 
     const relevantDbs = activeDbs.filter(d => {
       if (d.type === 'sqlite') return false
@@ -214,11 +220,28 @@ export function generateDockerCompose(settings: ProjectSettings): string {
       return true
     })
 
-    if (relevantDbs.length > 0) {
+    const dependencies = new Map<string, 'service_healthy' | 'service_started'>()
+    relevantDbs.forEach(db => {
+      const index = settings.databases.indexOf(db)
+      dependencies.set(getDbServiceName(db, index, settings.apps), 'service_healthy')
+    })
+    for (const connection of app.connections || []) {
+      const target = settings.apps.find(item => item.id === connection.targetAppId)
+      if (!target || target.runMode !== 'docker') continue
+      dependencies.set(target.folderName, target.healthCheck?.enabled ? 'service_healthy' : 'service_started')
+    }
+    if (dependencies.size > 0) {
       yaml += `    depends_on:\n`
-      relevantDbs.forEach((d, idx) => {
-        yaml += `      ${getDbServiceName(d, idx, settings.apps)}:\n        condition: service_healthy\n`
+      dependencies.forEach((condition, serviceName) => {
+        yaml += `      ${serviceName}:\n        condition: ${condition}\n`
       })
+    }
+    if (app.healthCheck?.enabled) {
+      const check = app.healthCheck
+      const command = check.type === 'http'
+        ? `wget --no-verbose --tries=1 --spider http://127.0.0.1:${app.port}${check.path || '/health'}`
+        : (check.command || '').replaceAll('${PORT}', String(app.port))
+      yaml += `    healthcheck:\n      test: ["CMD-SHELL", ${yamlQuote(command)}]\n      interval: ${check.intervalSeconds}s\n      timeout: ${check.timeoutSeconds}s\n      retries: ${check.retries}\n      start_period: ${check.startPeriodSeconds}s\n`
     }
     yaml += `    networks:\n      - lazystack_net\n\n`
   })
@@ -240,7 +263,7 @@ export function generateDockerDevCompose(settings: ProjectSettings): string {
   const paths = resolveStructurePaths(settings)
   let yaml = `version: '3.8'\n\nservices:\n`
   settings.apps.filter(a => a.runMode === 'docker').forEach(app => {
-    const appRelPath = paths.getAppRelativePath(app.folderName, app.id)
+    const appRelPath = paths.getAppRelativePath(app.folderName, app.id, app.role)
     yaml += `  ${app.folderName}:\n`
     yaml += `    volumes:\n      - ../${appRelPath}:/app\n`
     if (['react-vite', 'vue-vite', 'ts-express', 'ts-fastify', 'ts-nestjs'].includes(app.techId)) {
