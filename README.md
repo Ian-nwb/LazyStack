@@ -11,7 +11,7 @@ Download **Linux AppImage** or **Windows portable EXE** from the [v1.0.4 GitHub 
 | Linux x64 | AppImage |
 | Windows x64 | Portable EXE |
 
-There is no macOS package for this release.
+macOS package not yet available (sponsor me macbook)
 
 ## Features
 
