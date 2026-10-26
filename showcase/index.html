@@ -57,7 +57,12 @@ a { color: inherit; }
 code, pre, .mono { font-family: var(--font-mono); }
 code { font-size: 0.86em; }
 :focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; }
-@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  * { transition: none !important; }
+  .hero h1, .copy.is-copied { animation: none !important; }
+  .dl-row:not(.none)::after { display: none; }
+}
 
 .page { max-width: 1240px; margin-inline: auto; }
 .eyebrow {
@@ -68,7 +73,11 @@ code { font-size: 0.86em; }
 /* ---------- top bar ---------- */
 .bar {
   position: sticky; top: env(safe-area-inset-top, 0px); z-index: 50;
-  background: var(--bg); border-bottom: 1px solid var(--line-strong);
+  background: var(--bg);
+  margin-left: calc(-1 * max(16px, env(safe-area-inset-left, 0px)));
+  margin-right: calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
   display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px;
   padding-block: 14px;
 }
@@ -94,6 +103,11 @@ h1 {
   letter-spacing: -0.045em;
   font-weight: 900;
   text-wrap: balance;
+}
+h1 { animation: title-imprint 680ms cubic-bezier(.16, 1, .3, 1) both; }
+@keyframes title-imprint {
+  from { clip-path: inset(0 0 88% 0); transform: translateY(8px); }
+  to { clip-path: inset(0); transform: translateY(0); }
 }
 h1 .thin { font-weight: 200; letter-spacing: -0.05em; }
 .hero-grid {
@@ -185,6 +199,11 @@ tr.pick td:first-child::before { content: "\2192\00a0"; font-family: var(--font-
   background: transparent; color: var(--fg); border: 0; border-left: 1px solid var(--line-strong); padding: 10px 16px; cursor: pointer;
   transition: background-color 120ms, color 120ms; min-width: 8.5rem;
 }
+.copy.is-copied { background: var(--fg); color: var(--bg); animation: copy-confirm 220ms cubic-bezier(.16, 1, .3, 1) both; }
+@keyframes copy-confirm {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0); }
+}
 .copy:hover { background: var(--fg); color: var(--bg); }
 pre { margin: 0; padding: 16px 14px; overflow-x: auto; font-size: 13px; line-height: 1.7; tab-size: 2; }
 pre .c { color: var(--mute); }
@@ -201,8 +220,25 @@ pre .c { color: var(--mute); }
 .dl-rows { margin: 0 0 28px; border-top: 1px solid var(--inv-fg); }
 .dl-row {
   display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px 24px; align-items: center;
+  position: relative; isolation: isolate; overflow: hidden;
   padding: 18px 0; border-bottom: 1px solid var(--dl-line);
 }
+.dl-row:not(.none)::after {
+  content: ""; position: absolute; z-index: 1; inset-block: 0; left: 0; width: clamp(48px, 9vw, 112px);
+  pointer-events: none; opacity: 0; transform: translateX(-130%);
+  background: color-mix(in srgb, var(--inv-fg) 7%, transparent);
+  border-inline: 1px solid color-mix(in srgb, var(--inv-fg) 18%, transparent);
+  backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+}
+.dl.is-visible .dl-row:not(.none)::after { animation: release-scan 1050ms cubic-bezier(.16, 1, .3, 1) both; }
+.dl.is-visible .dl-row:nth-child(2)::after { animation-delay: 130ms; }
+@keyframes release-scan {
+  0% { opacity: 0; transform: translateX(-130%); }
+  18% { opacity: 1; }
+  82% { opacity: .8; }
+  100% { opacity: 0; transform: translateX(1100%); }
+}
+@media (prefers-reduced-motion: reduce) { .dl-row:not(.none)::after { display: none; } }
 @media (min-width: 760px) { .dl-row { grid-template-columns: 200px minmax(0, 1fr) auto; } }
 .dl-row .plat { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700; }
 .dl-row .pkg { font-size: clamp(1.4rem, 3vw, 2.1rem); font-weight: 800; letter-spacing: -0.03em; line-height: 1.05; }
@@ -214,6 +250,7 @@ pre .c { color: var(--mute); }
 .dl .code { border-color: var(--inv-fg); }
 .dl .code-head { border-color: var(--inv-fg); }
 .dl .copy { color: var(--inv-fg); border-left-color: var(--inv-fg); }
+.dl .copy.is-copied { background: var(--inv-fg); color: var(--inv-bg); }
 .dl .copy:hover { background: var(--inv-fg); color: var(--inv-bg); }
 .dl pre .c { color: var(--dl-mute); }
 .dl :focus-visible { outline-color: var(--inv-fg); }
@@ -293,7 +330,7 @@ footer { border-top: 1px solid var(--line-strong); padding-block: 40px calc(32px
           <div class="row"><dt>Polyglot layout</dt><dd>Browser clients go to <code>frontend/clients/</code>, API services to <code>backend/services/</code>, workers to <code>backend/workers/</code>, and deployment files to <code>deploy/</code>.</dd></div>
           <div class="row"><dt>Service connections</dt><dd>Configure API URLs, environment variable names, health checks, and startup dependencies between services.</dd></div>
           <div class="row"><dt>Database setup</dt><dd>Add self-hosted databases or managed cloud providers, set per-service database scope, and get local credentials generated into <code>.env</code>.</dd></div>
-          <div class="row"><dt>Database web UIs</dt><dd>Attach an admin UI to a database instance: Adminer, pgAdmin, phpMyAdmin, Mongo Express, or Redis Commander, matched to the engine.</dd></div>
+          <div class="row"><dt>Database web UIs</dt><dd>Attach an admin UI to a database instance: Adminer, pgAdmin, Prisma Studio, phpMyAdmin, Mongo Express, or Redis Commander, matched to the engine. Prisma Studio gets a generated local launch command.</dd></div>
           <div class="row"><dt>Testing tools</dt><dd>Choose tools per app, grouped by purpose. They are opt-in, so no test runner lands in a service that did not ask for one.</dd></div>
           <div class="row"><dt>Infrastructure output</dt><dd>Docker Compose, optional Nginx or Apache routing, environment files, scripts, shared packages, and starter documentation.</dd></div>
           <div class="row"><dt>Blueprints + CLI</dt><dd>Export a JSON blueprint, then scaffold it from the command line without opening the desktop app.</dd></div>
@@ -373,20 +410,20 @@ footer { border-top: 1px solid var(--line-strong); padding-block: 40px calc(32px
             <li class="t">Supabase</li><li class="t">Firebase</li><li class="t">PlanetScale</li><li class="t">Neon</li><li class="t">Turso</li><li class="t">Upstash</li><li class="t">Appwrite</li><li class="t">Convex</li>
           </ul></div></div>
           <div class="row"><div class="k">DB admin UIs</div><div class="v"><ul class="tags">
-            <li class="t">Adminer</li><li class="t">pgAdmin</li><li class="t">phpMyAdmin</li><li class="t">Mongo Express</li><li class="t">Redis Commander</li>
+            <li class="t">Adminer</li><li class="t">pgAdmin</li><li class="t">Prisma Studio</li><li class="t">phpMyAdmin</li><li class="t">Mongo Express</li><li class="t">Redis Commander</li>
           </ul></div></div>
           <div class="row"><div class="k">Unit + component</div><div class="v"><ul class="tags">
             <li class="t">Jest</li><li class="t">Vitest</li><li class="t">Testing Library</li><li class="t">pytest</li><li class="t">Go testing</li><li class="t">PHPUnit</li><li class="t">JUnit</li>
           </ul></div></div>
           <div class="row"><div class="k">API + integration</div><div class="v"><ul class="tags">
-            <li class="t">Supertest</li><li class="t">Newman</li><li class="t">Bruno</li><li class="t">REST Assured</li><li class="t">Postman via Newman</li>
+            <li class="t">Supertest</li><li class="t">Newman</li><li class="t">Bruno</li><li class="t">REST Assured</li><li class="t">Swagger UI + OpenAPI lint</li><li class="t">Postman via Newman</li>
           </ul></div></div>
           <div class="row"><div class="k">Browser end-to-end</div><div class="v"><ul class="tags">
             <li class="t">Playwright</li><li class="t">Cypress</li><li class="t">WebdriverIO</li><li class="t">Puppeteer</li>
           </ul></div></div>
           <div class="row"><div class="k">UI development</div><div class="v"><ul class="tags"><li class="t">Storybook</li></ul></div></div>
           <div class="row"><div class="k">Performance</div><div class="v"><ul class="tags"><li class="t">k6</li><li class="t">Artillery</li></ul></div></div>
-          <div class="row"><div class="k">Contract + schema</div><div class="v"><ul class="tags"><li class="t">Pact</li><li class="t">OpenAPI validation</li></ul></div></div>
+          <div class="row"><div class="k">Contract + schema</div><div class="v"><ul class="tags"><li class="t">Pact</li><li class="t">Swagger / OpenAPI validation</li></ul></div></div>
           <div class="row"><div class="k">Security</div><div class="v"><ul class="tags"><li class="t">OWASP ZAP</li></ul></div></div>
         </div>
         <p class="note" style="margin-top:18px">Missing a test tool? Add a custom one by name and package.</p>
@@ -535,6 +572,19 @@ npm run dist:release  <span class="c"># build both targets</span></pre>
 
 <script>
 (function () {
+  var download = document.querySelector('.dl');
+  if (download && 'IntersectionObserver' in window) {
+    var reveal = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          download.classList.add('is-visible');
+          reveal.disconnect();
+        }
+      });
+    }, { threshold: 0.18 });
+    reveal.observe(download);
+  }
+
   var buttons = document.querySelectorAll('[data-copy]');
   buttons.forEach(function (btn) {
     btn.addEventListener('click', function () {
@@ -543,7 +593,8 @@ npm run dist:release  <span class="c"># build both targets</span></pre>
       var text = pre.innerText;
       function done(ok) {
         btn.textContent = ok ? 'Copied' : 'Select + copy';
-        setTimeout(function () { btn.textContent = 'Copy'; }, 1600);
+        btn.classList.toggle('is-copied', ok);
+        setTimeout(function () { btn.textContent = 'Copy'; btn.classList.remove('is-copied'); }, 1600);
       }
       function fallback() {
         var ok = false;

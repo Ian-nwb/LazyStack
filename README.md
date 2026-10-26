@@ -21,7 +21,7 @@ There is no macOS package for this release.
 - **Polyglot layout:** Route browser clients to `frontend/clients/`, API services to `backend/services/`, workers to `backend/workers/`, and deployment files to `deploy/`.
 - **Service connections:** Configure API URLs, environment variable names, health checks, and startup dependencies between services.
 - **Database configuration:** Add self-hosted databases or managed cloud providers, configure per-service database scope, and generate local credentials in `.env`.
-- **Database web UIs:** Optionally attach an admin UI to each database instance: Adminer or pgAdmin for PostgreSQL, Adminer or phpMyAdmin for MySQL/MariaDB, Mongo Express for MongoDB, and Redis Commander for Redis/Valkey.
+- **Database web UIs:** Optionally attach an admin UI to each database instance: Adminer, pgAdmin, or Prisma Studio for PostgreSQL; Adminer, phpMyAdmin, or Prisma Studio for MySQL/MariaDB; Mongo Express for MongoDB; and Redis Commander for Redis/Valkey. Prisma Studio runs on the host so its local web server is reachable; the generated project adds an `npm run prisma:studio:<database>` command. Start the database stack first, then run that command and open the configured local port. It uses Prisma CLI 7's direct connection URL support, so it does not require a Prisma schema.
 - **Testing tools:** Select tools per app, organized by test purpose. See [Testing tools](#testing-tools).
 - **Infrastructure output:** Generate Docker Compose, optional Nginx or Apache routing, environment files, scripts, shared packages, and starter documentation.
 - **Blueprints and CLI:** Export JSON blueprints and scaffold them without opening the desktop interface.
@@ -39,7 +39,7 @@ Testing is a first-class stack choice. Select tools for the app’s language and
 | Test area | Available examples |
 | --- | --- |
 | Unit and component | Jest, Vitest, Testing Library, pytest, Go `testing`, PHPUnit, JUnit, 
-| API and integration | Supertest, Newman, Bruno, REST Assured, Postman collections via Newman |
+| API and integration | Supertest, Newman, Bruno, REST Assured, Swagger UI, and Swagger/OpenAPI spec validation with the Redocly CLI |
 | Browser end-to-end | Playwright, Cypress, WebdriverIO, Puppeteer |
 | UI component development | Storybook |
 | Performance and load | k6, Artillery |

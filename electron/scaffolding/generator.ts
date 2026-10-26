@@ -377,7 +377,7 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
       const selectedTools = selectedToolIds.map(id => TESTING_TOOLS.find(tool => tool.id === id)).filter((tool): tool is NonNullable<typeof tool> => Boolean(tool))
       const customToolPackages = (app.customTestingTools || []).map(tool => tool.packageName).filter((name): name is string => Boolean(name && /^[a-zA-Z0-9@/_.*-]+$/.test(name)))
       const appPackagePath = path.join(appDir, 'package.json')
-      const hasNpmTools = selectedTools.some(tool => tool.ecosystem === 'npm') || customToolPackages.length > 0
+      const hasNpmTools = selectedTools.some(tool => tool.ecosystem === 'npm' || (tool.ecosystem === 'cli' && Boolean(tool.scriptName))) || customToolPackages.length > 0
       if (hasNpmTools && await fs.pathExists(appPackagePath)) {
         try {
           const packageJson = await fs.readJson(appPackagePath)
@@ -392,6 +392,13 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
         } catch {
           // Some non-Node services include JSON files that are not npm manifests; leave them untouched.
         }
+      }
+
+      if (selectedToolIds.includes('swagger-openapi')) {
+        const title = JSON.stringify(app.folderName)
+        const description = JSON.stringify(`API contract for ${app.folderName}`)
+        await fs.writeFile(path.join(appDir, 'openapi.yaml'), `openapi: 3.1.0\ninfo:\n  title: ${title}\n  version: 1.0.0\n  description: ${description}\nservers:\n  - url: http://localhost:${app.port}\npaths:\n  /:\n    get:\n      summary: Service root\n      responses:\n        '200':\n          description: Service is responding\n`, 'utf8')
+        filesCreated++
       }
 
       if (selectedToolIds.includes('playwright')) {

@@ -12,7 +12,7 @@ import { Layers, Database, Globe, Eye, FolderOpen, ExternalLink, Copy, Check, Ch
 import { StackPreset } from './data/presets'
 import { joinPaths } from './utils/pathValidation'
 import { getDefaultStructureConfig } from './data/structurePresets'
-import { getDatabaseAdminUiOption } from './data/databaseAdminUis'
+import { getDatabaseAdminUiCommandName, getDatabaseAdminUiOption } from './data/databaseAdminUis'
 
 export const App: React.FC = () => {
   const [projectName, setProjectName] = useState('')
@@ -525,6 +525,9 @@ export const App: React.FC = () => {
                         const option = getDatabaseAdminUiOption(db.type, db.adminUi)
                         const port = db.adminUiPort || option?.defaultPort
                         if (!option || !port) return null
+                        if (option.hostProcess) return <span key={db.id || `${db.type}-${index}`} title={`Run npm run prisma:studio:${getDatabaseAdminUiCommandName(db, databases.indexOf(db), apps)}`} className="px-2.5 py-1 bg-surface-900 border border-surface-700 rounded text-zinc-400 flex items-center gap-1 font-mono">
+                          {option.name} · start with npm run · {db.customName || db.type} : {port}
+                        </span>
                         return <a key={db.id || `${db.type}-${index}`} href={`http://localhost:${port}`} target="_blank" rel="noreferrer" className="px-2.5 py-1 bg-surface-900 border border-surface-700 hover:border-cyan-500 rounded text-cyan-300 hover:text-white flex items-center gap-1 font-mono">
                           {option.name} · {db.customName || db.type} : {port}
                         </a>

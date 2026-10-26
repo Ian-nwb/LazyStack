@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Database, AlertTriangle, HardDrive, ShieldCheck, Cloud, Server, ExternalLink, Package, Key, Plus, Trash2, Box } from 'lucide-react'
 import { SelectedDatabase, DatabaseType, CartApp, DatabaseAdminUi } from '../types'
 import { DATABASE_CATALOG } from '../data/databases'
-import { getDatabaseAdminUiOption, getDatabaseAdminUiOptions } from '../data/databaseAdminUis'
+import { getDatabaseAdminUiCommandName, getDatabaseAdminUiOption, getDatabaseAdminUiOptions } from '../data/databaseAdminUis'
 
 interface DatabasePickerProps {
   databases: SelectedDatabase[]
@@ -399,7 +399,7 @@ export const DatabasePicker: React.FC<DatabasePickerProps> = ({ databases, setDa
                                 />
                                 {getPortCollision(inst.adminUiPort || 0, instKey, true) && <span className="block text-[9px] text-red-400 mt-1">{getPortCollision(inst.adminUiPort || 0, instKey, true)}</span>}
                               </label>}
-                              {inst.adminUi && <p className="col-span-2 text-[10px] text-zinc-500">Available locally at http://localhost:{inst.adminUiPort || getDatabaseAdminUiOption(inst.type, inst.adminUi)?.defaultPort}</p>}
+                              {inst.adminUi && <p className="col-span-2 text-[10px] text-zinc-500">{getDatabaseAdminUiOption(inst.type, inst.adminUi)?.hostProcess ? `Start with npm run prisma:studio:${getDatabaseAdminUiCommandName(inst, databases.indexOf(inst), apps)}; then open http://localhost:${inst.adminUiPort || getDatabaseAdminUiOption(inst.type, inst.adminUi)?.defaultPort}` : `Available locally at http://localhost:${inst.adminUiPort || getDatabaseAdminUiOption(inst.type, inst.adminUi)?.defaultPort}`}</p>}
                             </div>
                           )}
 

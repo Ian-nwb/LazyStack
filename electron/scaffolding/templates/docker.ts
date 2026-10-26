@@ -184,7 +184,9 @@ export function generateDockerCompose(settings: ProjectSettings): string {
   // Optional per-instance database web administration UIs
   activeDbs.forEach(db => {
     const option = getDatabaseAdminUiOption(db.type, db.adminUi)
-    if (!option) return
+    // Prisma Studio runs on the host so it can bind a reachable local port.
+    // The current Studio CLI binds to loopback inside containers.
+    if (!option || option.hostProcess) return
     const sName = getDbServiceName(db, settings.databases.indexOf(db), settings.apps)
     const uiServiceName = `${sName}_admin_ui`
     const uiPort = db.adminUiPort || option.defaultPort
@@ -214,6 +216,8 @@ export function generateDockerCompose(settings: ProjectSettings): string {
       case 'redis-commander':
         yaml += `    image: rediscommander/redis-commander:latest\n`
         yaml += `    environment:\n      REDIS_HOSTS: local:${sName}:6379\n`
+        break
+      case 'prisma-studio':
         break
     }
     yaml += `    ports:\n      - "127.0.0.1:${uiPort}:${option.containerPort}"\n`
@@ -267,6 +271,25 @@ export function generateDockerCompose(settings: ProjectSettings): string {
       yaml += `    healthcheck:\n      test: ["CMD-SHELL", ${yamlQuote(command)}]\n      interval: ${check.intervalSeconds}s\n      timeout: ${check.timeoutSeconds}s\n      retries: ${check.retries}\n      start_period: ${check.startPeriodSeconds}s\n`
     }
     yaml += `    networks:\n      - lazystack_net\n\n`
+  })
+
+  const swaggerApps = settings.apps.filter(app => (app.testingTools || []).includes('swagger-openapi'))
+  const usedPorts = new Set([
+    ...settings.apps.map(app => app.port),
+    ...settings.databases.filter(db => db.enabled).map(db => db.port),
+    settings.proxy.httpPort
+  ])
+  swaggerApps.forEach((app, index) => {
+    let uiPort = 8088 + index
+    while (usedPorts.has(uiPort)) uiPort++
+    usedPorts.add(uiPort)
+    const appRelPath = paths.getAppRelativePath(app.folderName, app.id, app.role)
+    yaml += `  ${app.folderName}_swagger_ui:\n`
+    yaml += `    image: swaggerapi/swagger-ui:latest\n`
+    yaml += `    environment:\n      SWAGGER_JSON: /openapi.yaml\n`
+    yaml += `    ports:\n      - "127.0.0.1:${uiPort}:8080"\n`
+    yaml += `    volumes:\n      - ../${appRelPath}/openapi.yaml:/openapi.yaml:ro\n`
+    yaml += `    networks:\n      - lazystack_net\n    restart: unless-stopped\n\n`
   })
 
   // Gateway Service
