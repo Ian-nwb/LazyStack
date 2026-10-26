@@ -369,7 +369,7 @@ ${activeDbs.filter(db => db.adminUi).map(db => {
 
 ${settings.apps.map(app => (app.connections || []).length ? `- **${app.folderName}**: ${app.connections!.map(connection => `\`${connection.envVar}\` → ${settings.apps.find(target => target.id === connection.targetAppId)?.folderName || 'unknown service'}`).join(', ')}.` : '').filter(Boolean).join('\n') || 'No app-to-app connections were configured.'}
 
-Service-specific `.env` files contain resolved local URLs and credentials. Keep `.env` private and use `.env.example` for safe configuration references.
+Service-specific \`.env\` files contain resolved local URLs and credentials. Keep \`.env\` private and use \`.env.example\` for safe configuration references.
 
 ## Testing and component workbench
 

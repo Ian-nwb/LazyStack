@@ -31,7 +31,7 @@ export function generateDockerCompose(settings: ProjectSettings): string {
 
   let yaml = `version: '3.8'\n\nnetworks:\n  lazystack_net:\n    driver: bridge\n\nvolumes:\n`
 
-  activeDbs.forEach(db => {
+  activeDbs.forEach((db, idx) => {
     if (db.type !== 'sqlite') {
       const sName = getDbServiceName(db, idx, settings.apps)
       yaml += `  ${sName}_data:\n`
