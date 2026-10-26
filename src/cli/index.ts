@@ -28,6 +28,8 @@ OPTIONS FOR 'export':
   --preset, -p <name>   Preset to export (t3-stack, fastapi-react, modern-mern, etc.)
   --out, -o <file>      Target output file (default: ./lazystack.json)
   --name, -n <name>     Project name (default: my-monorepo)
+  --native-only         Disable root workspace files (native project tooling only)
+  --unified-workspace   Enable root JS workspace files (default)
   --stdout              Print JSON directly to stdout
 
 OPTIONS FOR 'scaffold':
@@ -35,6 +37,8 @@ OPTIONS FOR 'scaffold':
   --preset, -p <name>   Scaffold directly from a preset name
   --out, -o <dir>       Target parent directory (default: current working directory)
   --name, -n <name>     Override project name
+  --native-only         Disable root workspace files (native project tooling only)
+  --unified-workspace   Enable root JS workspace files
 
 EXAMPLES:
   # Export a T3 Stack blueprint to lazystack.json
@@ -75,7 +79,8 @@ function buildSettingsFromPreset(preset: StackPreset, projectName: string, paren
     databases: preset.databases,
     proxy: preset.proxy,
     includeAdminGui: true,
-    includeSharedPackage: true
+    includeSharedPackage: true,
+    useUnifiedWorkspace: true
   }
 }
 
@@ -145,6 +150,7 @@ export async function runCli(args: string[] = process.argv.slice(2)) {
     let outFile = './lazystack.json'
     let projectName = 'my-monorepo'
     let stdout = false
+    let useUnifiedWorkspace = true
 
     for (let i = 1; i < args.length; i++) {
       if ((args[i] === '--preset' || args[i] === '-p') && args[i + 1]) {
@@ -155,6 +161,10 @@ export async function runCli(args: string[] = process.argv.slice(2)) {
         projectName = args[++i]
       } else if (args[i] === '--stdout') {
         stdout = true
+      } else if (args[i] === '--native-only') {
+        useUnifiedWorkspace = false
+      } else if (args[i] === '--unified-workspace') {
+        useUnifiedWorkspace = true
       }
     }
 
@@ -169,6 +179,7 @@ export async function runCli(args: string[] = process.argv.slice(2)) {
     } else {
       settings = getDefaultSettings(projectName, process.cwd())
     }
+    settings.useUnifiedWorkspace = useUnifiedWorkspace
 
     const jsonStr = JSON.stringify(settings, null, 2)
 
@@ -191,6 +202,7 @@ export async function runCli(args: string[] = process.argv.slice(2)) {
     let presetName: string | undefined
     let outDir = process.cwd()
     let projectName = 'my-monorepo'
+    let workspaceOverride: boolean | undefined
 
     for (let i = 1; i < args.length; i++) {
       if ((args[i] === '--config' || args[i] === '-c') && args[i + 1]) {
@@ -201,6 +213,10 @@ export async function runCli(args: string[] = process.argv.slice(2)) {
         outDir = args[++i]
       } else if ((args[i] === '--name' || args[i] === '-n') && args[i + 1]) {
         projectName = args[++i]
+      } else if (args[i] === '--native-only') {
+        workspaceOverride = false
+      } else if (args[i] === '--unified-workspace') {
+        workspaceOverride = true
       }
     }
 
@@ -239,6 +255,8 @@ export async function runCli(args: string[] = process.argv.slice(2)) {
       console.log(`Run 'lazystack --help' for usage examples.`)
       process.exit(1)
     }
+
+    if (workspaceOverride !== undefined) settings.useUnifiedWorkspace = workspaceOverride
 
     console.log(`Scaffolding '${settings.projectName}' into ${settings.parentDir}...`)
     const result = await scaffoldProject(settings)

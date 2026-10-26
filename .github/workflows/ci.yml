@@ -69,6 +69,21 @@ jobs:
       - name: Build LazyStack CLI
         run: npm run build:cli
 
+      - name: Setup Python 3.12 for generated service checks
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Setup Go for generated Go service checks
+        if: matrix.preset == 'go-vue'
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      - name: Setup Rust for generated Rust service checks
+        if: matrix.preset == 'rust-axum'
+        uses: dtolnay/rust-toolchain@stable
+
       - name: Export blueprint configuration
         run: |
           mkdir -p ./configs
@@ -95,3 +110,192 @@ jobs:
           echo "Validating Docker Compose syntax..."
           docker compose -f "$TARGET_DIR/${{ matrix.compose_file }}" config --quiet
           echo "Docker compose configuration is valid and boot-ready."
+
+      - name: Test and build generated Go service
+        if: matrix.preset == 'go-vue'
+        run: |
+          cd ./matrix-output/test-go-vue/apps/service
+          go mod tidy
+          go test ./...
+          go build ./...
+
+      - name: Test and build generated Rust service
+        if: matrix.preset == 'rust-axum'
+        run: |
+          cd ./matrix-output/test-rust-axum/apps/engine
+          cargo test
+          cargo build
+
+      - name: Build generated React frontend
+        if: matrix.preset == 'fastapi-react'
+        run: |
+          cd ./matrix-output/test-fastapi-react/apps/client
+          npm install --no-audit --no-fund
+          npm run build
+
+      - name: Install and syntax-check generated FastAPI backend
+        if: matrix.preset == 'fastapi-react'
+        run: |
+          python -m pip install --disable-pip-version-check -r ./matrix-output/test-fastapi-react/apps/api/requirements.txt
+          python -m compileall -q ./matrix-output/test-fastapi-react/apps/api
+
+      - name: Boot generated FastAPI and check health endpoint
+        if: matrix.preset == 'fastapi-react'
+        run: |
+          cd ./matrix-output/test-fastapi-react/apps/api
+          python -m uvicorn main:app --host 127.0.0.1 --port 8000 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          curl --fail --silent --show-error --retry 10 --retry-connrefused --retry-delay 1 http://127.0.0.1:8000/health
+
+      - name: Generate API-service profile fixture
+        if: matrix.preset == 'fastapi-react'
+        run: |
+          node ./bin/lazystack.js export --preset fastapi-react --name test-fastapi-api-service --out ./configs/fastapi-api-service.json
+          node -e 'const fs=require("fs");const p="./configs/fastapi-api-service.json";const c=JSON.parse(fs.readFileSync(p,"utf8"));const api=c.apps.find(item=>item.techId==="python-fastapi");const client=c.apps.find(item=>item.role==="frontend");if(!api||!client)throw new Error("FastAPI API or frontend missing");api.starterProfile="api-service";api.testingTools=["swagger-openapi"];client.testingTools=["openapi-client"];client.connections=[{targetAppId:api.id,envVar:"API_URL",protocol:"http"}];fs.writeFileSync(p,JSON.stringify(c,null,2));'
+          node ./bin/lazystack.js scaffold --config ./configs/fastapi-api-service.json --out ./matrix-output-api
+
+      - name: Generate and typecheck connected OpenAPI client
+        if: matrix.preset == 'fastapi-react'
+        run: |
+          cd ./matrix-output-api/test-fastapi-api-service/apps/client
+          npm install --no-audit --no-fund
+          npm run api:generate
+          npx tsc --noEmit
+          npm run build
+
+      - name: Install and test generated FastAPI API-service profile
+        if: matrix.preset == 'fastapi-react'
+        run: |
+          API_DIR=./matrix-output-api/test-fastapi-api-service/apps/api
+          python -m pip install --disable-pip-version-check -r "$API_DIR/requirements.txt"
+          cd "$API_DIR"
+          python -m compileall -q .
+          DATABASE_URL=sqlite:///./ci.db alembic upgrade head
+          API_TOKEN=ci-test-token DATABASE_URL=sqlite:///./ci.db python -m pytest -q
+
+  workspace_mode_matrix:
+    name: Workspace Mode (${{ matrix.mode }})
+    needs: build_and_typecheck
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [native, unified]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build LazyStack CLI
+        run: npm run build:cli
+
+      - name: Export and scaffold both workspace modes
+        run: |
+          mkdir -p ./workspace-output ./configs
+          node ./bin/lazystack.js export --preset fastapi-react --name qa-${{ matrix.mode }} --out ./configs/qa-${{ matrix.mode }}.json ${{ matrix.mode == 'native' && '--native-only' || '--unified-workspace' }}
+          node ./bin/lazystack.js scaffold --config ./configs/qa-${{ matrix.mode }}.json --out ./workspace-output
+
+      - name: Verify generated workspace mode
+        run: |
+          TARGET_DIR="./workspace-output/qa-${{ matrix.mode }}"
+          test -f "$TARGET_DIR/apps/client/package.json"
+          test -f "$TARGET_DIR/apps/api/requirements.txt"
+          if [ "${{ matrix.mode }}" = "native" ]; then
+            test ! -e "$TARGET_DIR/package.json"
+            test ! -e "$TARGET_DIR/pnpm-workspace.yaml"
+            test ! -e "$TARGET_DIR/turbo.json"
+            test ! -d "$TARGET_DIR/packages"
+          else
+            test -f "$TARGET_DIR/package.json"
+            test -f "$TARGET_DIR/pnpm-workspace.yaml"
+            test -f "$TARGET_DIR/turbo.json"
+            test -f "$TARGET_DIR/packages/types/package.json"
+          fi
+          docker compose -f "$TARGET_DIR/infra/docker-compose.yml" config --quiet
+
+  native_project_matrix:
+    name: Native Project (${{ matrix.language }})
+    needs: build_and_typecheck
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: java-springboot
+            tech_id: java-springboot
+          - language: kotlin-ktor
+            tech_id: kotlin-ktor
+          - language: php
+            tech_id: vanilla-php
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies and build CLI
+        run: npm ci && npm run build:cli
+
+      - name: Set up Java 17
+        if: matrix.tech_id == 'java-springboot' || matrix.tech_id == 'kotlin-ktor'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        if: matrix.tech_id == 'kotlin-ktor'
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+
+      - name: Set up PHP
+        if: matrix.tech_id == 'vanilla-php'
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+
+      - name: Export a native-only blueprint
+        run: |
+          mkdir -p ./configs ./native-output
+          node ./bin/lazystack.js export --preset t3-stack --name native-${{ matrix.language }} --native-only --out ./configs/native-${{ matrix.language }}.json
+          node -e 'const fs=require("fs");const p="./configs/native-${{ matrix.language }}.json";const c=JSON.parse(fs.readFileSync(p,"utf8"));c.apps=[{...c.apps[0],id:"native-service",folderName:"service",role:"backend",techId:"${{ matrix.tech_id }}",port:8080,connections:[]}];c.databases=[];c.proxy={type:"none",httpPort:80};c.useUnifiedWorkspace=false;fs.writeFileSync(p,JSON.stringify(c,null,2));'
+          node ./bin/lazystack.js scaffold --config ./configs/native-${{ matrix.language }}.json --out ./native-output
+
+      - name: Verify native project files and Compose config
+        run: |
+          TARGET_DIR="./native-output/native-${{ matrix.language }}"
+          test -f "$TARGET_DIR/infra/docker-compose.yml"
+          test ! -e "$TARGET_DIR/package.json"
+          test ! -e "$TARGET_DIR/pnpm-workspace.yaml"
+          docker compose -f "$TARGET_DIR/infra/docker-compose.yml" config --quiet
+          if [ "${{ matrix.tech_id }}" = 'java-springboot' ]; then test -f "$TARGET_DIR/apps/service/pom.xml"; fi
+          if [ "${{ matrix.tech_id }}" = 'kotlin-ktor' ]; then test -f "$TARGET_DIR/apps/service/build.gradle.kts"; fi
+          if [ "${{ matrix.tech_id }}" = 'vanilla-php' ]; then test -f "$TARGET_DIR/apps/service/composer.json"; fi
+
+      - name: Build and test generated Spring Boot project
+        if: matrix.tech_id == 'java-springboot'
+        run: mvn --batch-mode --no-transfer-progress -f ./native-output/native-${{ matrix.language }}/apps/service/pom.xml test package
+
+      - name: Build and test generated Ktor project
+        if: matrix.tech_id == 'kotlin-ktor'
+        run: gradle -p ./native-output/native-${{ matrix.language }}/apps/service test build
+
+      - name: Syntax-check generated PHP project
+        if: matrix.tech_id == 'vanilla-php'
+        run: php -l ./native-output/native-${{ matrix.language }}/apps/service/index.php

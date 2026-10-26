@@ -104,6 +104,15 @@ export const ServiceOptionsPanel: React.FC<ServiceOptionsPanelProps> = ({ app, a
       </summary>
 
       <div className="mt-3 grid grid-cols-1 xl:grid-cols-3 gap-4">
+        {app.techId === 'python-fastapi' && <section className="xl:col-span-3 border border-surface-700 bg-surface-950 p-3">
+          <label className="block text-[11px] font-semibold text-zinc-300">Service starter
+            <select value={app.starterProfile || 'minimal'} onChange={event => onUpdate({ starterProfile: event.target.value as CartApp['starterProfile'] })} className="mt-1 block w-full max-w-md rounded border border-surface-700 bg-surface-900 px-2 py-1.5 text-xs text-white focus:outline-none focus:border-zinc-400">
+              <option value="minimal">Minimal FastAPI</option>
+              <option value="api-service">API service · CRUD, database, bearer auth, migrations, tests</option>
+            </select>
+          </label>
+          <p className="mt-1 text-[10px] text-zinc-500">The API service profile uses an assigned PostgreSQL/MySQL database, or SQLite when no database is configured.</p>
+        </section>}
         <section className="min-w-0">
           <h4 className="text-[11px] font-semibold uppercase tracking-wide text-zinc-300 flex items-center gap-1.5 mb-2"><Link2 className="w-3.5 h-3.5" /> Service connections</h4>
           <p className="text-[10px] text-zinc-500 mb-2">Generate URL environment variables and start dependencies for this service.</p>

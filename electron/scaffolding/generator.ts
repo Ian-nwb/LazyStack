@@ -12,6 +12,7 @@ import { resolveStructurePaths } from '../../src/data/structurePresets'
 import { TESTING_TOOLS } from '../../src/data/testingTools'
 import { resolveServiceConnectionUrl } from '../../src/utils/serviceConnections'
 import { getDatabaseAdminUiOption } from '../../src/data/databaseAdminUis'
+import { TECH_CATALOG } from '../../src/data/frameworks'
 
 export interface ScaffoldResult {
   success: boolean
@@ -83,6 +84,16 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
   }
 
   const appById = new Map(settings.apps.map(app => [app.id, app]))
+  for (const consumer of settings.apps.filter(app => (app.testingTools || []).includes('openapi-client'))) {
+    const consumerLanguage = TECH_CATALOG.find(tech => tech.id === consumer.techId)?.language || ''
+    const isTypeScriptApp = /^(JS \/ TS|JavaScript|TypeScript|Node\.js)$/.test(consumerLanguage)
+    const source = (consumer.connections || []).map(connection => ({ connection, app: appById.get(connection.targetAppId) }))
+      .find(item => item.app && ['http', 'https'].includes(item.connection.protocol) && (item.app.testingTools || []).includes('swagger-openapi'))
+    if (!isTypeScriptApp || !source) {
+      return { success: false, targetDir: '', filesCreated: 0, error: `Typed OpenAPI client generation for '${consumer.folderName}' needs a JavaScript/TypeScript app connected over HTTP(S) to an API service with Swagger/OpenAPI selected.` }
+    }
+  }
+
   for (const app of settings.apps) {
     const envNames = new Set<string>()
     for (const connection of app.connections || []) {
@@ -141,6 +152,17 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
     }
   }
 
+  for (const app of settings.apps.filter(item => item.techId === 'python-fastapi' && item.starterProfile === 'api-service')) {
+    const appDatabases = settings.databases.filter(db => {
+      if (!db.enabled || db.type === 'sqlite' || DATABASE_CATALOG.find(item => item.id === db.type)?.isCloud) return false
+      return resolveStructurePaths(settings).databaseIsolation !== 'service-isolated' || db.assignedAppId === app.id || db.assignedAppId === 'global' || !db.assignedAppId
+    })
+    const firstDb = appDatabases[0]
+    if (firstDb && !['postgres', 'mysql', 'mariadb'].includes(firstDb.type)) {
+      return { success: false, targetDir: '', filesCreated: 0, error: `The FastAPI API service profile needs PostgreSQL, MySQL, or MariaDB as its first configured database for '${app.folderName}'. Remove or reorder the incompatible database, or use the minimal starter.` }
+    }
+  }
+
   const declaredPorts = [
     ...settings.apps.filter(app => app.port > 0).map(app => ({ port: app.port, name: app.folderName })),
     ...settings.databases.filter(db => {
@@ -178,7 +200,7 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
       paths.docsDir,
       paths.infraDir,
       paths.scriptsDir,
-      paths.packagesDir,
+      ...(settings.useUnifiedWorkspace !== false ? [paths.packagesDir] : []),
       ...(settings.structureConfig?.customFolders || []),
       'tests'
     ]
@@ -284,7 +306,7 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
 
       // Hosted and native-client templates do not run as container services.
       if (!['python-anvil', 'swiftui-client'].includes(app.techId)) {
-        const { dockerfile, dockerignore } = getDockerfileForTech(app.techId, app.port)
+        const { dockerfile, dockerignore } = getDockerfileForTech(app.techId, app.port, app.folderName, app.starterProfile)
         await fs.writeFile(path.join(appDir, 'Dockerfile'), dockerfile, 'utf8')
         await fs.writeFile(path.join(appDir, '.dockerignore'), dockerignore, 'utf8')
         filesCreated += 2
@@ -308,6 +330,10 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
       // App .env with service-level credentials
       let appEnv = `PORT=${app.port}\nNODE_ENV=development\nAPP_NAME=${app.folderName}\n`
       let appEnvExample = `PORT=${app.port}\nNODE_ENV=development\nAPP_NAME=${app.folderName}\n`
+      if (app.techId === 'python-fastapi' && app.starterProfile === 'api-service') {
+        appEnv += 'API_TOKEN=local-dev-token-change-me\n'
+        appEnvExample += 'API_TOKEN=replace_with_random_secret\n'
+      }
       const appDbs = settings.databases.filter(db => {
         if (!db.enabled || db.type === 'sqlite' || DATABASE_CATALOG.find(item => item.id === db.type)?.isCloud) return false
         if (paths.databaseIsolation === 'service-isolated') return db.assignedAppId === app.id || db.assignedAppId === 'global' || !db.assignedAppId
@@ -365,7 +391,7 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
       filesCreated += 2
 
       // Starter code files
-      const starterFiles = getStarterFilesForTech(app.techId, app.folderName, app.port, app.flavor)
+      const starterFiles = getStarterFilesForTech(app.techId, app.folderName, app.port, app.flavor, app.starterProfile)
       for (const [fileName, fileContent] of Object.entries(starterFiles)) {
         const filePath = path.join(appDir, fileName)
         await fs.ensureDir(path.dirname(filePath))
@@ -384,8 +410,27 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
           packageJson.devDependencies = packageJson.devDependencies || {}
           packageJson.scripts = packageJson.scripts || {}
           for (const tool of selectedTools) {
-            if (tool.ecosystem === 'npm') for (const packageName of tool.installPackages || []) packageJson.devDependencies[packageName] = 'latest'
+            if (tool.ecosystem === 'npm') for (const packageName of tool.installPackages || []) {
+              if (tool.runtimePackages?.includes(packageName)) {
+                packageJson.dependencies = packageJson.dependencies || {}
+                packageJson.dependencies[packageName] = 'latest'
+              } else {
+                packageJson.devDependencies[packageName] = 'latest'
+              }
+            }
             if (tool.scriptName && tool.scriptCommand) packageJson.scripts[tool.scriptName] = tool.scriptCommand
+          }
+          if (selectedToolIds.includes('openapi-client')) {
+            const source = (app.connections || []).map(connection => ({ connection, app: appById.get(connection.targetAppId) }))
+              .find(item => item.app && ['http', 'https'].includes(item.connection.protocol) && (item.app.testingTools || []).includes('swagger-openapi'))
+            if (source?.app) {
+              packageJson.scripts['api:generate'] = 'openapi-typescript api-contract.yaml --output src/api/schema.d.ts'
+              packageJson.scripts.predev = 'npm run api:generate'
+              packageJson.scripts.prebuild = 'npm run api:generate'
+              await fs.ensureDir(path.join(appDir, 'src/api'))
+              await fs.writeFile(path.join(appDir, 'src/api/client.ts'), `import createClient from 'openapi-fetch'\nimport type { paths } from './schema'\n\nexport const createApiClient = (baseUrl: string, bearerToken?: string) =>\n  createClient<paths>({\n    baseUrl,\n    headers: bearerToken ? { Authorization: 'Bearer ' + bearerToken } : {}\n  })\n`, 'utf8')
+              filesCreated++
+            }
           }
           for (const packageName of customToolPackages) packageJson.devDependencies[packageName] = 'latest'
           await fs.writeJson(appPackagePath, packageJson, { spaces: 2 })
@@ -397,7 +442,33 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
       if (selectedToolIds.includes('swagger-openapi')) {
         const title = JSON.stringify(app.folderName)
         const description = JSON.stringify(`API contract for ${app.folderName}`)
-        await fs.writeFile(path.join(appDir, 'openapi.yaml'), `openapi: 3.1.0\ninfo:\n  title: ${title}\n  version: 1.0.0\n  description: ${description}\nservers:\n  - url: http://localhost:${app.port}\npaths:\n  /:\n    get:\n      summary: Service root\n      responses:\n        '200':\n          description: Service is responding\n`, 'utf8')
+        const openApi = app.starterProfile === 'api-service' ? {
+          openapi: '3.1.0',
+          info: { title: app.folderName, version: '1.0.0', description: `CRUD API contract for ${app.folderName}` },
+          servers: [{ url: `http://localhost:${app.port}` }],
+          paths: {
+            '/api/items': {
+              get: { operationId: 'listItems', security: [{ BearerAuth: [] }], responses: { '200': { description: 'Items', content: { 'application/json': { schema: { type: 'array', items: { $ref: '#/components/schemas/ItemRead' } } } } } } },
+              post: { operationId: 'createItem', security: [{ BearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/ItemCreate' } } } }, responses: { '201': { description: 'Created item', content: { 'application/json': { schema: { $ref: '#/components/schemas/ItemRead' } } } } } }
+            },
+            '/api/items/{item_id}': {
+              parameters: [{ name: 'item_id', in: 'path', required: true, schema: { type: 'integer' } }],
+              get: { operationId: 'getItem', security: [{ BearerAuth: [] }], responses: { '200': { description: 'Item', content: { 'application/json': { schema: { $ref: '#/components/schemas/ItemRead' } } } }, '404': { description: 'Item not found' } } },
+              patch: { operationId: 'updateItem', security: [{ BearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/ItemUpdate' } } } }, responses: { '200': { description: 'Updated item', content: { 'application/json': { schema: { $ref: '#/components/schemas/ItemRead' } } } }, '404': { description: 'Item not found' } } },
+              delete: { operationId: 'deleteItem', security: [{ BearerAuth: [] }], responses: { '204': { description: 'Deleted item' }, '404': { description: 'Item not found' } } }
+            }
+          },
+          components: {
+            securitySchemes: { BearerAuth: { type: 'http', scheme: 'bearer' } },
+            schemas: {
+              ItemCreate: { type: 'object', required: ['title'], properties: { title: { type: 'string', minLength: 1, maxLength: 160 }, description: { type: ['string', 'null'] } } },
+              ItemUpdate: { type: 'object', properties: { title: { type: 'string', minLength: 1, maxLength: 160 }, description: { type: ['string', 'null'] }, completed: { type: 'boolean' } } },
+              ItemRead: { type: 'object', required: ['id', 'title', 'completed', 'created_at'], properties: { id: { type: 'integer' }, title: { type: 'string' }, description: { type: ['string', 'null'] }, completed: { type: 'boolean' }, created_at: { type: 'string', format: 'date-time' } } }
+            }
+          }
+        } : null
+        const spec = openApi ? JSON.stringify(openApi, null, 2) : `openapi: 3.1.0\ninfo:\n  title: ${title}\n  version: 1.0.0\n  description: ${description}\nservers:\n  - url: http://localhost:${app.port}\npaths:\n  /:\n    get:\n      summary: Service root\n      responses:\n        '200':\n          description: Service is responding\n`
+        await fs.writeFile(path.join(appDir, 'openapi.yaml'), spec + '\n', 'utf8')
         filesCreated++
       }
 
@@ -435,7 +506,7 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
       const customTools = app.customTestingTools || []
       if (selectedTools.length || customTools.length) {
         const setupNotes = [
-          ...selectedTools.map(tool => `- **${tool.name}** (${tool.category}): ${tool.description}${tool.installPackages?.length ? ` Packages: \`${tool.installPackages.join('`, `')}\`.` : ''}${tool.scriptCommand ? ` Run with \`${tool.scriptCommand}\`.` : ''}`),
+          ...selectedTools.map(tool => `- **${tool.name}** (${tool.category}): ${tool.description}${tool.installPackages?.length ? ` Packages: \`${tool.installPackages.join('`, `')}\`.` : ''}${tool.id === 'openapi-client' ? ' Edit the copied api-contract.yaml when the API changes, then run `npm run api:generate`; npm also regenerates client types before dev and build.' : tool.scriptCommand ? ` Run with \`${tool.scriptCommand}\`.` : ''}`),
           ...customTools.map(tool => `- **${tool.name}**${tool.packageName ? ` (${tool.packageName})` : ''}: configure this tool's install and run command for your stack.`)
         ]
         await fs.ensureDir(path.join(appDir, 'tests'))
@@ -444,8 +515,72 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
       }
     }
 
+    for (const consumer of settings.apps.filter(app => (app.testingTools || []).includes('openapi-client'))) {
+      const source = (consumer.connections || []).map(connection => ({ connection, app: appById.get(connection.targetAppId) }))
+        .find(item => item.app && ['http', 'https'].includes(item.connection.protocol) && (item.app.testingTools || []).includes('swagger-openapi'))?.app
+      if (!source) continue
+      const sourcePath = path.join(targetDir, paths.getAppRelativePath(source.folderName, source.id, source.role), 'openapi.yaml')
+      const consumerPath = path.join(targetDir, paths.getAppRelativePath(consumer.folderName, consumer.id, consumer.role), 'api-contract.yaml')
+      await fs.copyFile(sourcePath, consumerPath)
+      filesCreated++
+    }
+
     // 8. Documentation files
-    const archDoc = `# System Architecture: ${settings.projectName}\n\n- **Architecture Style**: ${settings.structureConfig?.preset || 'monorepo'}\n- **Database Pattern**: ${paths.databaseIsolation}\n- **Services**: ${settings.apps.length}\n- **Databases**: ${settings.databases.filter(d => d.enabled).length}\n\nAuto-generated documentation of components, services, and networking topology.\n`
+    const diagramId = (prefix: string, index: number) => `${prefix}_${index + 1}`
+    const mermaidLabel = (label: string) => JSON.stringify(label.replace(/[\r\n"]+/g, ' '))
+    const appNodeIds = new Map(settings.apps.map((app, index) => [app.id, diagramId('app', index)]))
+    const enabledDbs = settings.databases.filter(db => db.enabled)
+    const dbNodeIds = new Map(enabledDbs.map((db, index) => [db, diagramId('db', index)]))
+    const isCloudDb = (db: typeof enabledDbs[number]) => Boolean(DATABASE_CATALOG.find(item => item.id === db.type)?.isCloud && db.type !== 'pocketbase')
+    const serviceDiagram = [
+      'flowchart LR',
+      ...settings.apps.map((app, index) => `  ${diagramId('app', index)}[${mermaidLabel(`${app.folderName} · ${app.techId} · :${app.port}`)}]`),
+      ...enabledDbs.map((db, index) => `  ${diagramId('db', index)}[${mermaidLabel(`${db.customName || db.type} · ${db.type} · ${db.port ? `:${db.port}` : 'managed/file'}`)}]`),
+      ...settings.apps.flatMap(app => [
+        ...(app.connections || []).flatMap(connection => {
+          const target = appNodeIds.get(connection.targetAppId)
+          const source = appNodeIds.get(app.id)
+          return source && target ? [`  ${source} -->|${connection.protocol} ${connection.envVar}| ${target}`] : []
+        }),
+        ...enabledDbs.flatMap(db => {
+          const source = appNodeIds.get(app.id)
+          const target = dbNodeIds.get(db)
+          if (!source || !target) return []
+          const relevant = paths.databaseIsolation !== 'service-isolated' || db.assignedAppId === app.id || db.assignedAppId === 'global' || !db.assignedAppId
+          return relevant ? [`  ${source} -->|database| ${target}`] : []
+        })
+      ]),
+      ...(settings.apps.length + enabledDbs.length === 0 ? ['  empty[No services selected]'] : [])
+    ].join('\n')
+    const topologyLines = [
+      'flowchart LR',
+      '  subgraph host["Host machine"]',
+      '    client["Browser / external client"]',
+      ...settings.apps.filter(app => app.runMode === 'host').map(app => `    ${appNodeIds.get(app.id)}[${mermaidLabel(`${app.folderName} · host :${app.port}`)}]`),
+      ...enabledDbs.filter(db => db.type === 'sqlite').map(db => `    ${dbNodeIds.get(db)}[${mermaidLabel(`${db.customName || db.type} · local file`)}]`),
+      '  end',
+      '  subgraph docker["Docker bridge · lazystack_net"]',
+      ...(settings.proxy.type !== 'none' ? [`    gateway[${mermaidLabel(`${settings.proxy.type} gateway · host :${settings.proxy.httpPort}`)}]`] : []),
+      ...settings.apps.filter(app => app.runMode === 'docker').map(app => `    ${appNodeIds.get(app.id)}[${mermaidLabel(`${app.folderName} · container :${app.port} · published`)}]`),
+      ...enabledDbs.filter(db => !isCloudDb(db) && db.type !== 'sqlite').map(db => `    ${dbNodeIds.get(db)}[${mermaidLabel(`${db.customName || db.type} · container${db.port ? ` · host :${db.port}` : ''}`)}]`),
+      '  end',
+      ...enabledDbs.filter(isCloudDb).map(db => `  ${dbNodeIds.get(db)}[${mermaidLabel(`${db.customName || db.type} · managed external`)}]`),
+      ...(settings.proxy.type !== 'none' ? ['  client --> gateway'] : settings.apps.filter(app => app.runMode === 'docker').map(app => `  client --> ${appNodeIds.get(app.id)}`)),
+      ...(settings.proxy.type !== 'none' ? settings.apps.filter(app => app.runMode === 'docker').map(app => `  gateway -->|${app.routePrefix || '/'}| ${appNodeIds.get(app.id)}`) : []),
+      ...settings.apps.flatMap(app => (app.connections || []).flatMap(connection => {
+        const target = appNodeIds.get(connection.targetAppId)
+        const source = appNodeIds.get(app.id)
+        return source && target ? [`  ${source} -. ${connection.protocol} .-> ${target}`] : []
+      })),
+      ...settings.apps.flatMap(app => enabledDbs.flatMap(db => {
+        const source = appNodeIds.get(app.id)
+        const target = dbNodeIds.get(db)
+        const relevant = paths.databaseIsolation !== 'service-isolated' || db.assignedAppId === app.id || db.assignedAppId === 'global' || !db.assignedAppId
+        return source && target && relevant && (isCloudDb(db) || db.type === 'sqlite') ? [`  ${source} -. data connection .-> ${target}`] : []
+      })),
+      ...(settings.apps.length + enabledDbs.length === 0 ? ['  empty[No services selected]'] : [])
+    ].join('\n')
+    const archDoc = `# System Architecture: ${settings.projectName}\n\n- **Architecture style:** ${settings.structureConfig?.preset || 'monorepo'}\n- **Database pattern:** ${paths.databaseIsolation}\n- **Services:** ${settings.apps.length}\n- **Databases:** ${enabledDbs.length}\n- **Unified workspace:** ${settings.useUnifiedWorkspace === false ? 'off' : 'on'}\n\n## Service diagram\n\nShows service-to-service protocols and database dependencies.\n\n\`\`\`mermaid\n${serviceDiagram}\n\`\`\`\n\n## Network topology\n\nShows host-published endpoints, Docker bridge membership, host-run apps, and managed external services.\n\n\`\`\`mermaid\n${topologyLines}\n\`\`\`\n`
     await fs.writeFile(path.join(targetDir, paths.docsDir, 'architecture.md'), archDoc, 'utf8')
     filesCreated++
 

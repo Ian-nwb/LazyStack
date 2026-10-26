@@ -7,6 +7,8 @@ interface ProjectConfigBarProps {
   setProjectName: (name: string) => void
   parentDir: string
   setParentDir: (dir: string) => void
+  useUnifiedWorkspace: boolean
+  setUseUnifiedWorkspace: (enabled: boolean) => void
   onValidityChange?: (isValid: boolean, errorMsg?: string) => void
 }
 
@@ -15,6 +17,8 @@ export const ProjectConfigBar: React.FC<ProjectConfigBarProps> = ({
   setProjectName,
   parentDir,
   setParentDir,
+  useUnifiedWorkspace,
+  setUseUnifiedWorkspace,
 }) => {
   const [dirStatus, setDirStatus] = useState<{
     exists: boolean
@@ -287,6 +291,22 @@ export const ProjectConfigBar: React.FC<ProjectConfigBarProps> = ({
               <ShieldAlert className="w-2.5 h-2.5 shrink-0" /> {dirStatus.error || 'Permission denied: directory is write-protected'}
             </p>
           )}
+        </div>
+      </div>
+      <div className="mt-3 flex items-center gap-3 border-t border-surface-700/70 pt-3">
+        <button
+          type="button"
+          role="switch"
+          aria-checked={useUnifiedWorkspace}
+          onClick={() => setUseUnifiedWorkspace(!useUnifiedWorkspace)}
+          className={`relative h-5 w-9 rounded-full border transition-colors ${useUnifiedWorkspace ? 'bg-zinc-100 border-zinc-100' : 'bg-surface-950 border-surface-600'}`}
+          title="When enabled, include root workspace files for JavaScript apps and shared packages. Native apps keep their own tools."
+        >
+          <span className={`absolute top-0.5 h-3.5 w-3.5 rounded-full transition-all ${useUnifiedWorkspace ? 'left-[18px] bg-zinc-950' : 'left-0.5 bg-zinc-400'}`} />
+        </button>
+        <div>
+          <div className="text-[11px] font-semibold text-zinc-200">Unified workspace <span className="text-zinc-500 font-normal">{useUnifiedWorkspace ? 'On' : 'Off'}</span></div>
+          <div className="text-[10px] text-zinc-500">{useUnifiedWorkspace ? 'Adds root workspace files for JavaScript apps and shared packages; native apps keep their own tools.' : 'Each app uses only its native project files and commands.'}</div>
         </div>
       </div>
     </div>

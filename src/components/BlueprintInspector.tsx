@@ -1,10 +1,11 @@
 import React, { useState, useRef } from 'react'
-import { FolderTree, Code, Network, FileText, Download, Upload, Sliders, Layers, Database } from 'lucide-react'
+import { FolderTree, Code, Network, FileText, Download, Upload, Sliders, Layers, Database, Share2 } from 'lucide-react'
 import { ProjectSettings, SelectedDatabase, FolderStructureConfig } from '../types'
 import { DATABASE_CATALOG } from '../data/databases'
 import { resolveStructurePaths } from '../data/structurePresets'
 import { StructureCustomizer } from './StructureCustomizer'
 import { resolveServiceConnectionUrl } from '../utils/serviceConnections'
+import { BlueprintMarkdownExport, ServiceDiagram, NetworkTopologyDiagram } from './BlueprintDiagrams'
 
 interface BlueprintInspectorProps {
   settings: ProjectSettings
@@ -17,7 +18,7 @@ export const BlueprintInspector: React.FC<BlueprintInspectorProps> = ({
   onImportBlueprint,
   onUpdateStructure
 }) => {
-  const [activeTab, setActiveTab] = useState<'structure' | 'tree' | 'compose' | 'ports' | 'env'>('structure')
+  const [activeTab, setActiveTab] = useState<'structure' | 'tree' | 'compose' | 'ports' | 'services' | 'topology' | 'env'>('structure')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const projectName = settings.projectName || 'my-monorepo'
@@ -222,8 +223,8 @@ export const BlueprintInspector: React.FC<BlueprintInspectorProps> = ({
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-surface-950">
       {/* Tab Selector */}
-      <div className="px-6 py-3 border-b border-surface-700 bg-surface-900 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-1 bg-surface-950 p-1 rounded-lg border border-surface-700 text-xs">
+      <div className="px-6 py-3 border-b border-surface-700 bg-surface-900 flex items-center justify-between gap-3 shrink-0">
+        <div className="flex items-center gap-1 bg-surface-950 p-1 rounded-lg border border-surface-700 text-xs overflow-x-auto">
           <button
             onClick={() => setActiveTab('structure')}
             className={`px-3 py-1.5 rounded-md font-medium transition flex items-center gap-1.5 cursor-pointer ${
@@ -255,6 +256,22 @@ export const BlueprintInspector: React.FC<BlueprintInspectorProps> = ({
             }`}
           >
             <Network className="w-3.5 h-3.5" /> Ports & Services Map
+          </button>
+          <button
+            onClick={() => setActiveTab('services')}
+            className={`px-3 py-1.5 rounded-md font-medium transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+              activeTab === 'services' ? 'bg-zinc-100 text-zinc-950 font-bold' : 'text-zinc-400 hover:text-white'
+            }`}
+          >
+            <Share2 className="w-3.5 h-3.5" /> Service Diagram
+          </button>
+          <button
+            onClick={() => setActiveTab('topology')}
+            className={`px-3 py-1.5 rounded-md font-medium transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+              activeTab === 'topology' ? 'bg-zinc-100 text-zinc-950 font-bold' : 'text-zinc-400 hover:text-white'
+            }`}
+          >
+            <Network className="w-3.5 h-3.5" /> Network Topology
           </button>
           <button
             onClick={() => setActiveTab('env')}
@@ -340,14 +357,15 @@ export const BlueprintInspector: React.FC<BlueprintInspectorProps> = ({
               ))}
 
               {/* Shared Packages / Core */}
-              <div>├── 📁 {paths.packagesDir}/ <span className="text-zinc-500 font-sans text-[11px]">(shared packages & contracts)</span></div>
-              <div className="pl-4 border-l border-surface-700 space-y-1">
-                <div>├── 📁 types/ <span className="text-zinc-500 font-sans text-[11px]">(shared TypeScript DTOs)</span></div>
-                <div>├── 📁 shared/ <span className="text-zinc-500 font-sans text-[11px]">(shared utils)</span></div>
-                {activeDatabases.some(d => {
+              {settings.useUnifiedWorkspace !== false && <>
+                <div>├── 📁 {paths.packagesDir}/ <span className="text-zinc-500 font-sans text-[11px]">(shared packages & contracts)</span></div>
+                <div className="pl-4 border-l border-surface-700 space-y-1">
+                  <div>├── 📁 types/ <span className="text-zinc-500 font-sans text-[11px]">(shared TypeScript DTOs)</span></div>
+                  <div>├── 📁 shared/ <span className="text-zinc-500 font-sans text-[11px]">(shared utils)</span></div>
+                  {activeDatabases.some(d => {
                   const def = DATABASE_CATALOG.find(c => c.id === d.type)
                   return def?.isCloud
-                }) && (
+                  }) && (
                   <div>
                     <div>├── 📁 cloud/ <span className="text-zinc-500 font-sans text-[11px]">(SDK clients for Cloud / BaaS)</span></div>
                     <div className="pl-4 border-l border-surface-750 space-y-0.5">
@@ -361,8 +379,9 @@ export const BlueprintInspector: React.FC<BlueprintInspectorProps> = ({
                       ))}
                     </div>
                   </div>
-                )}
-              </div>
+                  )}
+                </div>
+              </>}
 
               {/* Infra / Deploy */}
               <div>├── 📁 {paths.infraDir}/ <span className="text-zinc-500 font-sans text-[11px]">(orchestration & proxies)</span></div>
@@ -395,6 +414,10 @@ export const BlueprintInspector: React.FC<BlueprintInspectorProps> = ({
             {generateComposePreview()}
           </pre>
         )}
+
+        {activeTab === 'services' && <><div className="flex justify-end"><BlueprintMarkdownExport settings={settings} /></div><ServiceDiagram settings={settings} /></>}
+
+        {activeTab === 'topology' && <><div className="flex justify-end"><BlueprintMarkdownExport settings={settings} /></div><NetworkTopologyDiagram settings={settings} /></>}
 
         {activeTab === 'ports' && (
           <div className="bg-surface-900 border border-surface-700 rounded-xl overflow-hidden">

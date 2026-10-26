@@ -19,6 +19,7 @@ export const App: React.FC = () => {
   const [parentDir, setParentDir] = useState('')
   const [activeTab, setActiveTab] = useState<'cart' | 'databases' | 'proxy' | 'inspector' | 'environment'>('cart')
   const [structureConfig, setStructureConfig] = useState<FolderStructureConfig>(getDefaultStructureConfig())
+  const [useUnifiedWorkspace, setUseUnifiedWorkspace] = useState(true)
   
   // Scaffolding modal state
   const [scaffoldModalOpen, setScaffoldModalOpen] = useState(false)
@@ -135,7 +136,8 @@ export const App: React.FC = () => {
     proxy,
     databases,
     apps,
-    structureConfig
+    structureConfig,
+    useUnifiedWorkspace
   }
 
   // Trigger real scaffolding engine
@@ -248,6 +250,7 @@ export const App: React.FC = () => {
     if (Array.isArray(imported.databases)) setDatabases(imported.databases)
     if (imported.proxy) setProxy(imported.proxy)
     if (imported.structureConfig) setStructureConfig(imported.structureConfig)
+    if (typeof imported.useUnifiedWorkspace === 'boolean') setUseUnifiedWorkspace(imported.useUnifiedWorkspace)
   }
 
   const handleStartStack = async () => {
@@ -310,6 +313,8 @@ export const App: React.FC = () => {
         setProjectName={setProjectName}
         parentDir={parentDir}
         setParentDir={setParentDir}
+        useUnifiedWorkspace={useUnifiedWorkspace}
+        setUseUnifiedWorkspace={setUseUnifiedWorkspace}
       />
 
       {/* Navigation Sub-header / Tabs */}

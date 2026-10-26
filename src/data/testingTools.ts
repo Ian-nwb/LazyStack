@@ -8,6 +8,7 @@ export interface TestingToolOption {
   ecosystem: TestingEcosystem
   description: string
   installPackages?: string[]
+  runtimePackages?: string[]
   scriptName?: string
   scriptCommand?: string
   roles: Array<'frontend' | 'backend' | 'fullstack' | 'worker' | 'desktop-mobile' | 'other'>
@@ -33,7 +34,8 @@ export const TESTING_TOOLS: TestingToolOption[] = [
   { id: 'puppeteer', name: 'Puppeteer', category: 'e2e', ecosystem: 'npm', description: 'Chrome and Firefox browser automation.', installPackages: ['puppeteer'], roles: web, devDependencies: true },
   { id: 'newman', name: 'Newman (Postman CLI)', category: 'api', ecosystem: 'npm', description: 'Run Postman API collections from the command line.', installPackages: ['newman'], scriptName: 'test:api', scriptCommand: 'newman run tests/api.collection.json', roles: services, devDependencies: true },
   { id: 'bruno', name: 'Bruno CLI', category: 'api', ecosystem: 'npm', description: 'Git-friendly API collection runner.', installPackages: ['@usebruno/cli'], scriptName: 'test:api', scriptCommand: 'bru run tests/bruno', roles: services, devDependencies: true },
-  { id: 'swagger-openapi', name: 'Swagger UI + OpenAPI (Redocly CLI)', category: 'api', ecosystem: 'cli', description: 'Generate an OpenAPI starter specification, a local Swagger UI service, and a Redocly lint command.', installPackages: ['@redocly/cli'], scriptName: 'api:lint', scriptCommand: 'npx --yes @redocly/cli lint openapi.yaml', roles: services },
+  { id: 'swagger-openapi', name: 'Swagger UI + OpenAPI (Redocly CLI)', category: 'api', ecosystem: 'cli', description: 'Generate an OpenAPI contract and local Swagger UI service; JavaScript/TypeScript apps also get a Redocly lint command.', installPackages: ['@redocly/cli'], scriptName: 'api:lint', scriptCommand: 'npx --yes @redocly/cli lint openapi.yaml', roles: services },
+  { id: 'openapi-client', name: 'Typed OpenAPI client (TypeScript)', category: 'contract', ecosystem: 'npm', description: 'Generate endpoint types and a typed Fetch client from a connected service OpenAPI contract.', installPackages: ['openapi-typescript', 'openapi-fetch'], runtimePackages: ['openapi-fetch'], scriptName: 'api:generate', scriptCommand: 'openapi-typescript ../api/openapi.yaml --output src/api/schema.d.ts', roles: web },
   { id: 'rest-assured', name: 'REST Assured', category: 'api', ecosystem: 'jvm', description: 'Java DSL for REST API integration tests.', roles: services },
   { id: 'schemathesis', name: 'Schemathesis', category: 'api', ecosystem: 'python', description: 'Property-based API testing from OpenAPI schemas.', roles: services },
   { id: 'pytest', name: 'pytest', category: 'unit', ecosystem: 'python', description: 'Python unit and integration test framework.', roles: any },

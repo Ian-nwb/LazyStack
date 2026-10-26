@@ -126,7 +126,13 @@ npm run dist:win      # release/1.0.3/LazyStack 1.0.3.exe
 npm run dist:release  # build both targets
 ```
 
-## Future feature ideas
+## v1.0.4 roadmap
+
+The current generator has broad framework catalog coverage, but many generated apps are starter-level and CI does not yet prove that generated applications build and run. The [v1.0.4 QA and implementation plan](ROADMAP-1.0.4.md) tracks native project generation with an on/off unified-workspace option, meaningful API starters, generated-project CI, service contracts, service and network diagrams, and observability. These are plans, not v1.0.3 features.
+
+Additional proposals include a local AI stack assistant, development/staging/production profiles, Kubernetes and Helm, Terraform/Pulumi, database backup and restore, secrets integrations, deployment workflow generators, a template registry, architecture migration tools, resource sizing, and blueprint review workflows.
+
+### Future feature ideas
 
 These are proposals, not features included in the current release.
 

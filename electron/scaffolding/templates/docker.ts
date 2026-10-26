@@ -29,8 +29,9 @@ export function generateDockerCompose(settings: ProjectSettings): string {
   })
   const hostOnlyTechIds = new Set(['python-anvil', 'swiftui-client'])
   const dockerApps = settings.apps.filter(a => a.runMode === 'docker' && !hostOnlyTechIds.has(a.techId))
+  const hasNamedVolumes = activeDbs.some(db => db.type !== 'sqlite')
 
-  let yaml = `version: '3.8'\n\nnetworks:\n  lazystack_net:\n    driver: bridge\n\nvolumes:\n`
+  let yaml = `version: '3.8'\n\nnetworks:\n  lazystack_net:\n    driver: bridge\n\n${hasNamedVolumes ? 'volumes:\n' : ''}`
 
   activeDbs.forEach((db, idx) => {
     if (db.type !== 'sqlite') {
@@ -320,7 +321,7 @@ export function generateDockerDevCompose(settings: ProjectSettings): string {
   return yaml
 }
 
-export function getDockerfileForTech(techId: string, port: number): { dockerfile: string, dockerignore: string } {
+export function getDockerfileForTech(techId: string, port: number, folderName = 'app', starterProfile?: string): { dockerfile: string, dockerignore: string } {
   let dockerignore = `node_modules\n.git\n.env\n*.log\ndist\nbuild\ntmp\n`
 
   if (techId === 'assembly-nasm') {
@@ -536,7 +537,7 @@ CMD ["./server", "-p", "${port}"]
     }
   }
 
-  if (techId.startsWith('python-')) {
+  if (techId === 'python-fastapi') {
     return {
       dockerfile: `FROM python:3.11-slim
 WORKDIR /app
@@ -544,18 +545,25 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 EXPOSE ${port}
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "${port}"]
+${starterProfile === 'api-service' ? `CMD ["sh", "-c", "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port ${port}"]` : `CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "${port}"]`}
 `,
       dockerignore: `__pycache__\n*.pyc\n.venv\n.git\n`
     }
+  }
+
+  if (techId === 'python-django') {
+    return { dockerfile: `FROM python:3.12-slim\nWORKDIR /app\nCOPY requirements.txt .\nRUN pip install --no-cache-dir -r requirements.txt\nCOPY . .\nEXPOSE ${port}\nCMD ["python", "manage.py", "runserver", "0.0.0.0:${port}"]\n`, dockerignore: `.git\n.venv\n__pycache__\n` }
+  }
+
+  if (techId === 'python-flask') {
+    return { dockerfile: `FROM python:3.12-slim\nWORKDIR /app\nCOPY requirements.txt .\nRUN pip install --no-cache-dir -r requirements.txt\nCOPY . .\nEXPOSE ${port}\nCMD ["gunicorn", "--bind", "0.0.0.0:${port}", "app:app"]\n`, dockerignore: `.git\n.venv\n__pycache__\n` }
   }
 
   if (techId.startsWith('go-')) {
     return {
       dockerfile: `FROM golang:1.23-alpine AS builder
 WORKDIR /app
-COPY go.mod go.sum* ./
-RUN go mod download || true
+COPY go.mod ./
 COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -o server .
 
@@ -617,8 +625,8 @@ CMD ["./server/bin/server", "start"]
       dockerfile: `FROM rust:1.80-alpine AS builder
 RUN apk add --no-cache musl-dev
 WORKDIR /app
-COPY Cargo.toml Cargo.lock* ./
-COPY src ./src
+COPY Cargo.toml ./
+COPY . .
 RUN cargo build --release
 
 FROM alpine:3.20
@@ -759,11 +767,11 @@ CMD ["bundle", "exec", "rackup", "-p", "${port}", "-o", "0.0.0.0"]
       dockerfile: `FROM gradle:8-jdk21-alpine AS build
 WORKDIR /app
 COPY . .
-RUN gradle build --no-daemon || true
+RUN gradle buildFatJar --no-daemon
 
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
-COPY --from=build /app/build/libs/*.jar app.jar
+COPY --from=build /app/build/libs/*-all.jar app.jar
 EXPOSE ${port}
 CMD ["java", "-jar", "app.jar"]
 `,

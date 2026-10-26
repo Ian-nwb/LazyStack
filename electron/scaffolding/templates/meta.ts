@@ -4,6 +4,7 @@ import { resolveStructurePaths } from '../../../src/data/structurePresets'
 import { getDbServiceName } from './docker'
 import { TESTING_TOOLS } from '../../../src/data/testingTools'
 import { getDatabaseAdminUiOption } from '../../../src/data/databaseAdminUis'
+import { TECH_CATALOG } from '../../../src/data/frameworks'
 import crypto from 'crypto'
 
 export interface GeneratedDatabaseCredential {
@@ -30,6 +31,29 @@ export function generateMetaFiles(settings: ProjectSettings, credentials = creat
   const activeDbs = settings.databases.filter(d => d.enabled)
   const paths = resolveStructurePaths(settings)
   const appWorkspaceRoots = [...new Set(settings.apps.map(app => paths.getAppRelativePath(app.folderName, app.id, app.role).split('/').slice(0, -1).join('/') || paths.appsDir))]
+  const useUnifiedWorkspace = settings.useUnifiedWorkspace !== false
+  const nativeRunCommand = (app: ProjectSettings['apps'][number]) => {
+    if (app.techId === 'python-fastapi') return `python -m venv .venv && source .venv/bin/activate\npip install -r requirements.txt${app.starterProfile === 'api-service' ? '\nalembic upgrade head' : ''}\nuvicorn main:app --reload --port ${app.port}`
+    if (app.techId === 'python-django') return `python -m venv .venv && source .venv/bin/activate\npip install -r requirements.txt\npython manage.py migrate\npython manage.py runserver 0.0.0.0:${app.port}`
+    if (app.techId === 'python-flask') return `python -m venv .venv && source .venv/bin/activate\npip install -r requirements.txt\ngunicorn --bind 0.0.0.0:${app.port} app:app`
+    if (app.techId.startsWith('python-')) return `python -m venv .venv && source .venv/bin/activate\npip install -r requirements.txt\npython main.py`
+    if (app.techId.startsWith('go-')) return 'go mod tidy\ngo run .'
+    if (app.techId.startsWith('rust-')) return 'cargo run'
+    if (app.techId === 'java-springboot') return 'mvn spring-boot:run'
+    if (app.techId === 'kotlin-ktor') return 'gradle run'
+    if (app.techId === 'vanilla-php') return `php -S 0.0.0.0:${app.port} index.php`
+    if (app.techId === 'vanilla-go') return 'go run .'
+    if (app.techId === 'vanilla-python') return 'python3 main.py'
+    if (app.techId === 'vanilla-node') return 'npm install\nnpm run dev'
+    const language = TECH_CATALOG.find(tech => tech.id === app.techId)?.language || ''
+    if (/^(JS \/ TS|JavaScript|TypeScript|Node\.js)$/.test(language)) return 'npm install\nnpm run dev'
+    return 'See the app-local README for framework-specific commands.'
+  }
+  const jsApps = settings.apps.filter(app => {
+    const language = TECH_CATALOG.find(tech => tech.id === app.techId)?.language || ''
+    return /^(JS \/ TS|JavaScript|TypeScript|Node\.js)$/.test(language)
+  })
+  const jsAppWorkspaceRoots = [...new Set(jsApps.map(app => paths.getAppRelativePath(app.folderName, app.id, app.role).split('/').slice(0, -1).join('/') || paths.appsDir))]
   const prismaStudioDbs = activeDbs.filter(db => db.adminUi === 'prisma-studio')
 
   // 1. Root .env and .env.example
@@ -166,13 +190,13 @@ echo "All automated healthchecks completed."
 `
 
   // 7. Root package.json (Monorepo Workspaces)
-  files['package.json'] = JSON.stringify({
+  if (useUnifiedWorkspace) files['package.json'] = JSON.stringify({
     name: settings.projectName.toLowerCase().replace(/[^a-z0-9_-]/g, '-'),
     version: '1.0.0',
     private: true,
     description: `Monorepo stack generated with LazyStack`,
     workspaces: [
-      ...appWorkspaceRoots.map(root => `${root}/*`),
+      ...jsAppWorkspaceRoots.map(root => `${root}/*`),
       `${paths.packagesDir}/*`
     ],
     scripts: {
@@ -186,7 +210,7 @@ echo "All automated healthchecks completed."
       ...(settings.apps.some(app => (app.testingTools || []).includes('playwright') || (app.testingTools || []).includes('cypress')) ? { 'test:e2e': 'npm run test:e2e --workspaces --if-present' } : {}),
       ...(settings.apps.some(app => (app.testingTools || []).includes('newman') || (app.testingTools || []).includes('bruno')) ? { 'test:api': 'npm run test:api --workspaces --if-present' } : {}),
       ...(settings.apps.some(app => (app.testingTools || []).includes('storybook')) ? { storybook: 'npm run storybook --workspaces --if-present' } : {}),
-      ...Object.fromEntries(prismaStudioDbs.map(db => {
+      ...Object.fromEntries((useUnifiedWorkspace ? prismaStudioDbs : []).map(db => {
         const serviceName = getDbServiceName(db, settings.databases.indexOf(db), settings.apps)
         const scriptName = serviceName.toLowerCase().replace(/[^a-z0-9_-]/g, '-')
         return [`prisma:studio:${scriptName}`, `node ./${paths.scriptsDir}/prisma-studio-${scriptName}.mjs`]
@@ -223,10 +247,11 @@ child.on('exit', code => process.exit(code ?? 1))
   }
 
   // 8. pnpm-workspace.yaml
-  files['pnpm-workspace.yaml'] = `packages:\n${[...appWorkspaceRoots.map(root => `  - '${root}/*'`), `  - '${paths.packagesDir}/*`].join('\n')}\n`
+  if (useUnifiedWorkspace) files['pnpm-workspace.yaml'] = `packages:\n${[...jsAppWorkspaceRoots.map(root => `  - '${root}/*'`), `  - '${paths.packagesDir}/*'`].join('\n')}\n`
 
   // Shared Monorepo Packages
   const safeScope = settings.projectName.toLowerCase().replace(/[^a-z0-9_-]/g, '-')
+  if (useUnifiedWorkspace) {
   files[`${paths.packagesDir}/types/package.json`] = JSON.stringify({
     name: `@${safeScope}/types`,
     version: '1.0.0',
@@ -265,9 +290,10 @@ export const delay = (ms: number): Promise<void> => {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 `
+  }
 
   // 9. turbo.json (Monorepo Pipeline)
-  files['turbo.json'] = JSON.stringify({
+  if (useUnifiedWorkspace) files['turbo.json'] = JSON.stringify({
     $schema: 'https://turbo.build/schema.json',
     tasks: {
       build: {
@@ -295,7 +321,7 @@ export const delay = (ms: number): Promise<void> => {
   // 11. .vscode/launch.json
   files['.vscode/launch.json'] = JSON.stringify({
     version: '0.2.0',
-    configurations: settings.apps.filter(a => a.port > 0).map(a => ({
+    configurations: jsApps.filter(a => a.port > 0).map(a => ({
       name: `Debug: ${a.folderName} (${a.techId})`,
       type: 'node',
       request: 'launch',
@@ -337,7 +363,9 @@ jobs:
   // 9. README.md
   files['README.md'] = `# ${settings.projectName}
 
-Modular monorepo architecture scaffolded with **LazyStack**.
+Project scaffolded with **LazyStack**. Unified workspace: **${useUnifiedWorkspace ? 'On' : 'Off'}**.
+
+${useUnifiedWorkspace ? 'JavaScript/TypeScript apps and shared packages are connected through root workspace files. Other languages keep their native project files and tools.' : 'Apps use their language-native project files and tools; no root npm/pnpm workspace is required.'}
 
 ---
 
@@ -392,6 +420,18 @@ ${activeDbs.map(d => {
   return `| \`${d.type}\` | Database | \`${d.port}\` | Docker Container | Internal |`
 }).join('\n')}
 
+## Native development commands
+
+Run each service with its language toolchain from the service directory. Configure environment values from that service's \`.env\` file before starting it.
+
+${settings.apps.map(app => `### ${app.folderName} · ${app.techId}
+
+\`cd ${paths.getAppRelativePath(app.folderName, app.id, app.role)}\`
+
+\`\`\`bash
+${nativeRunCommand(app)}
+\`\`\``).join('\n\n') || 'No application services were selected.'}
+
 ## Database web administration
 
 ${activeDbs.filter(db => db.adminUi).map(db => {
@@ -399,7 +439,7 @@ ${activeDbs.filter(db => db.adminUi).map(db => {
   if (!option) return ''
   if (option.hostProcess) {
     const serviceName = getDbServiceName(db, settings.databases.indexOf(db), settings.apps).toLowerCase().replace(/[^a-z0-9_-]/g, '-')
-    return `- **${db.customName || db.type} · ${option.name}**: Start the database with \`npm run docker:up\`, then run \`npm run prisma:studio:${serviceName}\`. Open http://localhost:${db.adminUiPort || option.defaultPort}.`
+    return `- **${db.customName || db.type} · ${option.name}**: Start the database with \`${useUnifiedWorkspace ? 'npm run docker:up' : `docker compose --env-file .env -f ${paths.infraDir}/docker-compose.yml up -d`}\`, then run \`${useUnifiedWorkspace ? `npm run prisma:studio:${serviceName}` : `node ./${paths.scriptsDir}/prisma-studio-${serviceName}.mjs`}\`. Open http://localhost:${db.adminUiPort || option.defaultPort}.`
   }
   return `- **${db.customName || db.type} · ${option.name}**: http://localhost:${db.adminUiPort || option.defaultPort}`
 }).filter(Boolean).join('\n') || 'No database web UIs were selected. Enable one in the database settings to add its container and local URL.'}
@@ -407,6 +447,13 @@ ${activeDbs.filter(db => db.adminUi).map(db => {
 ## Service connections
 
 ${settings.apps.map(app => (app.connections || []).length ? `- **${app.folderName}**: ${app.connections!.map(connection => `\`${connection.envVar}\` → ${settings.apps.find(target => target.id === connection.targetAppId)?.folderName || 'unknown service'}`).join(', ')}.` : '').filter(Boolean).join('\n') || 'No app-to-app connections were configured.'}
+
+## Typed API clients
+
+${settings.apps.filter(app => (app.testingTools || []).includes('openapi-client')).map(app => {
+  const source = (app.connections || []).map(connection => settings.apps.find(target => target.id === connection.targetAppId)).find(target => target && (target.testingTools || []).includes('swagger-openapi'))
+  return `- **${app.folderName}** uses the OpenAPI contract from **${source?.folderName || 'its connected API'}**. The contract is copied to \`${paths.getAppRelativePath(app.folderName, app.id, app.role)}/api-contract.yaml\`; edit it if needed, then run \`npm run api:generate\`. Predev and prebuild regenerate the client. Import \`createApiClient\` from \`src/api/client.ts\` and pass the API base URL and optional bearer token.`
+}).join('\n') || 'No TypeScript OpenAPI clients were selected.'}
 
 Service-specific \`.env\` files contain resolved local URLs and credentials. Keep \`.env\` private and use \`.env.example\` for safe configuration references.
 

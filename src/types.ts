@@ -48,6 +48,7 @@ export interface CartApp {
   runMode: RunMode
   routePrefix: string
   flavor?: LanguageFlavor
+  starterProfile?: 'minimal' | 'api-service'
   connections?: ServiceConnection[]
   healthCheck?: AppHealthCheck
   testingTools?: string[]
@@ -186,6 +187,8 @@ export interface ProjectSettings {
   databases: SelectedDatabase[]
   apps: CartApp[]
   structureConfig?: FolderStructureConfig
+  /** Whether to generate optional root JS workspace integration files. Defaults on for older blueprints. */
+  useUnifiedWorkspace?: boolean
   includeAdminGui?: boolean
   includeSharedPackage?: boolean
 }
