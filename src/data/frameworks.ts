@@ -142,6 +142,39 @@ export const TECH_CATALOG: TechItem[] = [
       { binary: 'php', label: 'PHP Runtime', installHint: 'apt install php / brew install php' }
     ]
   },
+  {
+    id: 'vanilla-go',
+    name: 'Vanilla Go (net/http)',
+    language: 'Go',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 8080,
+    description: 'A standard-library HTTP service using Go net/http, with no framework dependency.',
+    badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
+    requires: [{ binary: 'go', label: 'Go Toolchain', installHint: 'https://go.dev/dl/' }]
+  },
+  {
+    id: 'vanilla-python',
+    name: 'Vanilla Python (WSGI)',
+    language: 'Python',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 8000,
+    description: 'A minimal HTTP API using Python standard-library WSGI, with no framework dependency.',
+    badgeColor: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/40',
+    requires: [{ binary: 'python3', label: 'Python 3', installHint: 'https://www.python.org/downloads/' }]
+  },
+  {
+    id: 'vanilla-java',
+    name: 'Vanilla Java (JDK HttpServer)',
+    language: 'Java',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 8080,
+    description: 'A small HTTP service using the JDK built-in HttpServer, without a web framework.',
+    badgeColor: 'bg-red-500/20 text-red-300 border-red-500/40',
+    requires: [{ binary: 'java', label: 'Java JDK 17+', installHint: 'https://adoptium.net/' }]
+  },
 
   // --- MODERN RUNTIMES: DENO & BUN ---
   {
@@ -567,6 +600,28 @@ export const TECH_CATALOG: TechItem[] = [
     description: 'Hypermedia-driven interactive UI without heavy client-side JavaScript bundles.',
     badgeColor: 'bg-teal-500/20 text-teal-300 border-teal-500/40'
   },
+  {
+    id: 'kotlin-js',
+    name: 'Kotlin/JS Browser Frontend',
+    language: 'Kotlin',
+    category: 'frontend',
+    role: 'frontend',
+    defaultPort: 8080,
+    description: 'Compile Kotlin to JavaScript for a browser-based frontend using the Kotlin Multiplatform Gradle plugin.',
+    badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
+    requires: [{ binary: 'java', label: 'Java JDK 17+', installHint: 'https://adoptium.net/' }, { binary: 'gradle', label: 'Gradle', installHint: 'https://gradle.org/install/' }]
+  },
+  {
+    id: 'swiftui-client',
+    name: 'SwiftUI Apple Client',
+    language: 'Swift',
+    category: 'mobile-desktop',
+    role: 'desktop-mobile',
+    defaultPort: 0,
+    description: 'Native Apple platform client starter using SwiftUI. Build and run with Xcode on macOS.',
+    badgeColor: 'bg-orange-500/20 text-orange-300 border-orange-500/40',
+    requires: [{ binary: 'swift', label: 'Swift Toolchain / Xcode', installHint: 'https://developer.apple.com/xcode/' }]
+  },
 
   // --- MOBILE & DESKTOP (TAURI, FLUTTER, ELECTRON) ---
   {
@@ -754,6 +809,39 @@ export const TECH_CATALOG: TechItem[] = [
     requires: [
       { binary: 'node', label: 'Node.js', installHint: 'https://nodejs.org/' }
     ]
+  },
+  {
+    id: 'python-reflex',
+    name: 'Reflex (Python Full-Stack UI)',
+    language: 'Python',
+    category: 'fullstack',
+    role: 'fullstack',
+    defaultPort: 3000,
+    description: 'Build a reactive web UI and backend in Python; Reflex compiles the interface for the browser.',
+    badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
+    requires: [{ binary: 'python3', label: 'Python 3.10+', installHint: 'https://www.python.org/downloads/' }]
+  },
+  {
+    id: 'python-nicegui',
+    name: 'NiceGUI (Python Web UI)',
+    language: 'Python',
+    category: 'fullstack',
+    role: 'fullstack',
+    defaultPort: 8080,
+    description: 'Create browser-based dashboards and apps using Python components and NiceGUI.',
+    badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+    requires: [{ binary: 'python3', label: 'Python 3.9+', installHint: 'https://www.python.org/downloads/' }]
+  },
+  {
+    id: 'python-anvil',
+    name: 'Anvil (Hosted Python Full-Stack)',
+    language: 'Python',
+    category: 'fullstack',
+    role: 'fullstack',
+    defaultPort: 0,
+    description: 'Hosted full-stack Python web app platform with browser-side Python UI and server modules; continue in Anvil’s editor.',
+    badgeColor: 'bg-sky-500/20 text-sky-300 border-sky-500/40',
+    requires: []
   },
 
   // --- POLYGLOT BACKENDS & NEW LANGUAGES ---

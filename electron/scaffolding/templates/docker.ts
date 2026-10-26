@@ -27,7 +27,8 @@ export function generateDockerCompose(settings: ProjectSettings): string {
     // Cloud services without imageTag don't get Docker containers
     return !def?.isCloud || def?.imageTag
   })
-  const dockerApps = settings.apps.filter(a => a.runMode === 'docker')
+  const hostOnlyTechIds = new Set(['python-anvil', 'swiftui-client'])
+  const dockerApps = settings.apps.filter(a => a.runMode === 'docker' && !hostOnlyTechIds.has(a.techId))
 
   let yaml = `version: '3.8'\n\nnetworks:\n  lazystack_net:\n    driver: bridge\n\nvolumes:\n`
 
@@ -284,7 +285,7 @@ export function generateDockerCompose(settings: ProjectSettings): string {
 export function generateDockerDevCompose(settings: ProjectSettings): string {
   const paths = resolveStructurePaths(settings)
   let yaml = `version: '3.8'\n\nservices:\n`
-  settings.apps.filter(a => a.runMode === 'docker').forEach(app => {
+  settings.apps.filter(a => a.runMode === 'docker' && !['python-anvil', 'swiftui-client'].includes(a.techId)).forEach(app => {
     const appRelPath = paths.getAppRelativePath(app.folderName, app.id, app.role)
     yaml += `  ${app.folderName}:\n`
     yaml += `    volumes:\n      - ../${appRelPath}:/app\n`
@@ -672,6 +673,30 @@ CMD ["php", "-S", "0.0.0.0:${port}", "-t", "."]
 `,
       dockerignore: `.git\n`
     }
+  }
+
+  if (techId === 'vanilla-go') {
+    return { dockerfile: `FROM golang:1.23-alpine AS build\nWORKDIR /src\nCOPY . .\nRUN CGO_ENABLED=0 go build -o /server .\nFROM scratch\nCOPY --from=build /server /server\nEXPOSE ${port}\nENV PORT=${port}\nENTRYPOINT ["/server"]\n`, dockerignore: `.git\n` }
+  }
+
+  if (techId === 'vanilla-python') {
+    return { dockerfile: `FROM python:3.12-alpine\nWORKDIR /app\nCOPY . .\nEXPOSE ${port}\nENV PORT=${port}\nCMD ["python", "main.py"]\n`, dockerignore: `.git\n__pycache__\n` }
+  }
+
+  if (techId === 'vanilla-java') {
+    return { dockerfile: `FROM eclipse-temurin:21-jdk-alpine AS build\nWORKDIR /app\nCOPY Main.java .\nRUN javac Main.java\nFROM eclipse-temurin:21-jre-alpine\nWORKDIR /app\nCOPY --from=build /app/Main.class .\nEXPOSE ${port}\nENV PORT=${port}\nCMD ["java", "Main"]\n`, dockerignore: `.git\n` }
+  }
+
+  if (techId === 'python-reflex') {
+    return { dockerfile: `FROM python:3.12-slim\nWORKDIR /app\nCOPY requirements.txt .\nRUN pip install --no-cache-dir -r requirements.txt\nCOPY . .\nEXPOSE ${port}\nENV PORT=${port}\nCMD ["sh", "-c", "reflex run --env prod --frontend-port ${port} --backend-port 8000"]\n`, dockerignore: `.git\n.venv\n__pycache__\n` }
+  }
+
+  if (techId === 'python-nicegui') {
+    return { dockerfile: `FROM python:3.12-slim\nWORKDIR /app\nCOPY requirements.txt .\nRUN pip install --no-cache-dir -r requirements.txt\nCOPY . .\nEXPOSE ${port}\nCMD ["python", "main.py"]\n`, dockerignore: `.git\n.venv\n__pycache__\n` }
+  }
+
+  if (techId === 'kotlin-js') {
+    return { dockerfile: `FROM gradle:8-jdk21-alpine AS build\nWORKDIR /app\nCOPY . .\nRUN gradle jsBrowserDistribution --no-daemon\nFROM nginx:alpine\nCOPY --from=build /app/build/dist/js/productionExecutable/ /usr/share/nginx/html/\nEXPOSE ${port}\n`, dockerignore: `.gradle\nbuild\n.git\n` }
   }
 
   if (techId.startsWith('csharp-')) {

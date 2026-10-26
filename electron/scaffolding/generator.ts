@@ -282,11 +282,13 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
       const appDir = path.join(targetDir, relAppPath)
       await fs.ensureDir(appDir)
 
-      // Dockerfile & .dockerignore
-      const { dockerfile, dockerignore } = getDockerfileForTech(app.techId, app.port)
-      await fs.writeFile(path.join(appDir, 'Dockerfile'), dockerfile, 'utf8')
-      await fs.writeFile(path.join(appDir, '.dockerignore'), dockerignore, 'utf8')
-      filesCreated += 2
+      // Hosted and native-client templates do not run as container services.
+      if (!['python-anvil', 'swiftui-client'].includes(app.techId)) {
+        const { dockerfile, dockerignore } = getDockerfileForTech(app.techId, app.port)
+        await fs.writeFile(path.join(appDir, 'Dockerfile'), dockerfile, 'utf8')
+        await fs.writeFile(path.join(appDir, '.dockerignore'), dockerignore, 'utf8')
+        filesCreated += 2
+      }
 
       // Scoped databases for this microservice
       const assignedDbs = settings.databases.filter(d => d.enabled && d.assignedAppId === app.id)

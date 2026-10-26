@@ -6,7 +6,7 @@ import { DATABASE_CATALOG } from '../data/databases'
 import { STACK_PRESETS, StackPreset } from '../data/presets'
 import { ProjectSettings, CartApp } from '../types'
 
-const VERSION = '1.0.0'
+const VERSION = '1.0.3'
 
 function printHelp() {
   console.log(`

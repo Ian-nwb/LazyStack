@@ -309,6 +309,88 @@ echo json_encode([
     return files
   }
 
+  if (techId === 'vanilla-go') {
+    files['go.mod'] = `module ${folderName.toLowerCase().replace(/[^a-z0-9./-]/g, '-')}
+go 1.22
+`
+    files['main.go'] = `package main
+import ("encoding/json"; "log"; "net/http"; "os")
+func main() {
+  port := os.Getenv("PORT"); if port == "" { port = "${port}" }
+  http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) { w.Header().Set("Content-Type", "application/json"); _ = json.NewEncoder(w).Encode(map[string]string{"service":"${folderName}", "runtime":"Go net/http", "status":"online"}) })
+  log.Fatal(http.ListenAndServe(":"+port, nil))
+}
+`
+    files['README.md'] = `# ${folderName} (Vanilla Go)\n\nRun with \`go run .\`. Set \`PORT\` to override the default port ${port}.\n`
+    return files
+  }
+
+  if (techId === 'vanilla-python') {
+    files['main.py'] = `from http.server import BaseHTTPRequestHandler, HTTPServer
+import json, os
+class Handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        body = json.dumps({"service": "${folderName}", "runtime": "Python stdlib HTTP", "status": "online"}).encode()
+        self.send_response(200); self.send_header("Content-Type", "application/json"); self.send_header("Content-Length", str(len(body))); self.end_headers(); self.wfile.write(body)
+HTTPServer(("0.0.0.0", int(os.getenv("PORT", "${port}"))), Handler).serve_forever()
+`
+    files['README.md'] = `# ${folderName} (Vanilla Python)\n\nRun with \`python3 main.py\`. Set \`PORT\` to override the default port ${port}.\n`
+    return files
+  }
+
+  if (techId === 'vanilla-java') {
+    files['Main.java'] = `import com.sun.net.httpserver.HttpServer;
+import java.net.InetSocketAddress;
+public class Main {
+  public static void main(String[] args) throws Exception {
+    int port = Integer.parseInt(System.getenv().getOrDefault("PORT", "${port}"));
+    var server = HttpServer.create(new InetSocketAddress("0.0.0.0", port), 0);
+    server.createContext("/", exchange -> { byte[] body = "{\\"service\\":\\"${folderName}\\",\\"runtime\\":\\"JDK HttpServer\\",\\"status\\":\\"online\\"}".getBytes(); exchange.getResponseHeaders().set("Content-Type", "application/json"); exchange.sendResponseHeaders(200, body.length); exchange.getResponseBody().write(body); exchange.close(); });
+    server.start();
+  }
+}
+`
+    files['README.md'] = `# ${folderName} (Vanilla Java)\n\nBuild and run with \`javac Main.java && java Main\`. Set \`PORT\` to override the default port ${port}.\n`
+    return files
+  }
+
+  if (techId === 'python-reflex') {
+    files['requirements.txt'] = 'reflex\n'
+    files['rxconfig.py'] = `import reflex as rx\n\nconfig = rx.Config(app_name="${folderName.replace(/[^a-zA-Z0-9_]/g, '_')}")\n`
+    const appModule = folderName.replace(/[^a-zA-Z0-9_]/g, '_')
+    files[`${appModule}/${appModule}.py`] = `import reflex as rx\n\nclass State(rx.State):\n    count: int = 0\n    def increment(self): self.count += 1\n\ndef index():\n    return rx.center(rx.vstack(rx.heading("${folderName}"), rx.text("Reflex Python full-stack starter"), rx.text(State.count), rx.button("Add", on_click=State.increment)), height="100vh")\n\napp = rx.App()\napp.add_page(index)\n`
+    files['README.md'] = `# ${folderName} (Reflex)\n\nCreate a virtual environment, install \`requirements.txt\`, then run \`reflex run\`. Reflex serves the UI and Python backend. Docs: https://reflex.dev/docs/\n`
+    return files
+  }
+
+  if (techId === 'python-nicegui') {
+    files['requirements.txt'] = 'nicegui\n'
+    files['main.py'] = `from nicegui import ui\n\nui.label("${folderName}").classes("text-2xl font-bold")\nui.label("NiceGUI Python web UI starter")\nui.run(host="0.0.0.0", port=${port}, title="${folderName}")\n`
+    files['README.md'] = `# ${folderName} (NiceGUI)\n\nInstall with \`python3 -m pip install -r requirements.txt\`, then run \`python3 main.py\`. Open http://localhost:${port}. Docs: https://nicegui.io/documentation.\n`
+    return files
+  }
+
+  if (techId === 'python-anvil') {
+    files['README.md'] = `# ${folderName} (Anvil)\n\nThis is a hosted Anvil starter. Create or import the app in the Anvil editor at https://anvil.works/build, then add client UI and server modules there. Anvil provides browser-side Python, server-side Python, HTTP APIs, and optional built-in Data Tables. This generator does not claim a local Docker runtime for hosted Anvil apps.\n\nDocs: https://anvil.works/docs/overview\n`
+    files['anvil-app-plan.md'] = `# App plan\n\n- Client form: Home\n- Client code: Python\n- Server module: API and business logic\n- Connect external services with Anvil HTTP APIs or server-side Python clients\n`
+    return files
+  }
+
+  if (techId === 'kotlin-js') {
+    files['settings.gradle.kts'] = `pluginManagement { repositories { gradlePluginPortal(); mavenCentral() } }\ndependencyResolutionManagement { repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS); repositories { mavenCentral() } }\nrootProject.name = "${folderName}"\n`
+    files['build.gradle.kts'] = `plugins { kotlin("multiplatform") version "2.2.20" }\nkotlin { js { browser(); binaries.executable() } }\n`
+    files['src/jsMain/kotlin/Main.kt'] = `import kotlinx.browser.document\n\nfun main() { document.body?.innerHTML = "<main style='font-family:sans-serif;padding:3rem'><h1>${folderName}</h1><p>Kotlin/JS browser frontend</p></main>" }\n`
+    files['README.md'] = `# ${folderName} (Kotlin/JS)\n\nBuild the browser bundle with \`./gradlew jsBrowserDevelopmentWebpack\`. Serve the generated output under \`build/dist/js/developmentExecutable\`. Requires JDK and Gradle. Docs: https://kotlinlang.org/docs/js-get-started.html\n`
+    return files
+  }
+
+  if (techId === 'swiftui-client') {
+    files['Package.swift'] = `// swift-tools-version:5.9\nimport PackageDescription\n\nlet package = Package(name: "${folderName}", platforms: [.macOS(.v13), .iOS(.v16)], targets: [.target(name: "${folderName}")])\n`
+    files['Sources/${folderName}/ContentView.swift'] = `import SwiftUI\n\nstruct ContentView: View {\n    var body: some View { VStack(spacing: 12) { Text("${folderName}").font(.largeTitle); Text("SwiftUI client starter") }.padding() }\n}\n`
+    files['README.md'] = `# ${folderName} (SwiftUI)\n\nOpen this package in Xcode on macOS to select an iOS or macOS run destination. SwiftUI is a native Apple client UI and is not a browser frontend.\n`
+    return files
+  }
+
   if (techId === 'tauri-app') {
     files['package.json'] = `{
   "name": "${folderName}",
