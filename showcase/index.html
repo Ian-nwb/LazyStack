@@ -1,0 +1,568 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>LazyStack</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+/* Layout: left-anchored editorial columns. Oversized Archivo headlines, JetBrains Mono for every label, path and command.
+   Hairline grid rules, inverted hover rows, one full-bleed inverted download block. Monochrome only. */
+:root {
+  --bg: #0a0a0a;
+  --fg: #ffffff;
+  --mute: #8f8f8f;
+  --line: #1f1f1f;
+  --line-strong: #3b3b3b;
+  --dot: #262626;
+  --inv-bg: #ffffff;
+  --inv-fg: #050505;
+  --dl-line: #c9c9c9;
+  --dl-mute: #5a5a5a;
+  --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #f4f4f0; --fg: #050505; --mute: #5b5b57; --line: #dcdcd6; --line-strong: #b4b4ae; --dot: #d5d5cf;
+    --inv-bg: #050505; --inv-fg: #f4f4f0; --dl-line: #3a3a3a; --dl-mute: #a9a9a3;
+    color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #f4f4f0; --fg: #050505; --mute: #5b5b57; --line: #dcdcd6; --line-strong: #b4b4ae; --dot: #d5d5cf;
+  --inv-bg: #050505; --inv-fg: #f4f4f0; --dl-line: #3a3a3a; --dl-mute: #a9a9a3;
+  color-scheme: light;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-display);
+  font-size: 16px;
+  line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0;
+  -webkit-font-smoothing: antialiased;
+}
+body::before {
+  content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px);
+  z-index: 40; background: var(--bg);
+}
+a { color: inherit; }
+code, pre, .mono { font-family: var(--font-mono); }
+code { font-size: 0.86em; }
+:focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
+
+.page { max-width: 1240px; margin-inline: auto; }
+.eyebrow {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mute);
+}
+.mute { color: var(--mute); }
+
+/* ---------- top bar ---------- */
+.bar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 50;
+  background: var(--bg); border-bottom: 1px solid var(--line-strong);
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px;
+  padding-block: 14px;
+}
+.bar .mark { font-family: var(--font-mono); font-weight: 700; font-size: 13px; letter-spacing: 0.04em; text-decoration: none; }
+.bar nav { display: flex; flex-wrap: wrap; gap: 4px 20px; }
+.bar nav a {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; text-decoration: none; color: var(--mute);
+  border-bottom: 1px solid transparent; padding-bottom: 1px; transition: color 120ms, border-color 120ms;
+}
+.bar nav a:hover { color: var(--fg); border-bottom-color: var(--fg); }
+
+/* ---------- hero ---------- */
+.hero {
+  padding-block: clamp(40px, 8vw, 96px) clamp(40px, 6vw, 72px);
+  background-image: radial-gradient(var(--dot) 1px, transparent 1.3px);
+  background-size: 16px 16px;
+}
+.hero .kicker { margin: 0 0 clamp(20px, 3vw, 36px); }
+h1 {
+  margin: 0;
+  font-size: clamp(2.6rem, 9vw, 7.5rem);
+  line-height: 0.92;
+  letter-spacing: -0.045em;
+  font-weight: 900;
+  text-wrap: balance;
+}
+h1 .thin { font-weight: 200; letter-spacing: -0.05em; }
+.hero-grid {
+  margin-top: clamp(32px, 5vw, 64px);
+  display: grid; grid-template-columns: 1fr; gap: 40px;
+}
+@media (min-width: 900px) {
+  .hero-grid { grid-template-columns: minmax(0, 6fr) minmax(0, 4fr); gap: 80px; }
+  .hero-grid .spec { grid-column: 2; }
+}
+.lead { margin: 0; max-width: 56ch; font-size: clamp(1.05rem, 1.6vw, 1.25rem); line-height: 1.5; font-weight: 400; }
+.actions { margin-top: 28px; display: flex; flex-wrap: wrap; gap: 12px; }
+.btn {
+  display: inline-block; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; text-decoration: none;
+  padding: 14px 22px; border: 1px solid var(--fg); transition: background-color 150ms, color 150ms;
+}
+.btn-solid { background: var(--fg); color: var(--bg); }
+.btn-solid:hover { background: var(--bg); color: var(--fg); }
+.btn-line { background: transparent; color: var(--fg); }
+.btn-line:hover { background: var(--fg); color: var(--bg); }
+.spec { margin: 0; border-top: 1px solid var(--line-strong); background: var(--bg); }
+.spec div { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); gap: 16px; padding: 11px 0; border-bottom: 1px solid var(--line); }
+.spec dt { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mute); padding-top: 3px; }
+.spec dd { margin: 0; font-family: var(--font-mono); font-size: 13px; }
+
+/* ---------- sections ---------- */
+.sec {
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px;
+  padding-block: clamp(48px, 7vw, 88px);
+  border-top: 1px solid var(--line-strong);
+  scroll-margin-top: 56px;
+}
+@media (min-width: 900px) { .sec { grid-template-columns: 200px minmax(0, 1fr); gap: 56px; } }
+.sec-side { display: flex; flex-direction: column; gap: 6px; align-self: start; }
+.sec-side .count { font-family: var(--font-mono); font-size: 13px; }
+h2 {
+  margin: 0 0 28px; max-width: 18ch;
+  font-size: clamp(2rem, 4.6vw, 3.6rem); line-height: 0.98; letter-spacing: -0.04em; font-weight: 800; text-wrap: balance;
+}
+h2 .thin { font-weight: 200; }
+.sec p { max-width: 62ch; margin: 0 0 16px; }
+.note { font-family: var(--font-mono); font-size: 12px; color: var(--mute); max-width: 70ch; }
+
+/* rows */
+.rows { margin: 0; border-top: 1px solid var(--line-strong); }
+.row {
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px 32px;
+  padding: 16px 12px; margin-inline: -12px; border-bottom: 1px solid var(--line);
+  transition: background-color 120ms, color 120ms;
+}
+@media (min-width: 760px) { .row { grid-template-columns: 220px minmax(0, 1fr); } }
+.row dt, .row .k { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700; padding-top: 3px; }
+.row dd, .row .v { margin: 0; min-width: 0; }
+.row .v p { margin: 0; }
+@media (hover: hover) {
+  .row:hover { background: var(--inv-bg); color: var(--inv-fg); }
+  .row:hover .mute { color: inherit; opacity: 0.65; }
+  .row:hover .t { border-color: var(--inv-fg); }
+}
+
+/* tags */
+.tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.t { font-family: var(--font-mono); font-size: 12px; padding: 3px 8px; border: 1px solid var(--line-strong); }
+.sub { margin: 10px 0 0; font-family: var(--font-mono); font-size: 12px; color: var(--mute); }
+
+/* tables */
+.scroll { overflow-x: auto; border-top: 1px solid var(--line-strong); }
+table { width: 100%; border-collapse: collapse; font-size: 15px; }
+th, td { text-align: left; vertical-align: top; padding: 13px 12px 13px 0; border-bottom: 1px solid var(--line); }
+th { font-family: var(--font-mono); font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mute); }
+td:first-child { font-weight: 700; white-space: nowrap; padding-right: 32px; }
+td code { white-space: nowrap; }
+tr.pick td { font-weight: 800; }
+tr.pick td:first-child::before { content: "\2192\00a0"; font-family: var(--font-mono); }
+@media (hover: hover) {
+  tbody tr { transition: background-color 120ms, color 120ms; }
+  tbody tr:hover { background: var(--inv-bg); color: var(--inv-fg); }
+  tbody tr:hover td { border-color: var(--inv-bg); }
+  tbody tr td:first-child { padding-left: 10px; }
+}
+@media (hover: none) { td:first-child { padding-left: 0; } }
+
+/* code blocks */
+.code { border: 1px solid var(--line-strong); margin: 0 0 20px; min-width: 0; }
+.code-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; border-bottom: 1px solid var(--line-strong); padding: 0 0 0 14px; }
+.code-head .eyebrow { padding: 10px 0; }
+.copy {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+  background: transparent; color: var(--fg); border: 0; border-left: 1px solid var(--line-strong); padding: 10px 16px; cursor: pointer;
+  transition: background-color 120ms, color 120ms; min-width: 8.5rem;
+}
+.copy:hover { background: var(--fg); color: var(--bg); }
+pre { margin: 0; padding: 16px 14px; overflow-x: auto; font-size: 13px; line-height: 1.7; tab-size: 2; }
+pre .c { color: var(--mute); }
+
+/* layout tree */
+.tree { border: 1px solid var(--line-strong); margin: 0 0 32px; }
+.tree pre { font-size: 13.5px; }
+
+/* ---------- download ---------- */
+.dl { display: block; background: var(--inv-bg); color: var(--inv-fg); margin-inline: calc(-1 * max(16px, env(safe-area-inset-left, 0px))) ; padding-inline: max(16px, env(safe-area-inset-left, 0px)); border-top: 0; }
+.dl-in { max-width: 1240px; margin-inline: auto; }
+.dl .eyebrow, .dl .note, .dl .mute { color: var(--dl-mute); }
+.dl h2 { max-width: 14ch; }
+.dl-rows { margin: 0 0 28px; border-top: 1px solid var(--inv-fg); }
+.dl-row {
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px 24px; align-items: center;
+  padding: 18px 0; border-bottom: 1px solid var(--dl-line);
+}
+@media (min-width: 760px) { .dl-row { grid-template-columns: 200px minmax(0, 1fr) auto; } }
+.dl-row .plat { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700; }
+.dl-row .pkg { font-size: clamp(1.4rem, 3vw, 2.1rem); font-weight: 800; letter-spacing: -0.03em; line-height: 1.05; }
+.dl-row .pkg .thin { font-weight: 200; }
+.dl-row.none .pkg { color: var(--dl-mute); }
+.dl .btn { border-color: var(--inv-fg); }
+.dl .btn-solid { background: var(--inv-fg); color: var(--inv-bg); }
+.dl .btn-solid:hover { background: var(--inv-bg); color: var(--inv-fg); }
+.dl .code { border-color: var(--inv-fg); }
+.dl .code-head { border-color: var(--inv-fg); }
+.dl .copy { color: var(--inv-fg); border-left-color: var(--inv-fg); }
+.dl .copy:hover { background: var(--inv-fg); color: var(--inv-bg); }
+.dl pre .c { color: var(--dl-mute); }
+.dl :focus-visible { outline-color: var(--inv-fg); }
+.dl-cols { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0 40px; margin-top: 8px; }
+@media (min-width: 900px) { .dl-cols { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.dl ul { margin: 0 0 20px; padding: 0; list-style: none; border-top: 1px solid var(--inv-fg); }
+.dl li { padding: 11px 0; border-bottom: 1px solid var(--dl-line); font-size: 15px; }
+.dl h3 { margin: 0 0 12px; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700; }
+
+/* proposals */
+.props { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line-strong); display: grid; grid-template-columns: minmax(0, 1fr); column-gap: 40px; }
+@media (min-width: 760px) { .props { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.props li { padding: 12px 0; border-bottom: 1px solid var(--line); color: var(--mute); font-size: 15px; display: flex; gap: 12px; }
+.props li::before { content: "+"; font-family: var(--font-mono); color: var(--fg); }
+
+/* footer */
+footer { border-top: 1px solid var(--line-strong); padding-block: 40px calc(32px + env(safe-area-inset-bottom, 0px)); }
+.wordmark { margin: 0 0 28px; font-size: clamp(2.5rem, 12vw, 10rem); line-height: 0.82; letter-spacing: -0.06em; font-weight: 900; text-transform: uppercase; overflow-wrap: anywhere; }
+.wordmark .thin { font-weight: 200; }
+.foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px 32px; font-family: var(--font-mono); font-size: 12px; color: var(--mute); }
+.foot nav { display: flex; flex-wrap: wrap; gap: 6px 20px; }
+.foot a { text-decoration: none; border-bottom: 1px solid var(--line-strong); }
+.foot a:hover { color: var(--fg); border-bottom-color: var(--fg); }
+</style>
+
+<div class="page">
+
+  <header class="bar">
+    <a class="mark" href="#top">LAZYSTACK/1.0.3</a>
+    <nav aria-label="Sections">
+      <a href="#features">Features</a>
+      <a href="#layouts">Layouts</a>
+      <a href="#catalog">Catalog</a>
+      <a href="#cli">CLI</a>
+      <a href="#download">Download</a>
+      <a href="https://github.com/Ian-nwb/LazyStack">GitHub &#8599;</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <p class="eyebrow kicker">Desktop stack builder + command-line scaffolder</p>
+      <h1>Mix the stack.<br><span class="thin">Scaffold the rest.</span></h1>
+
+      <div class="hero-grid">
+        <div>
+          <p class="lead">LazyStack lets you choose languages, frameworks, databases, service connections, testing tools, and an architecture layout. It then writes the project structure and the configuration around it.</p>
+          <div class="actions">
+            <a class="btn btn-solid" href="#download">Download v1.0.3 &#8595;</a>
+            <a class="btn btn-line" href="https://github.com/Ian-nwb/LazyStack">View source &#8599;</a>
+          </div>
+        </div>
+        <dl class="spec">
+          <div><dt>Version</dt><dd>1.0.3</dd></div>
+          <div><dt>Status</dt><dd>In development</dd></div>
+          <div><dt>Platforms</dt><dd>Linux x64, Windows x64</dd></div>
+          <div><dt>Builds</dt><dd>AppImage, portable EXE</dd></div>
+          <div><dt>Needs</dt><dd>Docker + Docker Compose to run generated stacks</dd></div>
+          <div><dt>From source</dt><dd>Node.js 20+, npm 10+</dd></div>
+          <div><dt>License</dt><dd>MIT</dd></div>
+        </dl>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section class="sec" id="features">
+      <div class="sec-side">
+        <span class="eyebrow">Features</span>
+        <span class="count">10 capabilities</span>
+      </div>
+      <div>
+        <h2>One blueprint, <span class="thin">every layer.</span></h2>
+        <dl class="rows">
+          <div class="row"><dt>Mix application roles</dt><dd>Generate frontend clients, backend services, full-stack apps, workers, and desktop or mobile clients in the same project.</dd></div>
+          <div class="row"><dt>Broad catalog</dt><dd>Start from an established framework or a plain language runtime template: React, Vue, Angular, Solid, Qwik, HTMX, Lit, Kotlin/JS, SwiftUI, Reflex, NiceGUI, Anvil, Go, Rust, Java and many more.</dd></div>
+          <div class="row"><dt>Architecture layouts</dt><dd>Pick a preset, or set your own root directories, extra folders, and per-app paths.</dd></div>
+          <div class="row"><dt>Polyglot layout</dt><dd>Browser clients go to <code>frontend/clients/</code>, API services to <code>backend/services/</code>, workers to <code>backend/workers/</code>, and deployment files to <code>deploy/</code>.</dd></div>
+          <div class="row"><dt>Service connections</dt><dd>Configure API URLs, environment variable names, health checks, and startup dependencies between services.</dd></div>
+          <div class="row"><dt>Database setup</dt><dd>Add self-hosted databases or managed cloud providers, set per-service database scope, and get local credentials generated into <code>.env</code>.</dd></div>
+          <div class="row"><dt>Database web UIs</dt><dd>Attach an admin UI to a database instance: Adminer, pgAdmin, phpMyAdmin, Mongo Express, or Redis Commander, matched to the engine.</dd></div>
+          <div class="row"><dt>Testing tools</dt><dd>Choose tools per app, grouped by purpose. They are opt-in, so no test runner lands in a service that did not ask for one.</dd></div>
+          <div class="row"><dt>Infrastructure output</dt><dd>Docker Compose, optional Nginx or Apache routing, environment files, scripts, shared packages, and starter documentation.</dd></div>
+          <div class="row"><dt>Blueprints + CLI</dt><dd>Export a JSON blueprint, then scaffold it from the command line without opening the desktop app.</dd></div>
+        </dl>
+      </div>
+    </section>
+
+    <!-- LAYOUTS -->
+    <section class="sec" id="layouts">
+      <div class="sec-side">
+        <span class="eyebrow">Layouts</span>
+        <span class="count">10 architectures</span>
+      </div>
+      <div>
+        <h2>Choose where <span class="thin">things live.</span></h2>
+        <p>Every layout is a starting point. The Polyglot layout splits a project by role, so clients, services, workers, and deployment files each get their own root.</p>
+
+        <div class="tree">
+          <div class="code-head"><span class="eyebrow">Polyglot layout, illustrative</span></div>
+<pre><code>my-app/
+├── frontend/
+│   └── clients/     browser clients
+├── backend/
+│   ├── services/    API services
+│   └── workers/     background workers
+├── deploy/          deployment files
+├── .env             generated database credentials <span class="c">(keep private)</span>
+└── .env.example     safe placeholders</code></pre>
+        </div>
+
+        <div class="scroll">
+          <table>
+            <thead><tr><th>Layout</th><th>Directory focus</th></tr></thead>
+            <tbody>
+              <tr><td>Standard Monorepo</td><td><code>apps/</code>, <code>packages/</code>, <code>infra/</code></td></tr>
+              <tr><td>Microservices Decoupled</td><td><code>services/</code>, shared contracts, isolated service data</td></tr>
+              <tr><td>Domain-Driven Design</td><td><code>domains/</code>, <code>core/</code>, bounded contexts</td></tr>
+              <tr class="pick"><td>Polyglot</td><td><code>frontend/clients/</code>, <code>backend/services/</code>, <code>backend/workers/</code>, <code>deploy/</code></td></tr>
+              <tr><td>Modular Monolith</td><td><code>modules/</code>, <code>libs/</code>, shared deployment</td></tr>
+              <tr><td>Hexagonal / Ports &amp; Adapters</td><td>Services separated from core logic and adapters</td></tr>
+              <tr><td>Serverless &amp; Cloud-Native</td><td><code>functions/</code>, shared packages, cloud infrastructure</td></tr>
+              <tr><td>Event-Driven Services</td><td>APIs, consumers, event schemas, and broker infrastructure</td></tr>
+              <tr><td>Data Platform</td><td>Pipelines, ingestion services, dashboards, and schemas</td></tr>
+              <tr><td>Custom Structure</td><td>User-defined roots, custom folders, and per-app paths</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- CATALOG -->
+    <section class="sec" id="catalog">
+      <div class="sec-side">
+        <span class="eyebrow">Catalog</span>
+        <span class="count">16 + 8 databases</span>
+      </div>
+      <div>
+        <h2>Frameworks, databases, <span class="thin">test tools.</span></h2>
+        <p>The tool list changes with the selected stack, and you can pick more than one tool per app.</p>
+
+        <div class="rows">
+          <div class="row"><div class="k">Frontend + UI</div><div class="v"><ul class="tags">
+            <li class="t">React + Vite</li><li class="t">React + MUI</li><li class="t">Vue + Vite</li><li class="t">Angular</li><li class="t">SolidJS</li><li class="t">Qwik</li><li class="t">HTMX</li><li class="t">Lit</li><li class="t">Vanilla HTML/CSS/JS</li><li class="t">Kotlin/JS</li><li class="t">SwiftUI</li>
+          </ul></div></div>
+          <div class="row"><div class="k">Python UI</div><div class="v"><ul class="tags"><li class="t">Reflex</li><li class="t">NiceGUI</li><li class="t">Anvil</li></ul>
+            <p class="sub">Reflex and NiceGUI pair a Python backend with a browser UI. Anvil is a hosted Python full-stack option, continued in the Anvil editor.</p></div></div>
+          <div class="row"><div class="k">Plain services</div><div class="v"><ul class="tags">
+            <li class="t">Vanilla Node.js</li><li class="t">PHP</li><li class="t">Go net/http</li><li class="t">Python stdlib HTTP</li><li class="t">Java JDK HttpServer</li>
+          </ul><p class="sub">Framework-free starters with runnable source and README instructions.</p></div></div>
+          <div class="row"><div class="k">Framework services</div><div class="v"><ul class="tags">
+            <li class="t">Go Chi</li><li class="t">Go Echo</li><li class="t">PHP Laravel</li><li class="t">Kotlin Ktor</li><li class="t">Swift Vapor</li><li class="t">and others</li>
+          </ul></div></div>
+          <div class="row"><div class="k">Self-hosted DBs</div><div class="v"><ul class="tags">
+            <li class="t">SQLite</li><li class="t">PostgreSQL</li><li class="t">MySQL</li><li class="t">MariaDB</li><li class="t">MongoDB</li><li class="t">Redis</li><li class="t">Valkey</li><li class="t">ClickHouse</li><li class="t">SurrealDB</li><li class="t">Neo4j</li><li class="t">Qdrant</li><li class="t">Meilisearch</li><li class="t">MinIO</li><li class="t">ScyllaDB</li><li class="t">RabbitMQ</li><li class="t">PocketBase</li>
+          </ul></div></div>
+          <div class="row"><div class="k">Cloud + BaaS</div><div class="v"><ul class="tags">
+            <li class="t">Supabase</li><li class="t">Firebase</li><li class="t">PlanetScale</li><li class="t">Neon</li><li class="t">Turso</li><li class="t">Upstash</li><li class="t">Appwrite</li><li class="t">Convex</li>
+          </ul></div></div>
+          <div class="row"><div class="k">DB admin UIs</div><div class="v"><ul class="tags">
+            <li class="t">Adminer</li><li class="t">pgAdmin</li><li class="t">phpMyAdmin</li><li class="t">Mongo Express</li><li class="t">Redis Commander</li>
+          </ul></div></div>
+          <div class="row"><div class="k">Unit + component</div><div class="v"><ul class="tags">
+            <li class="t">Jest</li><li class="t">Vitest</li><li class="t">Testing Library</li><li class="t">pytest</li><li class="t">Go testing</li><li class="t">PHPUnit</li><li class="t">JUnit</li>
+          </ul></div></div>
+          <div class="row"><div class="k">API + integration</div><div class="v"><ul class="tags">
+            <li class="t">Supertest</li><li class="t">Newman</li><li class="t">Bruno</li><li class="t">REST Assured</li><li class="t">Postman via Newman</li>
+          </ul></div></div>
+          <div class="row"><div class="k">Browser end-to-end</div><div class="v"><ul class="tags">
+            <li class="t">Playwright</li><li class="t">Cypress</li><li class="t">WebdriverIO</li><li class="t">Puppeteer</li>
+          </ul></div></div>
+          <div class="row"><div class="k">UI development</div><div class="v"><ul class="tags"><li class="t">Storybook</li></ul></div></div>
+          <div class="row"><div class="k">Performance</div><div class="v"><ul class="tags"><li class="t">k6</li><li class="t">Artillery</li></ul></div></div>
+          <div class="row"><div class="k">Contract + schema</div><div class="v"><ul class="tags"><li class="t">Pact</li><li class="t">OpenAPI validation</li></ul></div></div>
+          <div class="row"><div class="k">Security</div><div class="v"><ul class="tags"><li class="t">OWASP ZAP</li></ul></div></div>
+        </div>
+        <p class="note" style="margin-top:18px">Missing a test tool? Add a custom one by name and package.</p>
+      </div>
+    </section>
+
+    <!-- CLI -->
+    <section class="sec" id="cli">
+      <div class="sec-side">
+        <span class="eyebrow">CLI</span>
+        <span class="count">No window required</span>
+      </div>
+      <div>
+        <h2>Scaffold from <span class="thin">the terminal.</span></h2>
+        <p>Build the CLI once, list what it knows, then export a blueprint and scaffold it. <code>--out</code> is the parent directory where the generated project will be created.</p>
+
+        <div class="code">
+          <div class="code-head"><span class="eyebrow">Explore</span><button class="copy" type="button" data-copy="c1">Copy</button></div>
+<pre id="c1">npm run build:cli
+npm run cli -- help
+npm run cli -- list
+npm run cli -- presets</pre>
+        </div>
+
+        <div class="code">
+          <div class="code-head"><span class="eyebrow">Export a blueprint, then scaffold it</span><button class="copy" type="button" data-copy="c2">Copy</button></div>
+<pre id="c2">npm run cli -- export --preset modern-mern --name my-app --out lazystack.json
+npm run cli -- scaffold --config lazystack.json --out ./generated</pre>
+        </div>
+
+        <div class="code">
+          <div class="code-head"><span class="eyebrow">Or scaffold straight from a preset</span><button class="copy" type="button" data-copy="c3">Copy</button></div>
+<pre id="c3">npm run cli -- scaffold --preset fastapi-react --name my-api --out ./generated</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- DOWNLOAD -->
+    <section class="sec dl" id="download">
+      <div class="dl-in" style="display:grid;gap:20px;grid-template-columns:minmax(0,1fr)">
+        <div>
+          <span class="eyebrow">Download</span>
+        </div>
+        <div>
+          <h2>Get <span class="thin">v1.0.3.</span></h2>
+          <p style="max-width:62ch;margin:0 0 28px">Packages are attached to the v1.0.3 release on GitHub. This release ships for Linux and Windows only.</p>
+
+          <div class="dl-rows">
+            <div class="dl-row">
+              <span class="plat">Linux x64</span>
+              <span class="pkg">AppImage</span>
+              <a class="btn btn-solid" href="https://github.com/Ian-nwb/LazyStack/releases/tag/v1.0.3">Get it on GitHub &#8599;</a>
+            </div>
+            <div class="dl-row">
+              <span class="plat">Windows x64</span>
+              <span class="pkg">Portable <span class="thin">EXE</span></span>
+              <a class="btn btn-solid" href="https://github.com/Ian-nwb/LazyStack/releases/tag/v1.0.3">Get it on GitHub &#8599;</a>
+            </div>
+            <div class="dl-row none">
+              <span class="plat">macOS</span>
+              <span class="pkg">No package</span>
+              <span class="plat mute">Not built for this release</span>
+            </div>
+          </div>
+
+          <div class="dl-cols">
+            <div>
+              <h3>Before you run stacks</h3>
+              <ul>
+                <li>Docker Engine or Docker Desktop with Docker Compose, to run generated container stacks.</li>
+                <li>The runtime or toolchain that the templates you select require.</li>
+                <li>Node.js 20+ and npm 10+, only if you run or build LazyStack from source.</li>
+              </ul>
+            </div>
+            <div>
+              <h3>Run from source</h3>
+              <div class="code">
+                <div class="code-head"><span class="eyebrow">Dev mode</span><button class="copy" type="button" data-copy="c4">Copy</button></div>
+<pre id="c4">git clone https://github.com/Ian-nwb/LazyStack.git
+cd LazyStack
+npm install
+npm run dev</pre>
+              </div>
+              <div class="code">
+                <div class="code-head"><span class="eyebrow">Desktop app</span><button class="copy" type="button" data-copy="c5">Copy</button></div>
+<pre id="c5">npm run build
+npm start</pre>
+              </div>
+            </div>
+          </div>
+
+          <h3 style="margin-top:12px">Build the packages yourself</h3>
+          <div class="code">
+            <div class="code-head"><span class="eyebrow">Linux AppImage + Windows portable EXE</span><button class="copy" type="button" data-copy="c6">Copy</button></div>
+<pre id="c6">npm run dist:linux    <span class="c"># release/1.0.3/LazyStack-1.0.3.AppImage</span>
+npm run dist:win      <span class="c"># release/1.0.3/LazyStack 1.0.3.exe</span>
+npm run dist:release  <span class="c"># build both targets</span></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROPOSALS -->
+    <section class="sec" id="roadmap" style="border-top:0">
+      <div class="sec-side">
+        <span class="eyebrow">Proposals</span>
+        <span class="count">15 ideas, none shipped</span>
+      </div>
+      <div>
+        <h2>What might <span class="thin">come next.</span></h2>
+        <p>These are ideas under consideration. None of them are in v1.0.3.</p>
+        <ul class="props">
+          <li>Local AI stack assistant that drafts blueprints from natural-language requests</li>
+          <li>Separate development, staging, and production profiles</li>
+          <li>Kubernetes manifests and Helm chart export</li>
+          <li>Terraform and Pulumi infrastructure export</li>
+          <li>Interactive service and network topology diagrams</li>
+          <li>Typed API client generation from OpenAPI documents</li>
+          <li>OpenTelemetry, Prometheus, Grafana, and log collection</li>
+          <li>Database backup and restore workflows</li>
+          <li>Vault, 1Password, and cloud secret store integrations</li>
+          <li>Deployment workflow generators for cloud and self-hosted platforms</li>
+          <li>Shareable plugin and template registry</li>
+          <li>Architecture migration assistant for evolving generated projects</li>
+          <li>More framework-specific unit, integration, contract, and browser test starters</li>
+          <li>CPU, memory, and storage sizing estimates</li>
+          <li>Team review and merge workflows for blueprint changes</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p class="wordmark" aria-hidden="true">Lazy<span class="thin">Stack</span></p>
+    <div class="foot">
+      <span>MIT License &middot; v1.0.3 &middot; by Ian-nwb</span>
+      <nav aria-label="Project links">
+        <a href="https://github.com/Ian-nwb/LazyStack">Repository</a>
+        <a href="https://github.com/Ian-nwb/LazyStack/releases/tag/v1.0.3">Release v1.0.3</a>
+        <a href="https://github.com/Ian-nwb/LazyStack/blob/main/LICENSE">License</a>
+        <a href="https://github.com/Ian-nwb">Ian-nwb</a>
+      </nav>
+    </div>
+  </footer>
+</div>
+
+<script>
+(function () {
+  var buttons = document.querySelectorAll('[data-copy]');
+  buttons.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var pre = document.getElementById(btn.getAttribute('data-copy'));
+      if (!pre) return;
+      var text = pre.innerText;
+      function done(ok) {
+        btn.textContent = ok ? 'Copied' : 'Select + copy';
+        setTimeout(function () { btn.textContent = 'Copy'; }, 1600);
+      }
+      function fallback() {
+        var ok = false;
+        try {
+          var r = document.createRange();
+          r.selectNodeContents(pre);
+          var s = window.getSelection();
+          s.removeAllRanges();
+          s.addRange(r);
+          ok = document.execCommand('copy');
+        } catch (e) {}
+        done(ok);
+      }
+      try {
+        navigator.clipboard.writeText(text).then(function () { done(true); }, fallback);
+      } catch (e) { fallback(); }
+    });
+  });
+})();
+</script>
+
+</body></html>
