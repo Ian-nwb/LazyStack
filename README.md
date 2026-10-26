@@ -1,4 +1,5 @@
-# LazyStack
+# LazyStack(DO NOT DOWNLOAD YET)
+exe is crashing 
 
 > **Automated Polyglot Monorepo & Fullstack Architecture Scaffolder**  
 > Design, configure, and scaffold production-ready fullstack monorepos with unified gateway routing, container orchestration, and real-time host toolchain auditing.
