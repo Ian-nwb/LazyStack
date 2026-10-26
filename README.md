@@ -1,21 +1,19 @@
-# LazyStack(DO NOT DOWNLOAD YET)
-exe is crashing 
+# LazyStack
 
 > **Automated Polyglot Monorepo & Fullstack Architecture Scaffolder**  
 > Design, configure, and scaffold production-ready fullstack monorepos with unified gateway routing, container orchestration, and real-time host toolchain auditing.
 
 ---
 
-## Downloads & Releases
+## Version 1.0.2 Builds
 
-Pre-built releases for **LazyStack v1.0.0** are available on the [GitHub Releases](https://github.com/Ian-nwb/LazyStack/releases/tag/v1.0.0) page:
+This source tree builds a Linux AppImage and a portable Windows executable. Version 1.0.2 outputs go in `release/1.0.2/`; this build does not package macOS.
 
-| Operating System | Package Format | Direct Download | Notes |
-| :--- | :--- | :--- | :--- |
-| Linux (x64) | Universal AppImage | [LazyStack-1.0.0.AppImage](https://github.com/Ian-nwb/LazyStack/releases/download/v1.0.0/LazyStack-1.0.0.AppImage) | Portable, run `chmod +x` |
-| Windows (x64) | Standalone Executable | [LazyStack-1.0.0.exe](https://github.com/Ian-nwb/LazyStack/releases/download/v1.0.0/LazyStack-1.0.0.exe) | Portable single-file executable |
-| Windows (x64) | Portable ZIP | [LazyStack-1.0.0-windows-x64.zip](https://github.com/Ian-nwb/LazyStack/releases/download/v1.0.0/LazyStack-1.0.0-windows-x64.zip) | Extract and run `LazyStack.exe` |
-| macOS (x64 / Apple Silicon) | App Bundle ZIP | [LazyStack-1.0.0-mac.zip](https://github.com/Ian-nwb/LazyStack/releases/download/v1.0.0/LazyStack-1.0.0-mac.zip) | Extract and open `LazyStack.app` |
+| Target | Command | Output |
+| :--- | :--- | :--- |
+| Linux x64 | `npm run dist:linux` | `release/1.0.2/LazyStack-1.0.2.AppImage` |
+| Windows x64 | `npm run dist:win` | `release/1.0.2/LazyStack 1.0.2.exe` |
+| Both | `npm run dist:release` | AppImage and Windows portable EXE |
 
 ---
 
@@ -27,6 +25,26 @@ Pre-built releases for **LazyStack v1.0.0** are available on the [GitHub Release
 - **Host Environment Auditor**: Detects host toolchains (Node, Bun, Deno, Go, Cargo, Python, Composer, .NET SDK, Docker, etc.) in real time with quick-install commands and PATH helpers.
 - **Warm Cream & Sleek Dark Themes**: Monochromatic design featuring warm ivory cream (`#faf6ed`), rich parchment, and dark espresso typography.
 - **Turnkey Scaffolding**: Produces clean folder structures, Dockerfiles, docker-compose configs, `.env` files, and unified orchestrator tasks ready to run with `docker compose up`.
+
+## 15 possible features for future releases
+
+These are product ideas for discussion; they are not promises or current features.
+
+1. **Local AI stack assistant** — describe a stack in plain language and let a local model draft the blueprint.
+2. **Environment profiles** — keep development, staging, and production settings in separate profiles.
+3. **Kubernetes and Helm export** — generate manifests and charts alongside Docker Compose.
+4. **Terraform and Pulumi export** — provision cloud infrastructure from the selected stack.
+5. **Visual service topology** — inspect APIs, databases, queues, and network dependencies as a diagram.
+6. **OpenAPI client generation** — create typed clients for connected services from API schemas.
+7. **Observability bundle** — optionally add OpenTelemetry, Prometheus, Grafana, and log collection.
+8. **Database backup and restore** — create portable snapshots and restore workflows for generated databases.
+9. **Secrets manager integrations** — connect environment settings to 1Password, Vault, or cloud secret stores.
+10. **Deployment targets** — generate deployment workflows for common cloud and self-hosted platforms.
+11. **Plugin and template registry** — share custom frameworks, database adapters, and stack presets.
+12. **Architecture migration assistant** — preview and apply changes when a stack or directory layout evolves.
+13. **More generated test coverage** — scaffold useful unit, integration, contract, and browser tests per framework.
+14. **Resource sizing estimates** — estimate local and deployment CPU, memory, and storage needs.
+15. **Team blueprint collaboration** — review, compare, and merge stack configuration changes.
 
 ---
 
@@ -166,9 +184,9 @@ Blueprints can be imported back into the LazyStack GUI at any time or checked in
 
 ---
 
-## Building for Windows, macOS, and Linux
+## Building Linux and Windows packages
 
-LazyStack is packaged using `electron-builder` with multi-target output configurations.
+LazyStack is packaged using `electron-builder`. The v1.0.2 build targets Linux AppImage and Windows portable EXE only.
 
 ### Prerequisites
 
@@ -182,90 +200,22 @@ cd LazyStack
 npm install
 ```
 
-### Quick Build Commands
+### Build commands
 
-| Target Platform | Command | Generated Artifacts | Output Location |
-| :--- | :--- | :--- | :--- |
-| **Linux** | `npm run dist:linux` | `.AppImage` (x64) | `release/LazyStack-1.0.0.AppImage` |
-| **Windows (Native)** | `npm run dist:win` | `.exe` (NSIS Installer & Portable) | `release/LazyStack Setup 1.0.0.exe` |
-| **Windows (Cross-platform ZIP)** | `npx electron-builder --win zip` | `.zip` (with `LazyStack.exe`) | `release/LazyStack-1.0.0-win.zip` |
-| **macOS (Native)** | `npm run dist:mac` | `.dmg` installer | `release/LazyStack-1.0.0.dmg` |
-| **macOS (Cross-platform ZIP)** | `npx electron-builder --mac zip` | `.zip` (with `LazyStack.app`) | `release/LazyStack-1.0.0-mac.zip` |
-| **All Platforms** | `npm run dist:all` | Builds for all supported targets | `release/` |
-| **Unpackaged Folder** | `npm run pack` | Prepares unpackaged binary folder | `release/linux-unpacked/` |
-
----
-
-### Step-by-Step Instructions
-
-#### 1. Linux Build
-To build universal Linux binaries:
 ```bash
-# 1. Compile Vite frontend and packaging bundle
+# Build only the Linux AppImage
 npm run dist:linux
 
-# 2. Grant execution permissions
-chmod +x release/LazyStack-1.0.0.AppImage
-
-# 3. Launch LazyStack
-./release/LazyStack-1.0.0.AppImage
-```
-Output:
-- `release/LazyStack-1.0.0.AppImage` (Universal portable Linux executable)
-
-#### 2. Windows Build
-**Option A: Building natively on Windows**
-```powershell
-# In PowerShell or Command Prompt
-npm install
+# Build only the portable Windows EXE
 npm run dist:win
+
+# Build both deliverables
+npm run dist:release
 ```
-Produces:
-- `release/LazyStack Setup 1.0.0.exe` (NSIS installer with desktop shortcuts)
-- `release/LazyStack 1.0.0.exe` (Standalone portable single-file executable)
 
-**Option B: Cross-compiling Windows ZIP from Linux or macOS**
-```bash
-# Packages full Windows x64 binary without requiring Wine:
-npx electron-builder --win zip
-```
-Produces:
-- `release/LazyStack-1.0.0-win.zip` (Extract on Windows and run `LazyStack.exe`)
+Linux output: `release/1.0.2/LazyStack-1.0.2.AppImage`. Windows output: `release/1.0.2/LazyStack 1.0.2.exe`.
 
-#### 3. macOS Build
-**Option A: Building natively on macOS**
-```bash
-# In Terminal on macOS
-npm install
-npm run dist:mac
-```
-Produces:
-- `release/LazyStack-1.0.0.dmg` (Drag-and-drop installer)
-
-**Option B: Cross-compiling macOS ZIP from Linux or Windows**
-```bash
-# Packages full macOS app bundle without requiring Apple developer tools:
-npx electron-builder --mac zip
-```
-Produces:
-- `release/LazyStack-1.0.0-mac.zip` (Extract on macOS and run `LazyStack.app`)
-
----
-
-### Publishing Releases to GitHub
-
-To upload newly built release binaries to GitHub:
-```bash
-# 1. Authenticate with GitHub CLI
-gh auth login
-
-# 2. Upload or update assets for the release tag
-gh release upload v1.0.0 --clobber \
-  release/LazyStack-1.0.0.AppImage \
-  release/LazyStack-1.0.0.exe \
-  release/LazyStack-1.0.0-windows-x64.zip \
-  release/LazyStack-1.0.0-mac.zip
-```
+Run the AppImage with `chmod +x release/1.0.2/LazyStack-1.0.2.AppImage` followed by `./release/1.0.2/LazyStack-1.0.2.AppImage`.
 
 ---
 
@@ -316,7 +266,7 @@ lazystack/
 │   ├── types.ts                   # Core TypeScript domain models
 │   ├── App.tsx                    # Root UI state machine
 │   └── index.css                  # Warm cream & sleek dark design system
-├── release/                       # Packaged executables (.AppImage, .exe, .dmg)
+├── release/                       # Packaged executables (.AppImage, .exe)
 ├── package.json                   # Build & packaging configurations
 └── vite.config.ts                 # Vite + Electron build configuration
 ```

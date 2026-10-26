@@ -1,6 +1,7 @@
 import { ProjectSettings, CartApp, SelectedDatabase } from '../../../src/types'
 import { DATABASE_CATALOG } from '../../../src/data/databases'
 import { resolveStructurePaths } from '../../../src/data/structurePresets'
+import { getDatabaseAdminUiOption } from '../../../src/data/databaseAdminUis'
 
 export function getDbServiceName(db: SelectedDatabase, idx: number, apps?: CartApp[]): string {
   if (db.customName) {
@@ -30,7 +31,7 @@ export function generateDockerCompose(settings: ProjectSettings): string {
 
   let yaml = `version: '3.8'\n\nnetworks:\n  lazystack_net:\n    driver: bridge\n\nvolumes:\n`
 
-  activeDbs.forEach((db, idx) => {
+  activeDbs.forEach(db => {
     if (db.type !== 'sqlite') {
       const sName = getDbServiceName(db, idx, settings.apps)
       yaml += `  ${sName}_data:\n`
@@ -179,24 +180,45 @@ export function generateDockerCompose(settings: ProjectSettings): string {
     yaml += `    networks:\n      - lazystack_net\n    restart: unless-stopped\n\n`
   })
 
-  // Database Web Admin GUIs
-  const hasSqlDb = activeDbs.some(d => ['postgres', 'mysql', 'mariadb', 'sqlite'].includes(d.type))
-  const hasRedisDb = activeDbs.some(d => ['redis', 'valkey'].includes(d.type))
+  // Optional per-instance database web administration UIs
+  activeDbs.forEach(db => {
+    const option = getDatabaseAdminUiOption(db.type, db.adminUi)
+    if (!option) return
+    const sName = getDbServiceName(db, settings.databases.indexOf(db), settings.apps)
+    const uiServiceName = `${sName}_admin_ui`
+    const uiPort = db.adminUiPort || option.defaultPort
+    const composeVariable = (key: string, fallback: string) => '${' + key + ':-' + fallback + '}'
+    const credentials = composeVariable(`${sName.toUpperCase()}_USER`, db.username || 'lazystack_user')
+    const password = composeVariable(`${sName.toUpperCase()}_PASSWORD`, 'secret')
+    const database = composeVariable(`${sName.toUpperCase()}_DB`, db.databaseName || 'lazystack_mongodb')
 
-  if (hasSqlDb) {
-    yaml += `  db_admin:\n`
-    yaml += `    image: adminer:latest\n`
-    yaml += `    ports:\n      - "8088:8080"\n`
+    yaml += `  ${uiServiceName}:\n`
+    switch (option.id) {
+      case 'adminer':
+        yaml += `    image: adminer:latest\n`
+        yaml += `    environment:\n      ADMINER_DEFAULT_SERVER: ${sName}\n`
+        break
+      case 'pgadmin':
+        yaml += `    image: dpage/pgadmin4:latest\n`
+        yaml += `    environment:\n      PGADMIN_DEFAULT_EMAIL: ${credentials}@lazystack.local\n      PGADMIN_DEFAULT_PASSWORD: ${password}\n      PGADMIN_CONFIG_SERVER_MODE: "False"\n`
+        break
+      case 'phpmyadmin':
+        yaml += `    image: phpmyadmin:latest\n`
+        yaml += `    environment:\n      PMA_HOST: ${sName}\n      PMA_PORT: "3306"\n      PMA_USER: ${credentials}\n      PMA_PASSWORD: ${password}\n      UPLOAD_LIMIT: 64M\n`
+        break
+      case 'mongo-express':
+        yaml += `    image: mongo-express:1.0.2-20-alpine3.19\n`
+        yaml += `    environment:\n      ME_CONFIG_MONGODB_URL: "mongodb://${credentials}:${password}@${sName}:27017/${database}?authSource=admin"\n      ME_CONFIG_BASICAUTH_ENABLED: "false"\n`
+        break
+      case 'redis-commander':
+        yaml += `    image: rediscommander/redis-commander:latest\n`
+        yaml += `    environment:\n      REDIS_HOSTS: local:${sName}:6379\n`
+        break
+    }
+    yaml += `    ports:\n      - "127.0.0.1:${uiPort}:${option.containerPort}"\n`
+    yaml += `    depends_on:\n      ${sName}:\n        condition: service_healthy\n`
     yaml += `    networks:\n      - lazystack_net\n    restart: unless-stopped\n\n`
-  }
-
-  if (hasRedisDb) {
-    yaml += `  redis_admin:\n`
-    yaml += `    image: rediscommander/redis-commander:latest\n`
-    yaml += `    environment:\n      - REDIS_HOSTS=local:redis:6379\n`
-    yaml += `    ports:\n      - "8089:8081"\n`
-    yaml += `    networks:\n      - lazystack_net\n    restart: unless-stopped\n\n`
-  }
+  })
 
   // Docker Apps
   dockerApps.forEach(app => {

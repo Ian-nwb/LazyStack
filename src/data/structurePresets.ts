@@ -108,8 +108,8 @@ export const ARCHITECTURE_PRESETS: ArchitecturePresetMeta[] = [
   },
   {
     id: 'polyglot',
-    name: 'Frontend / Backend Split',
-    tagline: 'Keep client apps and backend services in clearly separate roots',
+    name: 'Polyglot',
+    tagline: 'Frontend / Backend Split across role-specific roots',
     description: 'A polyglot-friendly layout: frontend clients go in frontend/clients, backend services in backend/services, with shared code and deployment configuration alongside them.',
     icon: '🌐',
     badgeColor: 'border-cyan-500/40 bg-cyan-500/10 text-cyan-300',
@@ -222,6 +222,74 @@ export const ARCHITECTURE_PRESETS: ArchitecturePresetMeta[] = [
 │   ├── 📁 terraform/
 │   └── 📄 docker-compose.yml
 ├── 📁 shared/
+└── 📁 docs/`
+  },
+  {
+    id: 'event-driven',
+    name: 'Event-Driven Services',
+    tagline: 'Organize producers, consumers, and shared event contracts',
+    description: 'Separates API services, background consumers, and event schemas while keeping brokers and deployment configuration in infrastructure.',
+    icon: '📨',
+    badgeColor: 'border-orange-500/40 bg-orange-500/10 text-orange-300',
+    config: {
+      preset: 'event-driven',
+      isCustom: false,
+      appsDir: 'services',
+      appDirectories: {
+        frontend: 'frontend/apps',
+        backend: 'services',
+        fullstack: 'apps/fullstack',
+        worker: 'consumers',
+        'desktop-mobile': 'clients/desktop',
+        other: 'services/other'
+      },
+      infraDir: 'infra',
+      packagesDir: 'events',
+      docsDir: 'docs',
+      scriptsDir: 'scripts',
+      databaseIsolation: 'service-isolated'
+    },
+    previewTree: `├── 📁 services/
+│   ├── 📁 api-gateway/
+│   └── 📁 order-service/
+├── 📁 consumers/
+│   └── 📁 email-worker/
+├── 📁 events/ (schemas and contracts)
+├── 📁 infra/ (brokers and compose)
+└── 📁 docs/`
+  },
+  {
+    id: 'data-platform',
+    name: 'Data Platform',
+    tagline: 'Separate ingestion, processing, and analytics workloads',
+    description: 'Groups data jobs and ingestion APIs independently from dashboards, schemas, and the infrastructure that runs pipelines.',
+    icon: '📊',
+    badgeColor: 'border-violet-500/40 bg-violet-500/10 text-violet-300',
+    config: {
+      preset: 'data-platform',
+      isCustom: false,
+      appsDir: 'pipelines',
+      appDirectories: {
+        frontend: 'apps/dashboards',
+        backend: 'services/ingestion',
+        fullstack: 'apps/fullstack',
+        worker: 'pipelines/jobs',
+        'desktop-mobile': 'apps/clients',
+        other: 'pipelines/other'
+      },
+      infraDir: 'infra',
+      packagesDir: 'schemas',
+      docsDir: 'docs',
+      scriptsDir: 'scripts',
+      databaseIsolation: 'centralized'
+    },
+    previewTree: `├── 📁 pipelines/jobs/
+│   ├── 📁 ingestion/
+│   └── 📁 transforms/
+├── 📁 services/ingestion/
+├── 📁 apps/dashboards/
+├── 📁 schemas/ (data contracts)
+├── 📁 infra/ (warehouse and orchestration)
 └── 📁 docs/`
   },
   {

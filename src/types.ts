@@ -104,6 +104,8 @@ export type DatabaseType =
   | 'convex'
   | 'pocketbase'
 
+export type DatabaseAdminUi = 'adminer' | 'pgadmin' | 'phpmyadmin' | 'mongo-express' | 'redis-commander'
+
 export interface DatabaseOption {
   id: DatabaseType
   name: string
@@ -133,6 +135,8 @@ export interface SelectedDatabase {
   assignedAppId?: string       // ID of the microservice app it is assigned to, or 'global'
   databaseName?: string        // Custom DB name (e.g. 'auth_db', 'orders_db')
   username?: string            // Database login name; secret password is generated into .env
+  adminUi?: DatabaseAdminUi    // Optional database-specific web administration UI
+  adminUiPort?: number         // Local port for the selected admin UI
   sqliteStorage?: 'shared-volume' | 'app-local' | 'litestream'
 }
 
@@ -144,6 +148,8 @@ export type ArchitecturePreset =
   | 'modular-monolith'   // modules/<feature>/, libs/, infra/
   | 'hexagonal'          // services/, adapters/, core/, infra/
   | 'serverless'         // functions/, web/, infra/
+  | 'event-driven'       // services/, consumers/, events/contracts/
+  | 'data-platform'      // pipelines/, schemas/, analytics apps/
   | 'custom'             // User custom paths
 
 export type DatabaseIsolationMode =

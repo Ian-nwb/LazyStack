@@ -3,6 +3,7 @@ import { DATABASE_CATALOG } from '../../../src/data/databases'
 import { resolveStructurePaths } from '../../../src/data/structurePresets'
 import { getDbServiceName } from './docker'
 import { TESTING_TOOLS } from '../../../src/data/testingTools'
+import { getDatabaseAdminUiOption } from '../../../src/data/databaseAdminUis'
 import crypto from 'crypto'
 
 export interface GeneratedDatabaseCredential {
@@ -356,6 +357,13 @@ ${activeDbs.map(d => {
   }
   return `| \`${d.type}\` | Database | \`${d.port}\` | Docker Container | Internal |`
 }).join('\n')}
+
+## Database web administration
+
+${activeDbs.filter(db => db.adminUi).map(db => {
+  const option = getDatabaseAdminUiOption(db.type, db.adminUi)
+  return option ? `- **${db.customName || db.type} · ${option.name}**: http://localhost:${db.adminUiPort || option.defaultPort}` : ''
+}).filter(Boolean).join('\n') || 'No database web UIs were selected. Enable one in the database settings to add its container and local URL.'}
 
 ## Service connections
 

@@ -11,6 +11,7 @@ import { generateCloudServiceFiles, generateCloudEnvVars } from './templates/clo
 import { resolveStructurePaths } from '../../src/data/structurePresets'
 import { TESTING_TOOLS } from '../../src/data/testingTools'
 import { resolveServiceConnectionUrl } from '../../src/utils/serviceConnections'
+import { getDatabaseAdminUiOption } from '../../src/data/databaseAdminUis'
 
 export interface ScaffoldResult {
   success: boolean
@@ -132,6 +133,30 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
         return { success: false, targetDir: '', filesCreated: 0, error: `${field} for '${db.customName || db.type}' must use letters, numbers, dots, underscores, or hyphens (up to 128 characters).` }
       }
     }
+    if (db.adminUi && !getDatabaseAdminUiOption(db.type, db.adminUi)) {
+      return { success: false, targetDir: '', filesCreated: 0, error: `The selected admin UI is not supported for '${db.customName || db.type}'.` }
+    }
+    if (db.adminUi && (!Number.isInteger(db.adminUiPort) || (db.adminUiPort || 0) < 1 || (db.adminUiPort || 0) > 65535)) {
+      return { success: false, targetDir: '', filesCreated: 0, error: `Choose a valid local port (1–65535) for the ${db.adminUi} UI on '${db.customName || db.type}'.` }
+    }
+  }
+
+  const declaredPorts = [
+    ...settings.apps.filter(app => app.port > 0).map(app => ({ port: app.port, name: app.folderName })),
+    ...settings.databases.filter(db => {
+      if (!db.enabled || db.port <= 0) return false
+      const definition = DATABASE_CATALOG.find(item => item.id === db.type)
+      return !definition?.isCloud || Boolean(definition.imageTag)
+    }).map(db => ({ port: db.port, name: db.customName || db.type })),
+    ...settings.databases.filter(db => db.enabled && db.adminUi && db.adminUiPort).map(db => ({ port: db.adminUiPort!, name: `${db.customName || db.type} admin UI` }))
+  ]
+  const occupiedPorts = new Map<number, string>()
+  for (const item of declaredPorts) {
+    const existing = occupiedPorts.get(item.port)
+    if (existing) {
+      return { success: false, targetDir: '', filesCreated: 0, error: `Port ${item.port} is used by both '${existing}' and '${item.name}'. Choose different ports.` }
+    }
+    occupiedPorts.set(item.port, item.name)
   }
 
   const targetDir = path.normalize(joinPaths(settings.parentDir, settings.projectName))

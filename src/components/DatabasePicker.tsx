@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
 import { Database, AlertTriangle, HardDrive, ShieldCheck, Cloud, Server, ExternalLink, Package, Key, Plus, Trash2, Box } from 'lucide-react'
-import { SelectedDatabase, DatabaseType, CartApp } from '../types'
+import { SelectedDatabase, DatabaseType, CartApp, DatabaseAdminUi } from '../types'
 import { DATABASE_CATALOG } from '../data/databases'
+import { getDatabaseAdminUiOption, getDatabaseAdminUiOptions } from '../data/databaseAdminUis'
 
 interface DatabasePickerProps {
   databases: SelectedDatabase[]
@@ -18,7 +19,11 @@ export const DatabasePicker: React.FC<DatabasePickerProps> = ({ databases, setDa
     if (basePort <= 0) return 0
     let port = basePort
     const usedPorts = new Set<number>()
-    databases.forEach(d => { if (d.enabled && d.port > 0) usedPorts.add(d.port) })
+    databases.forEach(d => {
+      if (!d.enabled) return
+      if (d.port > 0) usedPorts.add(d.port)
+      if (d.adminUiPort && d.adminUiPort > 0) usedPorts.add(d.adminUiPort)
+    })
     apps.forEach(a => { if (a.port > 0) usedPorts.add(a.port) })
     while (usedPorts.has(port)) {
       port++
@@ -77,10 +82,12 @@ export const DatabasePicker: React.FC<DatabasePickerProps> = ({ databases, setDa
     return def?.isHeavyMemory
   })
 
-  const getPortCollision = (port: number, instanceId?: string) => {
+  const getPortCollision = (port: number, instanceId?: string, checkingAdminUi = false) => {
     if (port <= 0) return null
-    const collidingDb = databases.find(d => (d.id || d.type) !== instanceId && d.enabled && d.port === port)
+    const collidingDb = databases.find(d => d.enabled && d.port === port && (checkingAdminUi || (d.id || d.type) !== instanceId))
     if (collidingDb) return `Collides with ${collidingDb.customName || collidingDb.type.toUpperCase()}`
+    const collidingAdminUi = databases.find(d => d.enabled && d.adminUiPort === port && (!checkingAdminUi || (d.id || d.type) !== instanceId))
+    if (collidingAdminUi) return `Collides with ${getDatabaseAdminUiOption(collidingAdminUi.type, collidingAdminUi.adminUi)?.name || 'another database UI'}`
     const collidingApp = apps.find(a => a.port === port)
     if (collidingApp) return `Collides with app '${collidingApp.folderName}'`
     return null
@@ -359,6 +366,40 @@ export const DatabasePicker: React.FC<DatabasePickerProps> = ({ databases, setDa
                                 <input value={inst.username || 'lazystack_user'} onChange={(e) => updateInstance(instKey, { username: e.target.value })} className="mt-1 w-full bg-surface-900 border border-surface-700 rounded px-2 py-1 text-[11px] font-mono text-white focus:outline-none focus:border-zinc-400" />
                               </label>
                               <p className="col-span-2 text-[10px] text-zinc-500">A unique password is generated into the local .env file when the project is created.</p>
+                            </div>
+                          )}
+
+                          {getDatabaseAdminUiOptions(inst.type).length > 0 && (
+                            <div className="grid grid-cols-[1fr_auto] items-end gap-2 pt-1">
+                              <label className="text-[10px] text-zinc-400">Database web UI
+                                <select
+                                  value={inst.adminUi || ''}
+                                  onChange={(e) => {
+                                    const adminUi = (e.target.value || undefined) as DatabaseAdminUi | undefined
+                                    const option = getDatabaseAdminUiOption(inst.type, adminUi)
+                                    updateInstance(instKey, {
+                                      adminUi,
+                                      adminUiPort: option ? getNextFreePort(option.defaultPort) : undefined
+                                    })
+                                  }}
+                                  className="mt-1 w-full bg-surface-900 border border-surface-700 rounded px-2 py-1 text-[11px] text-white focus:outline-none focus:border-zinc-400"
+                                >
+                                  <option value="">No admin UI</option>
+                                  {getDatabaseAdminUiOptions(inst.type).map(option => <option key={option.id} value={option.id}>{option.name}</option>)}
+                                </select>
+                              </label>
+                              {inst.adminUi && <label className="text-[10px] text-zinc-400">UI port
+                                <input
+                                  type="number"
+                                  min="1"
+                                  max="65535"
+                                  value={inst.adminUiPort || getDatabaseAdminUiOption(inst.type, inst.adminUi)?.defaultPort || ''}
+                                  onChange={(e) => updateInstance(instKey, { adminUiPort: parseInt(e.target.value, 10) || 0 })}
+                                  className={`mt-1 w-20 bg-surface-900 border text-xs font-mono px-2 py-1 rounded text-white focus:outline-none ${getPortCollision(inst.adminUiPort || 0, instKey, true) ? 'border-red-500' : 'border-surface-650 focus:border-zinc-300'}`}
+                                />
+                                {getPortCollision(inst.adminUiPort || 0, instKey, true) && <span className="block text-[9px] text-red-400 mt-1">{getPortCollision(inst.adminUiPort || 0, instKey, true)}</span>}
+                              </label>}
+                              {inst.adminUi && <p className="col-span-2 text-[10px] text-zinc-500">Available locally at http://localhost:{inst.adminUiPort || getDatabaseAdminUiOption(inst.type, inst.adminUi)?.defaultPort}</p>}
                             </div>
                           )}
 

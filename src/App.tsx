@@ -12,6 +12,7 @@ import { Layers, Database, Globe, Eye, FolderOpen, ExternalLink, Copy, Check, Ch
 import { StackPreset } from './data/presets'
 import { joinPaths } from './utils/pathValidation'
 import { getDefaultStructureConfig } from './data/structurePresets'
+import { getDatabaseAdminUiOption } from './data/databaseAdminUis'
 
 export const App: React.FC = () => {
   const [projectName, setProjectName] = useState('')
@@ -520,16 +521,14 @@ export const App: React.FC = () => {
                           Gateway 🌐 : {proxy.httpPort}
                         </a>
                       )}
-                      {databases.some(d => ['postgres', 'mysql', 'mariadb', 'sqlite'].includes(d.type) && d.enabled) && (
-                        <a href="http://localhost:8088" target="_blank" rel="noreferrer" className="px-2.5 py-1 bg-surface-900 border border-surface-700 hover:border-cyan-500 rounded text-cyan-300 hover:text-white flex items-center gap-1 font-mono">
-                          Adminer 🗄️ : 8088
+                      {databases.filter(d => d.enabled && d.adminUi).map((db, index) => {
+                        const option = getDatabaseAdminUiOption(db.type, db.adminUi)
+                        const port = db.adminUiPort || option?.defaultPort
+                        if (!option || !port) return null
+                        return <a key={db.id || `${db.type}-${index}`} href={`http://localhost:${port}`} target="_blank" rel="noreferrer" className="px-2.5 py-1 bg-surface-900 border border-surface-700 hover:border-cyan-500 rounded text-cyan-300 hover:text-white flex items-center gap-1 font-mono">
+                          {option.name} · {db.customName || db.type} : {port}
                         </a>
-                      )}
-                      {databases.some(d => ['redis', 'valkey'].includes(d.type) && d.enabled) && (
-                        <a href="http://localhost:8089" target="_blank" rel="noreferrer" className="px-2.5 py-1 bg-surface-900 border border-surface-700 hover:border-red-500 rounded text-red-300 hover:text-white flex items-center gap-1 font-mono">
-                          Redis Commander ⚡ : 8089
-                        </a>
-                      )}
+                      })}
                       {apps.filter(a => a.port > 0).map(a => (
                         <a key={a.id} href={`http://localhost:${a.port}`} target="_blank" rel="noreferrer" className="px-2.5 py-1 bg-surface-900 border border-surface-700 hover:border-zinc-400 rounded text-zinc-200 hover:text-white flex items-center gap-1 font-mono">
                           {a.folderName} : {a.port}
