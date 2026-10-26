@@ -2,9 +2,9 @@
 
 LazyStack is a desktop stack builder and command-line scaffolder for composing application stacks. Choose languages, frameworks, databases, service connections, testing tools, and an architecture layout; LazyStack generates a project structure and supporting configuration.
 
-## Download v1.0.3
+## Download v1.0.4
 
-Download **Linux AppImage** or **Windows portable EXE** from the [v1.0.3 GitHub release](https://github.com/Ian-nwb/LazyStack/releases/tag/v1.0.3).
+Download **Linux AppImage** or **Windows portable EXE** from the [v1.0.4 GitHub release](https://github.com/Ian-nwb/LazyStack/releases/tag/v1.0.4).
 
 | Platform | Package |
 | --- | --- |
@@ -118,19 +118,21 @@ npm run cli -- scaffold --preset fastapi-react --name my-api --out ./generated
 
 ## Build packages
 
-The v1.0.3 scripts build Linux AppImage and Windows portable EXE packages; they do not build for macOS.
+The v1.0.4 scripts build Linux AppImage and Windows portable EXE packages; they do not build for macOS.
 
 ```bash
-npm run dist:linux    # release/1.0.3/LazyStack-1.0.3.AppImage
-npm run dist:win      # release/1.0.3/LazyStack 1.0.3.exe
+npm run dist:linux    # release/1.0.4/LazyStack-1.0.4.AppImage
+npm run dist:win      # release/1.0.4/LazyStack 1.0.4.exe
 npm run dist:release  # build both targets
 ```
 
-## v1.0.4 roadmap
+## v1.0.4
 
-The current generator has broad framework catalog coverage, but many generated apps are starter-level and CI does not yet prove that generated applications build and run. The [v1.0.4 QA and implementation plan](ROADMAP-1.0.4.md) tracks native project generation with an on/off unified-workspace option, meaningful API starters, generated-project CI, service contracts, service and network diagrams, and observability. These are plans, not v1.0.3 features.
+v1.0.4 adds native project generation with an optional unified workspace, a tested FastAPI API-service profile, generated OpenAPI TypeScript clients, expanded scaffold CI, and service/network architecture diagrams. The detailed release scope and QA record are in [ROADMAP-1.0.4.md](ROADMAP-1.0.4.md).
 
-Additional proposals include a local AI stack assistant, development/staging/production profiles, Kubernetes and Helm, Terraform/Pulumi, database backup and restore, secrets integrations, deployment workflow generators, a template registry, architecture migration tools, resource sizing, and blueprint review workflows.
+## v1.0.5 roadmap
+
+The next release is planned to add gRPC/protobuf contracts, event schemas and broker wiring, configurable service-to-service authentication, and an opt-in observability stack. Broader generated starter coverage and feature parity across the framework catalog will continue. See [ROADMAP-1.0.5.md](ROADMAP-1.0.5.md).
 
 ### Future feature ideas
 
@@ -140,17 +142,17 @@ These are proposals, not features included in the current release.
 2. Separate development, staging, and production profiles.
 3. Kubernetes manifests and Helm chart export.
 4. Terraform and Pulumi infrastructure export.
-5. Interactive service and network topology diagrams.
-6. Typed API client generation from OpenAPI documents.
-7. Optional OpenTelemetry, Prometheus, Grafana, and log collection.
-8. Database backup and restore workflows.
-9. Integrations with Vault, 1Password, and cloud secret stores.
-10. Deployment workflow generators for cloud and self-hosted platforms.
-11. Shareable plugin and template registry.
-12. Architecture migration assistant for evolving generated projects.
-13. More framework-specific unit, integration, contract, and browser test starters.
-14. CPU, memory, and storage sizing estimates.
-15. Team review and merge workflows for blueprint changes.
+5. Database backup and restore workflows.
+6. Integrations with Vault, 1Password, and cloud secret stores.
+7. Deployment workflow generators for cloud and self-hosted platforms.
+8. Shareable plugin and template registry.
+9. Architecture migration assistant for evolving generated projects.
+10. More framework-specific unit, integration, contract, and browser test starters.
+11. CPU, memory, and storage sizing estimates.
+12. Team review and merge workflows for blueprint changes.
+13. Optional OpenTelemetry, Prometheus, Grafana, and log collection (planned for v1.0.5).
+14. gRPC/protobuf and event schemas with broker wiring (planned for v1.0.5).
+15. Configurable service-to-service authentication (planned for v1.0.5).
 
 ## Repository layout
 

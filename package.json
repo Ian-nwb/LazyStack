@@ -1,6 +1,6 @@
 {
   "name": "lazystack",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Automated Tech Stack & Monorepo Boilerplate Generator",
   "type": "module",
   "main": "dist-electron/main.js",
@@ -16,10 +16,10 @@
     "start": "electron .",
     "pack": "npm run build && electron-builder --dir",
     "dist": "npm run build && electron-builder",
-    "dist:linux": "npm run build && electron-builder --linux AppImage --config.directories.output=release/1.0.3",
+    "dist:linux": "npm run build && electron-builder --linux AppImage --config.directories.output=release/1.0.4",
     "dist:deb": "npm run build && electron-builder --linux deb",
-    "dist:win": "npm run build && electron-builder --win portable --config.directories.output=release/1.0.3",
-    "dist:release": "npm run build && electron-builder --linux AppImage --win portable --config.directories.output=release/1.0.3"
+    "dist:win": "npm run build && electron-builder --win portable --config.directories.output=release/1.0.4",
+    "dist:release": "npm run build && electron-builder --linux AppImage --win portable --config.directories.output=release/1.0.4"
   },
   "keywords": [
     "electron",
