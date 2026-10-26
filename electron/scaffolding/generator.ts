@@ -2,11 +2,12 @@ import path from 'path'
 import fs from 'fs-extra'
 import { ProjectSettings } from '../../src/types'
 import { validateFolderName, validatePath, joinPaths } from '../../src/utils/pathValidation'
-import { generateDockerCompose, generateDockerDevCompose, getDockerfileForTech } from './templates/docker'
+import { generateDockerCompose, generateDockerDevCompose, getDockerfileForTech, getDbServiceName } from './templates/docker'
 import { generateNginxConfig, generateApacheConfig } from './templates/proxies'
 import { getStarterFilesForTech } from './templates/appTemplates'
 import { generateMetaFiles } from './templates/meta'
 import { generateCloudServiceFiles, generateCloudEnvVars } from './templates/cloudServices'
+import { resolveStructurePaths } from '../../src/data/structurePresets'
 
 export interface ScaffoldResult {
   success: boolean
@@ -50,20 +51,22 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
   }
 
   const targetDir = path.normalize(joinPaths(settings.parentDir, settings.projectName))
+  const paths = resolveStructurePaths(settings)
   let filesCreated = 0
 
   try {
     // 1. Ensure target directory exists
     await fs.ensureDir(targetDir)
 
-    // 2. Scaffold enforced directory contract
+    // 2. Scaffold configured directory contract
     const directories = [
       '.github/workflows',
       '.vscode',
-      'apps',
-      'docs',
-      'infra',
-      'scripts',
+      paths.appsDir,
+      paths.docsDir,
+      paths.infraDir,
+      paths.scriptsDir,
+      paths.packagesDir,
       'tests'
     ]
 
@@ -91,24 +94,24 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
 
     // 4. Write Docker Compose files
     const composeContent = generateDockerCompose(settings)
-    await fs.writeFile(path.join(targetDir, 'infra/docker-compose.yml'), composeContent, 'utf8')
+    await fs.writeFile(path.join(targetDir, paths.infraDir, 'docker-compose.yml'), composeContent, 'utf8')
     filesCreated++
 
     const devComposeContent = generateDockerDevCompose(settings)
-    await fs.writeFile(path.join(targetDir, 'infra/docker-compose.dev.yml'), devComposeContent, 'utf8')
+    await fs.writeFile(path.join(targetDir, paths.infraDir, 'docker-compose.dev.yml'), devComposeContent, 'utf8')
     filesCreated++
 
     // 5. Write Proxy Configurations
     if (settings.proxy.type === 'nginx') {
       const nginxConfigs = generateNginxConfig(settings)
-      const nginxDir = path.join(targetDir, 'infra/nginx')
+      const nginxDir = path.join(targetDir, paths.infraDir, 'nginx')
       await fs.ensureDir(nginxDir)
       await fs.writeFile(path.join(nginxDir, 'nginx.conf'), nginxConfigs['nginx.conf'], 'utf8')
       await fs.writeFile(path.join(nginxDir, 'default.conf'), nginxConfigs['default.conf'], 'utf8')
       filesCreated += 2
     } else if (settings.proxy.type === 'apache') {
       const apacheConf = generateApacheConfig(settings)
-      const apacheDir = path.join(targetDir, 'infra/apache')
+      const apacheDir = path.join(targetDir, paths.infraDir, 'apache')
       await fs.ensureDir(apacheDir)
       await fs.writeFile(path.join(apacheDir, 'httpd.conf'), apacheConf, 'utf8')
       filesCreated++
@@ -117,7 +120,7 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
     // 6. SQLite setup
     const hasSqlite = settings.databases.some(d => d.enabled && d.type === 'sqlite')
     if (hasSqlite) {
-      const sqliteDir = path.join(targetDir, 'infra/sqlite')
+      const sqliteDir = path.join(targetDir, paths.infraDir, 'sqlite')
       await fs.ensureDir(sqliteDir)
       await fs.writeFile(path.join(sqliteDir, 'README.md'), '# SQLite Shared Volume\nStores persistent database files (e.g. data.db) mounted across Docker containers and local apps.\n', 'utf8')
       filesCreated++
@@ -127,7 +130,11 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
     const cloudFiles = generateCloudServiceFiles(settings.databases)
     if (Object.keys(cloudFiles).length > 0) {
       for (const [relPath, content] of Object.entries(cloudFiles)) {
-        const fullPath = path.join(targetDir, relPath)
+        // Rewrite packages/ to paths.packagesDir if customized
+        const targetRelPath = relPath.startsWith('packages/')
+          ? `${paths.packagesDir}/${relPath.slice('packages/'.length)}`
+          : relPath
+        const fullPath = path.join(targetDir, targetRelPath)
         await fs.ensureDir(path.dirname(fullPath))
         await fs.writeFile(fullPath, content, 'utf8')
         filesCreated++
@@ -155,9 +162,10 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
       }
     }
 
-    // 7. Scaffold each Application Service
+    // 7. Scaffold each Microservice / Application Service
     for (const app of settings.apps) {
-      const appDir = path.join(targetDir, 'apps', app.folderName)
+      const relAppPath = paths.getAppRelativePath(app.folderName, app.id)
+      const appDir = path.join(targetDir, relAppPath)
       await fs.ensureDir(appDir)
 
       // Dockerfile & .dockerignore
@@ -166,8 +174,31 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
       await fs.writeFile(path.join(appDir, '.dockerignore'), dockerignore, 'utf8')
       filesCreated += 2
 
-      // App .env
-      const appEnv = `PORT=${app.port}\nNODE_ENV=development\nAPP_NAME=${app.folderName}\n`
+      // Scoped databases for this microservice
+      const assignedDbs = settings.databases.filter(d => d.enabled && d.assignedAppId === app.id)
+
+      // Service-isolated database folder (migrations & schema)
+      if (assignedDbs.length > 0 && paths.databaseIsolation === 'service-isolated') {
+        const dbDir = path.join(appDir, 'db')
+        await fs.ensureDir(path.join(dbDir, 'migrations'))
+        await fs.ensureDir(path.join(dbDir, 'seeds'))
+        const schemaSql = `-- Database Schema for ${app.folderName}\n-- Dedicated Service Databases: ${assignedDbs.map(d => d.customName || d.type).join(', ')}\n\nCREATE TABLE IF NOT EXISTS service_health (\n  id SERIAL PRIMARY KEY,\n  service_name VARCHAR(100) DEFAULT '${app.folderName}',\n  status VARCHAR(20) DEFAULT 'healthy',\n  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n);\n`
+        await fs.writeFile(path.join(dbDir, 'schema.sql'), schemaSql, 'utf8')
+        const readmeDb = `# Database for ${app.folderName}\n\nThis folder holds local schema migrations and seed scripts for the ${app.folderName} microservice.\n\nAssigned instances:\n${assignedDbs.map(d => `- **${d.customName || d.type}** (Port :${d.port})`).join('\n')}\n`
+        await fs.writeFile(path.join(dbDir, 'README.md'), readmeDb, 'utf8')
+        filesCreated += 2
+      }
+
+      // App .env with service-level credentials
+      let appEnv = `PORT=${app.port}\nNODE_ENV=development\nAPP_NAME=${app.folderName}\n`
+      if (assignedDbs.length > 0) {
+        appEnv += `\n# Dedicated Microservice Database Connections\n`
+        assignedDbs.forEach((d, idx) => {
+          const sName = getDbServiceName(d, idx, settings.apps).toLowerCase()
+          appEnv += `${sName.toUpperCase()}_PORT=${d.port}\n`
+          appEnv += `${sName.toUpperCase()}_URL=${d.type}://lazystack_user:secret@${sName}:${d.port}/${d.databaseName || `${d.type}_db`}\n`
+        })
+      }
       await fs.writeFile(path.join(appDir, '.env'), appEnv, 'utf8')
       filesCreated++
 
@@ -182,8 +213,8 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
     }
 
     // 8. Documentation files
-    const archDoc = `# System Architecture: ${settings.projectName}\n\nAuto-generated documentation of components, services, and networking topology.\n`
-    await fs.writeFile(path.join(targetDir, 'docs/architecture.md'), archDoc, 'utf8')
+    const archDoc = `# System Architecture: ${settings.projectName}\n\n- **Architecture Style**: ${settings.structureConfig?.preset || 'monorepo'}\n- **Database Pattern**: ${paths.databaseIsolation}\n- **Services**: ${settings.apps.length}\n- **Databases**: ${settings.databases.filter(d => d.enabled).length}\n\nAuto-generated documentation of components, services, and networking topology.\n`
+    await fs.writeFile(path.join(targetDir, paths.docsDir, 'architecture.md'), archDoc, 'utf8')
     filesCreated++
 
     // 9. Initialize Git repository

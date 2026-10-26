@@ -1,7 +1,22 @@
 import { ProjectSettings, CartApp, SelectedDatabase } from '../../../src/types'
 import { DATABASE_CATALOG } from '../../../src/data/databases'
+import { resolveStructurePaths } from '../../../src/data/structurePresets'
+
+export function getDbServiceName(db: SelectedDatabase, idx: number, apps?: CartApp[]): string {
+  if (db.customName) {
+    const slug = db.customName.toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/^_+|_+$/g, '')
+    if (slug) return slug
+  }
+  const assignedApp = apps?.find(a => a.id === db.assignedAppId)
+  if (assignedApp) {
+    return `${assignedApp.folderName}_${db.type}`
+  }
+  return idx > 0 ? `${db.type}_${idx + 1}` : db.type
+}
 
 export function generateDockerCompose(settings: ProjectSettings): string {
+  const paths = resolveStructurePaths(settings)
+
   // Filter out cloud-only databases — they don't need Docker containers
   const activeDbs = settings.databases.filter(d => {
     if (!d.enabled) return false
@@ -13,28 +28,30 @@ export function generateDockerCompose(settings: ProjectSettings): string {
 
   let yaml = `version: '3.8'\n\nnetworks:\n  lazystack_net:\n    driver: bridge\n\nvolumes:\n`
 
-  activeDbs.forEach(db => {
+  activeDbs.forEach((db, idx) => {
     if (db.type !== 'sqlite') {
-      yaml += `  ${db.type}_data:\n`
+      const sName = getDbServiceName(db, idx, settings.apps)
+      yaml += `  ${sName}_data:\n`
     }
   })
 
   yaml += `\nservices:\n`
 
   // Database Services
-  activeDbs.forEach(db => {
+  activeDbs.forEach((db, idx) => {
     if (db.type === 'sqlite') return
+    const sName = getDbServiceName(db, idx, settings.apps)
 
-    yaml += `  ${db.type}:\n`
+    yaml += `  ${sName}:\n`
     switch (db.type) {
       case 'postgres':
         yaml += `    image: postgres:16-alpine\n`
         yaml += `    environment:\n`
-        yaml += `      POSTGRES_USER: \${POSTGRES_USER:-lazystack_user}\n`
-        yaml += `      POSTGRES_PASSWORD: \${POSTGRES_PASSWORD:-secret}\n`
-        yaml += `      POSTGRES_DB: \${POSTGRES_DB:-lazystack_postgres}\n`
-        yaml += `    ports:\n      - "\${POSTGRES_PORT:-${db.port}}:5432"\n`
-        yaml += `    volumes:\n      - postgres_data:/var/lib/postgresql/data\n`
+        yaml += `      POSTGRES_USER: \${${sName.toUpperCase()}_USER:-lazystack_user}\n`
+        yaml += `      POSTGRES_PASSWORD: \${${sName.toUpperCase()}_PASSWORD:-secret}\n`
+        yaml += `      POSTGRES_DB: \${${sName.toUpperCase()}_DB:-${db.databaseName || 'lazystack_postgres'}}\n`
+        yaml += `    ports:\n      - "\${${sName.toUpperCase()}_PORT:-${db.port}}:5432"\n`
+        yaml += `    volumes:\n      - ${sName}_data:/var/lib/postgresql/data\n`
         yaml += `    healthcheck:\n`
         yaml += `      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]\n`
         yaml += `      interval: 5s\n      timeout: 5s\n      retries: 5\n`
@@ -43,11 +60,11 @@ export function generateDockerCompose(settings: ProjectSettings): string {
         yaml += `    image: mysql:8.4\n`
         yaml += `    environment:\n`
         yaml += `      MYSQL_ROOT_PASSWORD: \${MYSQL_ROOT_PASSWORD:-root_secret}\n`
-        yaml += `      MYSQL_USER: \${MYSQL_USER:-lazystack_user}\n`
-        yaml += `      MYSQL_PASSWORD: \${MYSQL_PASSWORD:-secret}\n`
-        yaml += `      MYSQL_DATABASE: \${MYSQL_DB:-lazystack_mysql}\n`
-        yaml += `    ports:\n      - "\${MYSQL_PORT:-${db.port}}:3306"\n`
-        yaml += `    volumes:\n      - mysql_data:/var/lib/mysql\n`
+        yaml += `      MYSQL_USER: \${${sName.toUpperCase()}_USER:-lazystack_user}\n`
+        yaml += `      MYSQL_PASSWORD: \${${sName.toUpperCase()}_PASSWORD:-secret}\n`
+        yaml += `      MYSQL_DATABASE: \${${sName.toUpperCase()}_DB:-${db.databaseName || 'lazystack_mysql'}}\n`
+        yaml += `    ports:\n      - "\${${sName.toUpperCase()}_PORT:-${db.port}}:3306"\n`
+        yaml += `    volumes:\n      - ${sName}_data:/var/lib/mysql\n`
         yaml += `    healthcheck:\n`
         yaml += `      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]\n`
         yaml += `      interval: 5s\n      timeout: 5s\n      retries: 5\n`
@@ -56,27 +73,27 @@ export function generateDockerCompose(settings: ProjectSettings): string {
         yaml += `    image: mariadb:11\n`
         yaml += `    environment:\n`
         yaml += `      MARIADB_ROOT_PASSWORD: \${MARIADB_ROOT_PASSWORD:-root_secret}\n`
-        yaml += `      MARIADB_USER: \${MARIADB_USER:-lazystack_user}\n`
-        yaml += `      MARIADB_PASSWORD: \${MARIADB_PASSWORD:-secret}\n`
-        yaml += `      MARIADB_DATABASE: \${MARIADB_DB:-lazystack_mariadb}\n`
-        yaml += `    ports:\n      - "\${MARIADB_PORT:-${db.port}}:3306"\n`
-        yaml += `    volumes:\n      - mariadb_data:/var/lib/mysql\n`
+        yaml += `      MARIADB_USER: \${${sName.toUpperCase()}_USER:-lazystack_user}\n`
+        yaml += `      MARIADB_PASSWORD: \${${sName.toUpperCase()}_PASSWORD:-secret}\n`
+        yaml += `      MARIADB_DATABASE: \${${sName.toUpperCase()}_DB:-${db.databaseName || 'lazystack_mariadb'}}\n`
+        yaml += `    ports:\n      - "\${${sName.toUpperCase()}_PORT:-${db.port}}:3306"\n`
+        yaml += `    volumes:\n      - ${sName}_data:/var/lib/mysql\n`
         yaml += `    healthcheck:\n`
         yaml += `      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost"]\n`
         yaml += `      interval: 5s\n      timeout: 5s\n      retries: 5\n`
         break
       case 'redis':
         yaml += `    image: redis:7.2-alpine\n`
-        yaml += `    ports:\n      - "\${REDIS_PORT:-${db.port}}:6379"\n`
-        yaml += `    volumes:\n      - redis_data:/data\n`
+        yaml += `    ports:\n      - "\${${sName.toUpperCase()}_PORT:-${db.port}}:6379"\n`
+        yaml += `    volumes:\n      - ${sName}_data:/data\n`
         yaml += `    healthcheck:\n`
         yaml += `      test: ["CMD", "redis-cli", "ping"]\n`
         yaml += `      interval: 5s\n      timeout: 5s\n      retries: 5\n`
         break
       case 'valkey':
         yaml += `    image: valkey/valkey:8.0-alpine\n`
-        yaml += `    ports:\n      - "\${VALKEY_PORT:-${db.port}}:6379"\n`
-        yaml += `    volumes:\n      - valkey_data:/data\n`
+        yaml += `    ports:\n      - "\${${sName.toUpperCase()}_PORT:-${db.port}}:6379"\n`
+        yaml += `    volumes:\n      - ${sName}_data:/data\n`
         yaml += `    healthcheck:\n`
         yaml += `      test: ["CMD", "valkey-cli", "ping"]\n`
         yaml += `      interval: 5s\n      timeout: 5s\n      retries: 5\n`
@@ -84,72 +101,72 @@ export function generateDockerCompose(settings: ProjectSettings): string {
       case 'mongodb':
         yaml += `    image: mongo:7.0\n`
         yaml += `    environment:\n`
-        yaml += `      MONGO_INITDB_ROOT_USERNAME: \${MONGO_USER:-lazystack_user}\n`
-        yaml += `      MONGO_INITDB_ROOT_PASSWORD: \${MONGO_PASSWORD:-secret}\n`
-        yaml += `    ports:\n      - "\${MONGO_PORT:-${db.port}}:27017"\n`
-        yaml += `    volumes:\n      - mongodb_data:/data/db\n`
+        yaml += `      MONGO_INITDB_ROOT_USERNAME: \${${sName.toUpperCase()}_USER:-lazystack_user}\n`
+        yaml += `      MONGO_INITDB_ROOT_PASSWORD: \${${sName.toUpperCase()}_PASSWORD:-secret}\n`
+        yaml += `    ports:\n      - "\${${sName.toUpperCase()}_PORT:-${db.port}}:27017"\n`
+        yaml += `    volumes:\n      - ${sName}_data:/data/db\n`
         yaml += `    healthcheck:\n`
         yaml += `      test: ["CMD", "mongosh", "--eval", "db.runCommand({ping:1})"]\n`
         yaml += `      interval: 5s\n      timeout: 5s\n      retries: 5\n`
         break
       case 'clickhouse':
         yaml += `    image: clickhouse/clickhouse-server:24.3-alpine\n`
-        yaml += `    ports:\n      - "\${CLICKHOUSE_PORT:-${db.port}}:8123"\n      - "9000:9000"\n`
-        yaml += `    volumes:\n      - clickhouse_data:/var/lib/clickhouse\n`
+        yaml += `    ports:\n      - "\${${sName.toUpperCase()}_PORT:-${db.port}}:8123"\n      - "9000:9000"\n`
+        yaml += `    volumes:\n      - ${sName}_data:/var/lib/clickhouse\n`
         yaml += `    healthcheck:\n      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8123/ping || exit 1"]\n      interval: 5s\n      timeout: 5s\n      retries: 5\n`
         break
       case 'surrealdb':
         yaml += `    image: surrealdb/surrealdb:v2.0\n`
         yaml += `    command: start --log trace --user root --pass root file:/data/database.db\n`
-        yaml += `    ports:\n      - "\${SURREALDB_PORT:-${db.port}}:8000"\n`
-        yaml += `    volumes:\n      - surrealdb_data:/data\n`
+        yaml += `    ports:\n      - "\${${sName.toUpperCase()}_PORT:-${db.port}}:8000"\n`
+        yaml += `    volumes:\n      - ${sName}_data:/data\n`
         yaml += `    healthcheck:\n      test: ["CMD", "curl", "-s", "-o", "/dev/null", "-w", "%{http_code}", "http://localhost:8000/health"]\n      interval: 5s\n      timeout: 5s\n      retries: 5\n`
         break
       case 'neo4j':
         yaml += `    image: neo4j:5.19\n`
         yaml += `    environment:\n      NEO4J_AUTH: \${NEO4J_AUTH:-neo4j/secret_password}\n`
-        yaml += `    ports:\n      - "\${NEO4J_PORT:-${db.port}}:7474"\n      - "7687:7687"\n`
-        yaml += `    volumes:\n      - neo4j_data:/data\n`
+        yaml += `    ports:\n      - "\${${sName.toUpperCase()}_PORT:-${db.port}}:7474"\n      - "7687:7687"\n`
+        yaml += `    volumes:\n      - ${sName}_data:/data\n`
         yaml += `    healthcheck:\n      test: ["CMD", "cypher-shell", "RETURN 1"]\n      interval: 10s\n      timeout: 5s\n      retries: 5\n`
         break
       case 'qdrant':
         yaml += `    image: qdrant/qdrant:v1.9.0\n`
-        yaml += `    ports:\n      - "\${QDRANT_PORT:-${db.port}}:6333"\n      - "6334:6334"\n`
-        yaml += `    volumes:\n      - qdrant_data:/qdrant/storage\n`
+        yaml += `    ports:\n      - "\${${sName.toUpperCase()}_PORT:-${db.port}}:6333"\n      - "6334:6334"\n`
+        yaml += `    volumes:\n      - ${sName}_data:/qdrant/storage\n`
         yaml += `    healthcheck:\n      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/6333'"]\n      interval: 5s\n      timeout: 5s\n      retries: 5\n`
         break
       case 'meilisearch':
         yaml += `    image: getmeili/meilisearch:v1.8\n`
         yaml += `    environment:\n      MEILI_MASTER_KEY: \${MEILI_MASTER_KEY:-masterKeySecret123}\n`
-        yaml += `    ports:\n      - "\${MEILISEARCH_PORT:-${db.port}}:7700"\n`
-        yaml += `    volumes:\n      - meilisearch_data:/meili_data\n`
+        yaml += `    ports:\n      - "\${${sName.toUpperCase()}_PORT:-${db.port}}:7700"\n`
+        yaml += `    volumes:\n      - ${sName}_data:/meili_data\n`
         yaml += `    healthcheck:\n      test: ["CMD", "curl", "-f", "http://localhost:7700/health"]\n      interval: 5s\n      timeout: 5s\n      retries: 5\n`
         break
       case 'minio':
         yaml += `    image: minio/minio:latest\n`
         yaml += `    command: server /data --console-address ":9001"\n`
         yaml += `    environment:\n      MINIO_ROOT_USER: \${MINIO_ROOT_USER:-lazystack_admin}\n      MINIO_ROOT_PASSWORD: \${MINIO_ROOT_PASSWORD:-minio_secret_password}\n`
-        yaml += `    ports:\n      - "\${MINIO_PORT:-${db.port}}:9000"\n      - "9001:9001"\n`
-        yaml += `    volumes:\n      - minio_data:/data\n`
+        yaml += `    ports:\n      - "\${${sName.toUpperCase()}_PORT:-${db.port}}:9000"\n      - "9001:9001"\n`
+        yaml += `    volumes:\n      - ${sName}_data:/data\n`
         yaml += `    healthcheck:\n      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]\n      interval: 5s\n      timeout: 5s\n      retries: 5\n`
         break
       case 'scylladb':
         yaml += `    image: scylladb/scylla:5.4\n`
-        yaml += `    ports:\n      - "\${SCYLLADB_PORT:-${db.port}}:9042"\n`
-        yaml += `    volumes:\n      - scylladb_data:/var/lib/scylla\n`
+        yaml += `    ports:\n      - "\${${sName.toUpperCase()}_PORT:-${db.port}}:9042"\n`
+        yaml += `    volumes:\n      - ${sName}_data:/var/lib/scylla\n`
         yaml += `    healthcheck:\n      test: ["CMD-SHELL", "nodetool status | grep -q 'UN'"]\n      interval: 10s\n      timeout: 5s\n      retries: 5\n`
         break
       case 'rabbitmq':
         yaml += `    image: rabbitmq:3-management-alpine\n`
         yaml += `    environment:\n      RABBITMQ_DEFAULT_USER: \${RABBITMQ_USER:-lazystack}\n      RABBITMQ_DEFAULT_PASS: \${RABBITMQ_PASS:-secret}\n`
-        yaml += `    ports:\n      - "\${RABBITMQ_PORT:-${db.port}}:5672"\n      - "15672:15672"\n`
-        yaml += `    volumes:\n      - rabbitmq_data:/var/lib/rabbitmq\n`
+        yaml += `    ports:\n      - "\${${sName.toUpperCase()}_PORT:-${db.port}}:5672"\n      - "15672:15672"\n`
+        yaml += `    volumes:\n      - ${sName}_data:/var/lib/rabbitmq\n`
         yaml += `    healthcheck:\n      test: ["CMD", "rabbitmq-diagnostics", "check_running"]\n      interval: 5s\n      timeout: 5s\n      retries: 5\n`
         break
       case 'pocketbase':
         yaml += `    image: ghcr.io/muchobien/pocketbase:latest\n`
-        yaml += `    ports:\n      - "\${POCKETBASE_PORT:-${db.port}}:8090"\n`
-        yaml += `    volumes:\n      - pocketbase_data:/pb_data\n`
+        yaml += `    ports:\n      - "\${${sName.toUpperCase()}_PORT:-${db.port}}:8090"\n`
+        yaml += `    volumes:\n      - ${sName}_data:/pb_data\n`
         yaml += `    healthcheck:\n      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8090/api/health || exit 1"]\n      interval: 5s\n      timeout: 5s\n      retries: 5\n`
         break
       default:
@@ -180,17 +197,27 @@ export function generateDockerCompose(settings: ProjectSettings): string {
 
   // Docker Apps
   dockerApps.forEach(app => {
+    const appRelPath = paths.getAppRelativePath(app.folderName, app.id)
     yaml += `  ${app.folderName}:\n`
-    yaml += `    build:\n      context: ../apps/${app.folderName}\n      dockerfile: Dockerfile\n`
+    yaml += `    build:\n      context: ../${appRelPath}\n      dockerfile: Dockerfile\n`
     yaml += `    restart: unless-stopped\n`
     if (app.port > 0) {
       yaml += `    ports:\n      - "${app.port}:${app.port}"\n`
     }
-    yaml += `    env_file:\n      - ../.env\n      - ../apps/${app.folderName}/.env\n`
-    if (activeDbs.filter(d => d.type !== 'sqlite').length > 0) {
+    yaml += `    env_file:\n      - ../.env\n      - ../${appRelPath}/.env\n`
+
+    const relevantDbs = activeDbs.filter(d => {
+      if (d.type === 'sqlite') return false
+      if (paths.databaseIsolation === 'service-isolated') {
+        return d.assignedAppId === app.id || d.assignedAppId === 'global' || !d.assignedAppId
+      }
+      return true
+    })
+
+    if (relevantDbs.length > 0) {
       yaml += `    depends_on:\n`
-      activeDbs.filter(d => d.type !== 'sqlite').forEach(d => {
-        yaml += `      ${d.type}:\n        condition: service_healthy\n`
+      relevantDbs.forEach((d, idx) => {
+        yaml += `      ${getDbServiceName(d, idx, settings.apps)}:\n        condition: service_healthy\n`
       })
     }
     yaml += `    networks:\n      - lazystack_net\n\n`
@@ -210,10 +237,12 @@ export function generateDockerCompose(settings: ProjectSettings): string {
 }
 
 export function generateDockerDevCompose(settings: ProjectSettings): string {
+  const paths = resolveStructurePaths(settings)
   let yaml = `version: '3.8'\n\nservices:\n`
   settings.apps.filter(a => a.runMode === 'docker').forEach(app => {
+    const appRelPath = paths.getAppRelativePath(app.folderName, app.id)
     yaml += `  ${app.folderName}:\n`
-    yaml += `    volumes:\n      - ../apps/${app.folderName}:/app\n`
+    yaml += `    volumes:\n      - ../${appRelPath}:/app\n`
     if (['react-vite', 'vue-vite', 'ts-express', 'ts-fastify', 'ts-nestjs'].includes(app.techId)) {
       yaml += `      - /app/node_modules\n`
     }

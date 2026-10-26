@@ -7,15 +7,17 @@ import { ProxyConfigurator } from './components/ProxyConfigurator'
 import { BlueprintInspector } from './components/BlueprintInspector'
 import { EnvironmentAuditor } from './components/EnvironmentAuditor'
 import { ValidationBanner } from './components/ValidationBanner'
-import { ProjectSettings, CartApp, SelectedDatabase, ProxyConfig } from './types'
+import { ProjectSettings, CartApp, SelectedDatabase, ProxyConfig, FolderStructureConfig } from './types'
 import { Layers, Database, Globe, Eye, FolderOpen, ExternalLink, Copy, Check, CheckCircle2, AlertCircle, Loader2, Wrench, Terminal, Package, Play, Square } from 'lucide-react'
 import { StackPreset } from './data/presets'
 import { joinPaths } from './utils/pathValidation'
+import { getDefaultStructureConfig } from './data/structurePresets'
 
 export const App: React.FC = () => {
   const [projectName, setProjectName] = useState('')
   const [parentDir, setParentDir] = useState('')
   const [activeTab, setActiveTab] = useState<'cart' | 'databases' | 'proxy' | 'inspector' | 'environment'>('cart')
+  const [structureConfig, setStructureConfig] = useState<FolderStructureConfig>(getDefaultStructureConfig())
   
   // Scaffolding modal state
   const [scaffoldModalOpen, setScaffoldModalOpen] = useState(false)
@@ -131,7 +133,8 @@ export const App: React.FC = () => {
     targetDir: parentDir.trim() && projectName.trim() ? joinPaths(parentDir, projectName) : (parentDir.trim() || projectName.trim()),
     proxy,
     databases,
-    apps
+    apps,
+    structureConfig
   }
 
   // Trigger real scaffolding engine
@@ -243,6 +246,7 @@ export const App: React.FC = () => {
     if (Array.isArray(imported.apps)) setApps(imported.apps)
     if (Array.isArray(imported.databases)) setDatabases(imported.databases)
     if (imported.proxy) setProxy(imported.proxy)
+    if (imported.structureConfig) setStructureConfig(imported.structureConfig)
   }
 
   const handleStartStack = async () => {
@@ -429,6 +433,7 @@ export const App: React.FC = () => {
           <BlueprintInspector
             settings={projectSettings}
             onImportBlueprint={handleImportBlueprint}
+            onUpdateStructure={setStructureConfig}
           />
         )}
 

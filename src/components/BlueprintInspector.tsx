@@ -1,19 +1,27 @@
 import React, { useState, useRef } from 'react'
-import { FolderTree, Code, Network, FileText, Download, Upload } from 'lucide-react'
-import { ProjectSettings } from '../types'
+import { FolderTree, Code, Network, FileText, Download, Upload, Sliders, Layers, Database } from 'lucide-react'
+import { ProjectSettings, SelectedDatabase, FolderStructureConfig } from '../types'
 import { DATABASE_CATALOG } from '../data/databases'
+import { resolveStructurePaths } from '../data/structurePresets'
+import { StructureCustomizer } from './StructureCustomizer'
 
 interface BlueprintInspectorProps {
   settings: ProjectSettings
   onImportBlueprint?: (imported: Partial<ProjectSettings>) => void
+  onUpdateStructure?: (config: FolderStructureConfig) => void
 }
 
-export const BlueprintInspector: React.FC<BlueprintInspectorProps> = ({ settings, onImportBlueprint }) => {
-  const [activeTab, setActiveTab] = useState<'tree' | 'compose' | 'ports' | 'env'>('tree')
+export const BlueprintInspector: React.FC<BlueprintInspectorProps> = ({
+  settings,
+  onImportBlueprint,
+  onUpdateStructure
+}) => {
+  const [activeTab, setActiveTab] = useState<'structure' | 'tree' | 'compose' | 'ports' | 'env'>('structure')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const projectName = settings.projectName || 'my-monorepo'
   const activeDatabases = settings.databases.filter(d => d.enabled)
+  const paths = resolveStructurePaths(settings)
 
   // Export lazystack.json
   const handleExportBlueprint = () => {
@@ -44,61 +52,86 @@ export const BlueprintInspector: React.FC<BlueprintInspectorProps> = ({ settings
     reader.readAsText(file)
   }
 
+  const getDbServiceName = (db: SelectedDatabase, idx: number) => {
+    if (db.customName) {
+      const slug = db.customName.toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/^_+|_+$/g, '')
+      if (slug) return slug
+    }
+    const assignedApp = settings.apps.find(a => a.id === db.assignedAppId)
+    if (assignedApp) {
+      return `${assignedApp.folderName}_${db.type}`
+    }
+    return `${db.type}_${db.port || idx + 1}`
+  }
+
   // Generate dynamic Docker Compose preview
   const generateComposePreview = () => {
     let yaml = `version: '3.8'\n\nnetworks:\n  lazystack_net:\n    driver: bridge\n\nvolumes:\n`
-    
-    // Only allocate volumes for containerized databases
-    activeDatabases.forEach(d => {
+
+    // Volumes
+    activeDatabases.forEach((d, idx) => {
       const def = DATABASE_CATALOG.find(c => c.id === d.type)
       if (def?.isCloud && d.type !== 'pocketbase') return
       if (d.type !== 'sqlite') {
-        yaml += `  ${d.type}_data:\n`
+        const sName = getDbServiceName(d, idx)
+        yaml += `  ${sName}_data:\n`
       }
     })
 
     yaml += `\nservices:\n`
 
-    activeDatabases.forEach(d => {
+    // Database services
+    activeDatabases.forEach((d, idx) => {
       const def = DATABASE_CATALOG.find(c => c.id === d.type)
+      const sName = getDbServiceName(d, idx)
+
       if (def?.isCloud && d.type !== 'pocketbase') {
-        yaml += `  # ${def?.name || d.type}: Managed Cloud Service (no local container needed)\n`
+        yaml += `  # ${d.customName || def?.name || d.type}: Managed Cloud Service (no local container needed)\n`
       } else if (d.type === 'sqlite') {
-        yaml += `  # SQLite: Storage in shared volume /infra/sqlite/data.db\n`
+        yaml += `  # ${sName} (SQLite): Local/Shared file storage\n`
       } else if (d.type === 'pocketbase') {
-        yaml += `  pocketbase:\n`
+        yaml += `  ${sName}:\n`
         yaml += `    image: ghcr.io/muchobien/pocketbase:latest\n`
         yaml += `    restart: unless-stopped\n`
         yaml += `    ports:\n      - "${d.port}:8090"\n`
         yaml += `    networks:\n      - lazystack_net\n`
-        yaml += `    volumes:\n      - pocketbase_data:/pb_data\n\n`
+        yaml += `    volumes:\n      - ${sName}_data:/pb_data\n\n`
       } else {
-        yaml += `  ${d.type}:\n`
+        yaml += `  ${sName}:\n`
         yaml += `    image: ${def?.imageTag}\n`
         yaml += `    restart: unless-stopped\n`
         yaml += `    ports:\n      - "${d.port}:${def?.defaultPort}"\n`
         yaml += `    networks:\n      - lazystack_net\n`
-        yaml += `    volumes:\n      - ${d.type}_data:/var/lib/${d.type}/data\n\n`
+        yaml += `    volumes:\n      - ${sName}_data:/var/lib/${d.type}/data\n\n`
       }
     })
 
+    // Microservice Applications
     const dockerApps = settings.apps.filter(a => a.runMode === 'docker')
     dockerApps.forEach(a => {
+      const appRelPath = paths.getAppRelativePath(a.folderName, a.id)
       yaml += `  ${a.folderName}:\n`
-      yaml += `    build:\n      context: ../apps/${a.folderName}\n      dockerfile: Dockerfile\n`
+      yaml += `    build:\n      context: ../${appRelPath}\n      dockerfile: Dockerfile\n`
       yaml += `    restart: unless-stopped\n`
       if (a.port > 0) {
         yaml += `    ports:\n      - "${a.port}:${a.port}"\n`
       }
-      yaml += `    env_file:\n      - ../.env\n      - ../apps/${a.folderName}/.env\n`
-      const containerDbs = activeDatabases.filter(d => {
+      yaml += `    env_file:\n      - ../.env\n      - ../${appRelPath}/.env\n`
+
+      // Microservice DB dependencies
+      const relevantDbs = activeDatabases.filter(d => {
         const def = DATABASE_CATALOG.find(c => c.id === d.type)
-        return d.type !== 'sqlite' && (!def?.isCloud || d.type === 'pocketbase')
+        if (d.type === 'sqlite' || (def?.isCloud && d.type !== 'pocketbase')) return false
+        if (paths.databaseIsolation === 'service-isolated') {
+          return d.assignedAppId === a.id || d.assignedAppId === 'global' || !d.assignedAppId
+        }
+        return true
       })
-      if (containerDbs.length > 0) {
+
+      if (relevantDbs.length > 0) {
         yaml += `    depends_on:\n`
-        containerDbs.forEach(d => {
-          yaml += `      ${d.type}:\n        condition: service_healthy\n`
+        relevantDbs.forEach((d, idx) => {
+          yaml += `      ${getDbServiceName(d, idx)}:\n        condition: service_healthy\n`
         })
       }
       yaml += `    networks:\n      - lazystack_net\n\n`
@@ -108,7 +141,7 @@ export const BlueprintInspector: React.FC<BlueprintInspectorProps> = ({ settings
       yaml += `  gateway:\n`
       yaml += `    image: ${settings.proxy.type === 'nginx' ? 'nginx:alpine' : 'httpd:alpine'}\n`
       yaml += `    ports:\n      - "${settings.proxy.httpPort}:${settings.proxy.httpPort}"\n`
-      yaml += `    volumes:\n      - ./infra/${settings.proxy.type}:/etc/${settings.proxy.type}/conf.d:ro\n`
+      yaml += `    volumes:\n      - ./${paths.infraDir}/${settings.proxy.type}:/etc/${settings.proxy.type}/conf.d:ro\n`
       yaml += `    networks:\n      - lazystack_net\n`
     }
 
@@ -116,7 +149,7 @@ export const BlueprintInspector: React.FC<BlueprintInspectorProps> = ({ settings
   }
 
   const generateEnvPreview = () => {
-    let env = `# Root Environment Configuration for LazyStack\nPROJECT_NAME=${projectName}\nNODE_ENV=development\n\n`
+    let env = `# Root Environment Configuration for LazyStack\nPROJECT_NAME=${projectName}\nNODE_ENV=development\nARCHITECTURE_LAYOUT=${settings.structureConfig?.preset || 'monorepo'}\n\n`
     env += `# Application Ports\n`
     settings.apps.forEach(a => {
       const varName = `${a.folderName.toUpperCase().replace(/[^A-Z0-9]/g, '_')}_PORT`
@@ -133,12 +166,18 @@ export const BlueprintInspector: React.FC<BlueprintInspectorProps> = ({ settings
     })
 
     if (selfHostedDbs.length > 0) {
-      env += `\n# Self-Hosted Database Configurations\n`
-      selfHostedDbs.forEach(d => {
-        env += `${d.type.toUpperCase()}_PORT=${d.port}\n`
-        env += `${d.type.toUpperCase()}_USER=lazystack_user\n`
-        env += `${d.type.toUpperCase()}_PASSWORD=secret_${Math.random().toString(36).substring(2, 8)}\n`
-        env += `${d.type.toUpperCase()}_DB=lazystack_${d.type}\n`
+      env += `\n# Self-Hosted Database Instances\n`
+      selfHostedDbs.forEach((d, idx) => {
+        const sName = getDbServiceName(d, idx).toUpperCase()
+        const assignedApp = settings.apps.find(a => a.id === d.assignedAppId)
+        const scopeNote = assignedApp ? `[Scoped to ${assignedApp.folderName}]` : '[Global Infrastructure]'
+
+        env += `# ${d.customName || d.type.toUpperCase()} ${scopeNote}\n`
+        env += `${sName}_PORT=${d.port}\n`
+        env += `${sName}_USER=lazystack_user\n`
+        env += `${sName}_PASSWORD=secret_${Math.random().toString(36).substring(2, 8)}\n`
+        env += `${sName}_DB=${d.databaseName || `${d.type}_db`}\n`
+        env += `${sName}_URL=${d.type}://lazystack_user:secret@${getDbServiceName(d, idx)}:${d.port}/${d.databaseName || `${d.type}_db`}\n\n`
       })
     }
 
@@ -147,7 +186,7 @@ export const BlueprintInspector: React.FC<BlueprintInspectorProps> = ({ settings
       cloudDbs.forEach(d => {
         const def = DATABASE_CATALOG.find(c => c.id === d.type)
         if (def) {
-          env += `# ${def.name}\n`
+          env += `# ${d.customName || def.name}\n`
           def.envVars?.forEach(v => {
             env += `${v}=your_${v.toLowerCase()}_here\n`
           })
@@ -163,6 +202,14 @@ export const BlueprintInspector: React.FC<BlueprintInspectorProps> = ({ settings
       {/* Tab Selector */}
       <div className="px-6 py-3 border-b border-surface-700 bg-surface-900 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-1 bg-surface-950 p-1 rounded-lg border border-surface-700 text-xs">
+          <button
+            onClick={() => setActiveTab('structure')}
+            className={`px-3 py-1.5 rounded-md font-medium transition flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'structure' ? 'bg-zinc-100 text-zinc-950 font-bold' : 'text-zinc-400 hover:text-white'
+            }`}
+          >
+            <Sliders className="w-3.5 h-3.5" /> Architecture & Folders
+          </button>
           <button
             onClick={() => setActiveTab('tree')}
             className={`px-3 py-1.5 rounded-md font-medium transition flex items-center gap-1.5 cursor-pointer ${
@@ -185,7 +232,7 @@ export const BlueprintInspector: React.FC<BlueprintInspectorProps> = ({ settings
               activeTab === 'ports' ? 'bg-zinc-100 text-zinc-950 font-bold' : 'text-zinc-400 hover:text-white'
             }`}
           >
-            <Network className="w-3.5 h-3.5" /> Ports Map
+            <Network className="w-3.5 h-3.5" /> Ports & Services Map
           </button>
           <button
             onClick={() => setActiveTab('env')}
@@ -229,56 +276,90 @@ export const BlueprintInspector: React.FC<BlueprintInspectorProps> = ({ settings
 
       {/* Tab Contents */}
       <div className="flex-1 overflow-auto p-6 font-mono text-xs">
+        {activeTab === 'structure' && (
+          <StructureCustomizer
+            settings={settings}
+            onUpdateStructure={(cfg) => {
+              if (onUpdateStructure) onUpdateStructure(cfg)
+            }}
+          />
+        )}
+
         {activeTab === 'tree' && (
-          <div className="bg-surface-900 border border-surface-700 rounded-xl p-5 text-zinc-300 leading-relaxed max-w-2xl">
+          <div className="bg-surface-900 border border-surface-700 rounded-xl p-5 text-zinc-300 leading-relaxed max-w-3xl">
             <div className="text-white font-bold mb-2">📁 {projectName}/</div>
             <div className="pl-4 border-l border-surface-700 space-y-1">
               <div>├── 📁 .github/workflows/ <span className="text-zinc-500 font-sans text-[11px]">(CI/CD workflows)</span></div>
               <div>├── 📁 .vscode/ <span className="text-zinc-500 font-sans text-[11px]">(recommended extensions)</span></div>
-              <div>├── 📁 apps/ <span className="text-zinc-500 font-sans text-[11px]">({settings.apps.length} applications)</span></div>
-              <div className="pl-4 border-l border-surface-700 space-y-1">
-                {settings.apps.map(a => (
-                  <div key={a.id} className="text-zinc-100">
-                    ├── 📁 {a.folderName}/
-                    <span className="text-zinc-500 font-sans text-[11px] ml-2">
-                      ({a.techId} {a.flavor ? `[${a.flavor}]` : ''} • port {a.port} • {a.runMode})
-                    </span>
-                  </div>
-                ))}
-              </div>
-              {settings.databases.some(d => {
-                if (!d.enabled) return false
-                const def = DATABASE_CATALOG.find(c => c.id === d.type)
-                return def?.isCloud
-              }) && (
-                <div>
-                  <div>├── 📁 packages/cloud/ <span className="text-zinc-500 font-sans text-[11px]">(SDK clients for Cloud / BaaS)</span></div>
-                  <div className="pl-4 border-l border-surface-700 space-y-1">
-                    {settings.databases.filter(d => {
-                      if (!d.enabled) return false
-                      const def = DATABASE_CATALOG.find(c => c.id === d.type)
-                      return def?.isCloud
-                    }).map(d => (
-                      <div key={d.type} className="text-zinc-400">
-                        ├── 📄 {d.type}.ts
+
+              {/* Application / Microservices directory */}
+              <div>├── 📁 {paths.appsDir}/ <span className="text-zinc-500 font-sans text-[11px]">({settings.apps.length} microservices / apps)</span></div>
+              <div className="pl-4 border-l border-surface-700 space-y-1.5">
+                {settings.apps.map(a => {
+                  const assignedDbs = activeDatabases.filter(d => d.assignedAppId === a.id)
+                  return (
+                    <div key={a.id} className="text-zinc-100">
+                      <div>
+                        ├── 📁 {a.folderName}/
+                        <span className="text-zinc-500 font-sans text-[11px] ml-2">
+                          ({a.techId} {a.flavor ? `[${a.flavor}]` : ''} • port {a.port} • {a.runMode})
+                        </span>
                       </div>
-                    ))}
+                      <div className="pl-4 border-l border-surface-750 text-zinc-400 space-y-0.5">
+                        <div>├── 📁 src/</div>
+                        {assignedDbs.length > 0 && paths.databaseIsolation === 'service-isolated' && (
+                          <div className="text-emerald-400">
+                            ├── 📁 db/ <span className="text-zinc-500 font-sans text-[11px]">(schema, migrations for {assignedDbs.map(d => d.customName || d.type).join(', ')})</span>
+                          </div>
+                        )}
+                        <div>├── 📄 Dockerfile</div>
+                        <div>└── 📄 .env <span className="text-zinc-500 font-sans text-[11px]">(service secrets & isolated DB URL)</span></div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Shared Packages / Core */}
+              <div>├── 📁 {paths.packagesDir}/ <span className="text-zinc-500 font-sans text-[11px]">(shared packages & contracts)</span></div>
+              <div className="pl-4 border-l border-surface-700 space-y-1">
+                <div>├── 📁 types/ <span className="text-zinc-500 font-sans text-[11px]">(shared TypeScript DTOs)</span></div>
+                <div>├── 📁 shared/ <span className="text-zinc-500 font-sans text-[11px]">(shared utils)</span></div>
+                {activeDatabases.some(d => {
+                  const def = DATABASE_CATALOG.find(c => c.id === d.type)
+                  return def?.isCloud
+                }) && (
+                  <div>
+                    <div>├── 📁 cloud/ <span className="text-zinc-500 font-sans text-[11px]">(SDK clients for Cloud / BaaS)</span></div>
+                    <div className="pl-4 border-l border-surface-750 space-y-0.5">
+                      {activeDatabases.filter(d => {
+                        const def = DATABASE_CATALOG.find(c => c.id === d.type)
+                        return def?.isCloud
+                      }).map(d => (
+                        <div key={d.id || d.type} className="text-zinc-400">
+                          ├── 📄 {d.type}.ts
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
-              <div>├── 📁 docs/ <span className="text-zinc-500 font-sans text-[11px]">(architecture & port diagrams)</span></div>
-              <div>├── 📁 infra/ <span className="text-zinc-500 font-sans text-[11px]">(orchestration & proxies)</span></div>
+                )}
+              </div>
+
+              {/* Infra / Deploy */}
+              <div>├── 📁 {paths.infraDir}/ <span className="text-zinc-500 font-sans text-[11px]">(orchestration & proxies)</span></div>
               <div className="pl-4 border-l border-surface-700 space-y-1">
                 {settings.proxy.type !== 'none' && (
-                  <div>├── 📁 {settings.proxy.type}/ <span className="text-zinc-500 font-sans text-[11px]">(reverse proxy configs)</span></div>
+                  <div>├── 📁 {settings.proxy.type}/ <span className="text-zinc-500 font-sans text-[11px]">(reverse proxy gateway configs)</span></div>
                 )}
-                {settings.databases.some(d => d.enabled && d.type === 'sqlite') && (
+                {activeDatabases.some(d => d.type === 'sqlite') && (
                   <div>├── 📁 sqlite/ <span className="text-zinc-500 font-sans text-[11px]">(shared database volume)</span></div>
                 )}
                 <div>├── 📄 docker-compose.yml</div>
                 <div>└── 📄 docker-compose.dev.yml</div>
               </div>
-              <div>├── 📁 scripts/ <span className="text-zinc-500 font-sans text-[11px]">(dev.sh, dev.ps1)</span></div>
+
+              <div>├── 📁 {paths.docsDir}/ <span className="text-zinc-500 font-sans text-[11px]">(architecture & port diagrams)</span></div>
+              <div>├── 📁 {paths.scriptsDir}/ <span className="text-zinc-500 font-sans text-[11px]">(dev.sh, dev.ps1)</span></div>
               <div>├── 📁 tests/ <span className="text-zinc-500 font-sans text-[11px]">(integration test harness)</span></div>
               <div>├── 📄 .env</div>
               <div>├── 📄 .gitignore</div>
@@ -300,6 +381,7 @@ export const BlueprintInspector: React.FC<BlueprintInspectorProps> = ({ settings
                 <tr className="border-b border-surface-700 bg-surface-950 text-zinc-400 text-[11px] uppercase">
                   <th className="p-3">Entity</th>
                   <th className="p-3">Type</th>
+                  <th className="p-3">Scope / Assigned To</th>
                   <th className="p-3">Host Port</th>
                   <th className="p-3">Container Port</th>
                   <th className="p-3">Run Mode</th>
@@ -308,20 +390,24 @@ export const BlueprintInspector: React.FC<BlueprintInspectorProps> = ({ settings
               <tbody className="divide-y divide-surface-700 text-zinc-300">
                 {settings.apps.map(a => (
                   <tr key={a.id} className="hover:bg-surface-850">
-                    <td className="p-3 font-semibold text-white">apps/{a.folderName}</td>
+                    <td className="p-3 font-semibold text-white">{paths.getAppRelativePath(a.folderName, a.id)}</td>
                     <td className="p-3 text-zinc-400 capitalize">{a.role}</td>
+                    <td className="p-3 text-zinc-400 font-sans text-xs">Self (Microservice)</td>
                     <td className="p-3 font-bold text-white font-mono">:{a.port}</td>
                     <td className="p-3 font-mono">:{a.port}</td>
                     <td className="p-3 capitalize">{a.runMode}</td>
                   </tr>
                 ))}
-                {activeDatabases.map(d => {
+                {activeDatabases.map((d, idx) => {
                   const def = DATABASE_CATALOG.find(c => c.id === d.type)
                   const isCloud = def?.isCloud && d.type !== 'pocketbase'
+                  const assignedApp = settings.apps.find(a => a.id === d.assignedAppId)
+                  const scopeLabel = assignedApp ? `📦 apps/${assignedApp.folderName}` : '🌐 Global Infra'
+
                   return (
-                    <tr key={d.type} className="hover:bg-surface-850">
+                    <tr key={d.id || `${d.type}-${idx}`} className="hover:bg-surface-850">
                       <td className="p-3 font-semibold text-white flex items-center gap-2">
-                        {def?.name || d.type}
+                        {d.customName || def?.name || d.type}
                         {def?.isCloud && (
                           <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30">
                             Cloud
@@ -329,6 +415,9 @@ export const BlueprintInspector: React.FC<BlueprintInspectorProps> = ({ settings
                         )}
                       </td>
                       <td className="p-3 text-zinc-400 capitalize">{def?.category || 'Database'}</td>
+                      <td className="p-3 font-sans text-xs text-emerald-400 font-medium">
+                        {scopeLabel}
+                      </td>
                       <td className="p-3 font-bold text-white font-mono">
                         {isCloud ? <span className="text-zinc-500 font-sans text-xs">Cloud Hosted</span> : `:${d.port}`}
                       </td>
@@ -351,6 +440,7 @@ export const BlueprintInspector: React.FC<BlueprintInspectorProps> = ({ settings
                   <tr className="hover:bg-surface-850">
                     <td className="p-3 font-semibold text-white">Gateway ({settings.proxy.type})</td>
                     <td className="p-3 text-zinc-400">Reverse Proxy</td>
+                    <td className="p-3 text-zinc-400 font-sans text-xs">Global Gateway</td>
                     <td className="p-3 font-bold text-white font-mono">:{settings.proxy.httpPort}</td>
                     <td className="p-3 font-mono">:{settings.proxy.httpPort}</td>
                     <td className="p-3">Docker Container</td>

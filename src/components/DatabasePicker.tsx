@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Database, AlertTriangle, HardDrive, ShieldCheck, Cloud, Server, ExternalLink, Package, Key } from 'lucide-react'
+import { Database, AlertTriangle, HardDrive, ShieldCheck, Cloud, Server, ExternalLink, Package, Key, Plus, Trash2, Box } from 'lucide-react'
 import { SelectedDatabase, DatabaseType, CartApp } from '../types'
 import { DATABASE_CATALOG } from '../data/databases'
 
@@ -14,29 +14,61 @@ type FilterTab = 'all' | 'self-hosted' | 'cloud'
 export const DatabasePicker: React.FC<DatabasePickerProps> = ({ databases, setDatabases, apps }) => {
   const [activeFilter, setActiveFilter] = useState<FilterTab>('all')
 
+  const getNextFreePort = (basePort: number) => {
+    if (basePort <= 0) return 0
+    let port = basePort
+    const usedPorts = new Set<number>()
+    databases.forEach(d => { if (d.enabled && d.port > 0) usedPorts.add(d.port) })
+    apps.forEach(a => { if (a.port > 0) usedPorts.add(a.port) })
+    while (usedPorts.has(port)) {
+      port++
+    }
+    return port
+  }
+
   const toggleDatabase = (type: DatabaseType) => {
-    setDatabases(prev => {
-      const existing = prev.find(d => d.type === type)
-      const def = DATABASE_CATALOG.find(c => c.id === type)
-      if (existing) {
-        return prev.map(d => d.type === type ? { ...d, enabled: !d.enabled } : d)
-      } else {
-        return [...prev, {
-          type,
-          enabled: true,
-          port: def ? def.defaultPort : 0,
-          sqliteStorage: type === 'sqlite' ? 'shared-volume' : undefined
-        }]
+    const existing = databases.filter(d => d.type === type && d.enabled)
+    const def = DATABASE_CATALOG.find(c => c.id === type)
+    if (existing.length > 0) {
+      // Disable all instances of this type
+      setDatabases(prev => prev.filter(d => d.type !== type))
+    } else {
+      // Add first instance
+      const newInst: SelectedDatabase = {
+        id: `${type}-${Date.now()}`,
+        type,
+        enabled: true,
+        port: def ? getNextFreePort(def.defaultPort) : 0,
+        customName: def?.name,
+        assignedAppId: 'global',
+        sqliteStorage: type === 'sqlite' ? 'shared-volume' : undefined
       }
-    })
+      setDatabases(prev => [...prev, newInst])
+    }
   }
 
-  const updatePort = (type: DatabaseType, port: number) => {
-    setDatabases(prev => prev.map(d => d.type === type ? { ...d, port } : d))
+  const addInstance = (type: DatabaseType) => {
+    const def = DATABASE_CATALOG.find(c => c.id === type)
+    const currentInstances = databases.filter(d => d.type === type && d.enabled)
+    const nextPort = def ? getNextFreePort((def.defaultPort || 5000) + currentInstances.length) : 0
+    const newInst: SelectedDatabase = {
+      id: `${type}-${Date.now()}`,
+      type,
+      enabled: true,
+      port: nextPort,
+      customName: `${def?.name || type} #${currentInstances.length + 1}`,
+      assignedAppId: 'global',
+      sqliteStorage: type === 'sqlite' ? 'shared-volume' : undefined
+    }
+    setDatabases(prev => [...prev, newInst])
   }
 
-  const updateSqliteStorage = (storage: 'shared-volume' | 'app-local' | 'litestream') => {
-    setDatabases(prev => prev.map(d => d.type === 'sqlite' ? { ...d, sqliteStorage: storage } : d))
+  const removeInstance = (instanceId: string) => {
+    setDatabases(prev => prev.filter(d => (d.id || d.type) !== instanceId))
+  }
+
+  const updateInstance = (instanceId: string, updates: Partial<SelectedDatabase>) => {
+    setDatabases(prev => prev.map(d => (d.id || d.type) === instanceId ? { ...d, ...updates } : d))
   }
 
   const enabledHeavyDBs = databases.filter(d => {
@@ -45,10 +77,10 @@ export const DatabasePicker: React.FC<DatabasePickerProps> = ({ databases, setDa
     return def?.isHeavyMemory
   })
 
-  const getPortCollision = (port: number, currentType: DatabaseType) => {
+  const getPortCollision = (port: number, instanceId?: string) => {
     if (port <= 0) return null
-    const collidingDb = databases.find(d => d.type !== currentType && d.enabled && d.port === port)
-    if (collidingDb) return `Collides with ${collidingDb.type.toUpperCase()}`
+    const collidingDb = databases.find(d => (d.id || d.type) !== instanceId && d.enabled && d.port === port)
+    if (collidingDb) return `Collides with ${collidingDb.customName || collidingDb.type.toUpperCase()}`
     const collidingApp = apps.find(a => a.port === port)
     if (collidingApp) return `Collides with app '${collidingApp.folderName}'`
     return null
@@ -64,13 +96,12 @@ export const DatabasePicker: React.FC<DatabasePickerProps> = ({ databases, setDa
 
   const selfHostedCount = DATABASE_CATALOG.filter(d => !d.isCloud).length
   const cloudCount = DATABASE_CATALOG.filter(d => d.isCloud).length
-  const enabledCloudCount = databases.filter(d => {
-    if (!d.enabled) return false
+  const enabledInstances = databases.filter(d => d.enabled)
+  const enabledCloudCount = enabledInstances.filter(d => {
     const def = DATABASE_CATALOG.find(c => c.id === d.type)
     return def?.isCloud
   }).length
-  const enabledSelfHostedCount = databases.filter(d => {
-    if (!d.enabled) return false
+  const enabledSelfHostedCount = enabledInstances.filter(d => {
     const def = DATABASE_CATALOG.find(c => c.id === d.type)
     return !def?.isCloud
   }).length
@@ -83,11 +114,11 @@ export const DatabasePicker: React.FC<DatabasePickerProps> = ({ databases, setDa
           <div className="flex items-center gap-2">
             <h2 className="text-sm font-bold text-white uppercase tracking-wider">Database Infrastructure</h2>
             <span className="px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 text-xs font-mono font-medium border border-zinc-700">
-              {databases.filter(d => d.enabled).length} active
+              {enabledInstances.length} active {enabledInstances.length === 1 ? 'instance' : 'instances'}
             </span>
           </div>
           <p className="text-xs text-zinc-400 mt-0.5">
-            Configure containerized Docker databases, embedded SQLite, or connect managed cloud services & BaaS providers.
+            Configure self-hosted container databases (multiple instances supported per microservice) or connect managed cloud services.
           </p>
         </div>
 
@@ -108,7 +139,6 @@ export const DatabasePicker: React.FC<DatabasePickerProps> = ({ databases, setDa
               : 'text-zinc-400 hover:text-white hover:bg-surface-800'
           }`}
         >
-          <Database className="w-3.5 h-3.5" />
           All
           <span className={`px-1.5 py-0.2 rounded text-[10px] font-mono border ${
             activeFilter === 'all'
@@ -117,6 +147,9 @@ export const DatabasePicker: React.FC<DatabasePickerProps> = ({ databases, setDa
           }`}>
             {DATABASE_CATALOG.length}
           </span>
+          {enabledInstances.length > 0 && (
+            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+          )}
         </button>
 
         <button
@@ -178,10 +211,8 @@ export const DatabasePicker: React.FC<DatabasePickerProps> = ({ databases, setDa
       {/* Database Grid */}
       <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredCatalog.map(db => {
-          const selected = databases.find(d => d.type === db.id)
-          const isEnabled = selected?.enabled ?? false
-          const port = selected?.port ?? db.defaultPort
-          const portCollision = isEnabled ? getPortCollision(port, db.id) : null
+          const instances = databases.filter(d => d.type === db.id && d.enabled)
+          const isEnabled = instances.length > 0
           const isCloudService = db.isCloud
 
           return (
@@ -191,7 +222,7 @@ export const DatabasePicker: React.FC<DatabasePickerProps> = ({ databases, setDa
                 isEnabled
                   ? isCloudService
                     ? 'bg-surface-900 border-zinc-600 shadow-md ring-1 ring-zinc-400/30'
-                    : 'bg-surface-900 border-zinc-800 dark:border-zinc-300 shadow-md ring-1 ring-zinc-500/20'
+                    : 'bg-surface-900 border-zinc-700 shadow-md ring-1 ring-zinc-500/20'
                   : 'bg-surface-900 border-surface-700 hover:border-surface-650'
               }`}
             >
@@ -206,6 +237,11 @@ export const DatabasePicker: React.FC<DatabasePickerProps> = ({ databases, setDa
                     <div>
                       <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
                         {db.name}
+                        {instances.length > 1 && (
+                          <span className="px-1.5 py-0.2 rounded text-[10px] font-mono bg-zinc-800 text-zinc-300 border border-zinc-700">
+                            {instances.length}x
+                          </span>
+                        )}
                       </h4>
                       <div className="flex items-center gap-1.5 mt-0.5">
                         <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded border ${db.badgeColor}`}>
@@ -246,31 +282,112 @@ export const DatabasePicker: React.FC<DatabasePickerProps> = ({ databases, setDa
                   {db.description}
                 </p>
 
-                {/* SQLite Special Storage Option */}
-                {db.id === 'sqlite' && isEnabled && (
-                  <div className="mt-3 p-2.5 bg-surface-950 rounded-lg border border-surface-700">
-                    <label className="block text-[10px] font-semibold text-zinc-300 uppercase mb-1 flex items-center gap-1">
-                      <HardDrive className="w-3 h-3 text-zinc-400" /> Storage Target
-                    </label>
-                    <select
-                      value={selected?.sqliteStorage || 'shared-volume'}
-                      onChange={(e) => updateSqliteStorage(e.target.value as any)}
-                      className="w-full bg-surface-900 border border-surface-650 rounded px-2 py-1 text-xs text-zinc-200 focus:outline-none focus:border-zinc-400 font-mono"
+                {/* Instance List */}
+                {isEnabled && (
+                  <div className="mt-3 space-y-2.5">
+                    {instances.map((inst, index) => {
+                      const instKey = inst.id || `${inst.type}-${index}`
+                      const portCollision = getPortCollision(inst.port, inst.id || inst.type)
+
+                      return (
+                        <div
+                          key={instKey}
+                          className="p-2.5 bg-surface-950 rounded-lg border border-surface-750 space-y-2"
+                        >
+                          <div className="flex items-center justify-between">
+                            <input
+                              type="text"
+                              value={inst.customName || `${db.name} #${index + 1}`}
+                              onChange={(e) => updateInstance(instKey, { customName: e.target.value })}
+                              placeholder="Instance Label"
+                              className="text-xs font-semibold bg-transparent text-white border-b border-transparent hover:border-surface-600 focus:border-zinc-400 focus:outline-none px-1 py-0.5 font-mono w-2/3"
+                            />
+                            {instances.length > 1 && (
+                              <button
+                                onClick={() => removeInstance(instKey)}
+                                className="p-1 rounded text-zinc-500 hover:text-red-400 hover:bg-surface-900 transition"
+                                title="Remove this database instance"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
+
+                          {/* Microservice Assignment */}
+                          <div className="flex items-center gap-1.5 text-[11px]">
+                            <Box className="w-3 h-3 text-zinc-400 shrink-0" />
+                            <span className="text-[10px] text-zinc-400 font-mono">Scope:</span>
+                            <select
+                              value={inst.assignedAppId || 'global'}
+                              onChange={(e) => updateInstance(instKey, { assignedAppId: e.target.value })}
+                              className="bg-surface-900 border border-surface-700 rounded px-1.5 py-0.5 text-[11px] text-zinc-300 font-mono focus:outline-none focus:border-zinc-400 flex-1 truncate"
+                            >
+                              <option value="global">🌐 Shared Infrastructure</option>
+                              {apps.map(app => (
+                                <option key={app.id} value={app.id}>
+                                  📦 {app.folderName} ({app.techId})
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          {/* Host Port (if applicable) */}
+                          {(!isCloudService || db.id === 'pocketbase') && db.id !== 'sqlite' && (
+                            <div className="flex items-center justify-between text-[11px]">
+                              <span className="text-[10px] font-mono text-zinc-400">Host Port:</span>
+                              <input
+                                type="number"
+                                value={inst.port}
+                                onChange={(e) => updateInstance(instKey, { port: parseInt(e.target.value) || 0 })}
+                                className={`w-20 bg-surface-900 border text-xs font-mono px-2 py-0.5 rounded text-white focus:outline-none ${
+                                  portCollision ? 'border-red-500' : 'border-surface-650 focus:border-zinc-300'
+                                }`}
+                              />
+                            </div>
+                          )}
+
+                          {portCollision && (
+                            <p className="text-[10px] text-red-400 truncate font-mono">{portCollision}</p>
+                          )}
+
+                          {/* SQLite Storage Option */}
+                          {db.id === 'sqlite' && (
+                            <div className="pt-1">
+                              <label className="block text-[10px] font-semibold text-zinc-400 uppercase mb-1 flex items-center gap-1">
+                                <HardDrive className="w-3 h-3 text-zinc-400" /> Storage
+                              </label>
+                              <select
+                                value={inst.sqliteStorage || 'shared-volume'}
+                                onChange={(e) => updateInstance(instKey, { sqliteStorage: e.target.value as any })}
+                                className="w-full bg-surface-900 border border-surface-650 rounded px-1.5 py-0.5 text-xs text-zinc-200 focus:outline-none font-mono"
+                              >
+                                <option value="shared-volume">Shared volume (/infra/sqlite/data.db)</option>
+                                <option value="app-local">Local file within assigned service</option>
+                                <option value="litestream">Litestream continuous S3 backup</option>
+                              </select>
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+
+                    {/* Add Another Instance Button */}
+                    <button
+                      onClick={() => addInstance(db.id)}
+                      className="w-full py-1.5 px-2 bg-surface-950 hover:bg-surface-850 border border-dashed border-surface-700 hover:border-zinc-500 rounded-lg text-xs font-mono text-zinc-300 hover:text-white flex items-center justify-center gap-1.5 transition cursor-pointer"
                     >
-                      <option value="shared-volume">Shared Docker volume (/infra/sqlite/data.db)</option>
-                      <option value="app-local">Local file within each app subfolder</option>
-                      <option value="litestream">Litestream continuous S3 backup</option>
-                    </select>
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add another {db.name.split(' ')[0]} instance</span>
+                    </button>
                   </div>
                 )}
 
-                {/* Cloud Service Details (SDK, Env Vars, Dashboard Link) */}
+                {/* Cloud Service Info */}
                 {isCloudService && isEnabled && (
                   <div className="mt-3 space-y-2">
-                    {/* SDK Packages */}
                     {db.sdkPackages && (
-                      <div className="p-2.5 bg-surface-950 rounded-lg border border-surface-700">
-                        <label className="block text-[10px] font-semibold text-zinc-300 uppercase mb-1.5 flex items-center gap-1">
+                      <div className="p-2 bg-surface-950 rounded-lg border border-surface-700">
+                        <label className="block text-[10px] font-semibold text-zinc-400 uppercase mb-1 flex items-center gap-1">
                           <Package className="w-3 h-3 text-zinc-400" /> SDK Packages
                         </label>
                         <div className="flex flex-wrap gap-1">
@@ -278,7 +395,6 @@ export const DatabasePicker: React.FC<DatabasePickerProps> = ({ databases, setDa
                             <span
                               key={ecosystem}
                               className="text-[10px] font-mono bg-surface-900 text-zinc-300 border border-surface-650 px-1.5 py-0.5 rounded"
-                              title={`${ecosystem}: ${pkg}`}
                             >
                               <span className="text-zinc-500">{ecosystem}:</span> {pkg.split(' ')[0]}
                             </span>
@@ -286,33 +402,12 @@ export const DatabasePicker: React.FC<DatabasePickerProps> = ({ databases, setDa
                         </div>
                       </div>
                     )}
-
-                    {/* Required Env Vars */}
-                    {db.envVars && db.envVars.length > 0 && (
-                      <div className="p-2.5 bg-surface-950 rounded-lg border border-surface-700">
-                        <label className="block text-[10px] font-semibold text-zinc-300 uppercase mb-1.5 flex items-center gap-1">
-                          <Key className="w-3 h-3 text-zinc-400" /> Required Env Vars
-                        </label>
-                        <div className="flex flex-wrap gap-1">
-                          {db.envVars.map(envVar => (
-                            <span
-                              key={envVar}
-                              className="text-[10px] font-mono bg-surface-900 text-zinc-400 border border-surface-650 px-1.5 py-0.5 rounded"
-                            >
-                              {envVar}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Dashboard Link */}
                     {db.docsUrl && (
                       <a
                         href={db.docsUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="flex items-center gap-1.5 text-[10px] font-mono text-zinc-400 hover:text-white transition px-2.5 py-1.5 bg-surface-950 rounded-lg border border-surface-700 hover:border-zinc-500"
+                        className="flex items-center gap-1.5 text-[10px] font-mono text-zinc-400 hover:text-white transition px-2 py-1 bg-surface-950 rounded-lg border border-surface-700 hover:border-zinc-500"
                       >
                         <ExternalLink className="w-3 h-3" />
                         Open Dashboard →
@@ -321,51 +416,6 @@ export const DatabasePicker: React.FC<DatabasePickerProps> = ({ databases, setDa
                   </div>
                 )}
               </div>
-
-              {/* Port & Image Tag Footer — only for self-hosted non-SQLite databases */}
-              {isEnabled && !isCloudService && db.id !== 'sqlite' && (
-                <div className="mt-3 pt-3 border-t border-surface-750 flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] font-mono text-zinc-400">Host Port:</span>
-                    <input
-                      type="number"
-                      value={port}
-                      onChange={(e) => updatePort(db.id, parseInt(e.target.value) || 0)}
-                      className={`w-20 bg-surface-950 border text-xs font-mono px-2 py-0.5 rounded text-white focus:outline-none ${
-                        portCollision ? 'border-zinc-500' : 'border-surface-650 focus:border-zinc-300'
-                      }`}
-                    />
-                  </div>
-
-                  <span className="text-[10px] font-mono text-zinc-500 truncate max-w-[120px]" title={db.imageTag}>
-                    {db.imageTag}
-                  </span>
-                </div>
-              )}
-
-              {/* Pocketbase gets port config since it can run as Docker */}
-              {isEnabled && db.id === 'pocketbase' && (
-                <div className="mt-3 pt-3 border-t border-surface-750 flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] font-mono text-zinc-400">Host Port:</span>
-                    <input
-                      type="number"
-                      value={port}
-                      onChange={(e) => updatePort(db.id, parseInt(e.target.value) || 0)}
-                      className={`w-20 bg-surface-950 border text-xs font-mono px-2 py-0.5 rounded text-white focus:outline-none ${
-                        portCollision ? 'border-zinc-500' : 'border-surface-650 focus:border-zinc-300'
-                      }`}
-                    />
-                  </div>
-                  <span className="text-[10px] font-mono text-zinc-500 truncate max-w-[120px]" title={db.imageTag}>
-                    {db.imageTag}
-                  </span>
-                </div>
-              )}
-
-              {portCollision && (
-                <p className="text-[10px] text-zinc-400 mt-1 truncate font-mono">{portCollision}</p>
-              )}
             </div>
           )
         })}

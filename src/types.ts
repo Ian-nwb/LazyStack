@@ -98,10 +98,41 @@ export interface DatabaseOption {
 }
 
 export interface SelectedDatabase {
+  id?: string                  // Unique instance identifier (e.g. 'inst-postgres-1', 'auth-db')
   type: DatabaseType
   enabled: boolean
   port: number
+  customName?: string          // e.g. 'Auth Service DB', 'Orders DB'
+  assignedAppId?: string       // ID of the microservice app it is assigned to, or 'global'
+  databaseName?: string        // Custom DB name (e.g. 'auth_db', 'orders_db')
   sqliteStorage?: 'shared-volume' | 'app-local' | 'litestream'
+}
+
+export type ArchitecturePreset =
+  | 'monorepo'           // apps/, packages/, infra/
+  | 'microservices'      // services/, shared/, infra/, gateway/
+  | 'domain-driven'      // domains/<domain>/, core/, infra/
+  | 'polyglot'           // backend/services/, frontend/clients/, deploy/
+  | 'modular-monolith'   // modules/<feature>/, libs/, infra/
+  | 'hexagonal'          // services/, adapters/, core/, infra/
+  | 'serverless'         // functions/, web/, infra/
+  | 'custom'             // User custom paths
+
+export type DatabaseIsolationMode =
+  | 'service-isolated'   // Database-per-Service: db/ folder inside each service + service-scoped env
+  | 'centralized'        // Centralized: all databases declared in root infra/
+  | 'hybrid'             // Service-isolated relational DBs + shared caches/brokers
+
+export interface FolderStructureConfig {
+  preset: ArchitecturePreset
+  isCustom: boolean
+  appsDir: string         // e.g. 'apps', 'services', 'domains', 'backend/services'
+  infraDir: string        // e.g. 'infra', 'deploy'
+  packagesDir: string     // e.g. 'packages', 'shared', 'libs', 'core'
+  docsDir: string         // e.g. 'docs'
+  scriptsDir: string      // e.g. 'scripts'
+  databaseIsolation: DatabaseIsolationMode
+  customAppPaths?: Record<string, string> // Map appId -> custom relative directory
 }
 
 export type ProxyType = 'nginx' | 'apache' | 'none'
@@ -118,7 +149,7 @@ export interface ProjectSettings {
   proxy: ProxyConfig
   databases: SelectedDatabase[]
   apps: CartApp[]
+  structureConfig?: FolderStructureConfig
   includeAdminGui?: boolean
   includeSharedPackage?: boolean
 }
-
