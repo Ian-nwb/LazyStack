@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>LazyStack</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 72 64'%3E%3Cstyle%3Epath%7Bfill:none;stroke:%23050505;stroke-width:4%7D.t%7Bfill:%23050505%7D@media(prefers-color-scheme:dark)%7Bpath%7Bstroke:%23fff%7D.t%7Bfill:%23fff%7D%7D%3C/style%3E%3Cpath class='t' d='M30 6 54 18 30 30 6 18Z'/%3E%3Cpath d='M14 32 38 44 62 32M6 46 30 58 54 46'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=JetBrains+Mono:wght@400;500;700&display=swap">
@@ -282,9 +283,47 @@ h1 .thin, .wordmark .thin { transition: font-weight 700ms var(--ease); }
 tr.pick td:first-child::before { display: inline-block; animation: nudgeX 1.6s ease-in-out infinite; }
 .dl-row:not(.none) .btn:not(:hover) { animation: ring 2.8s ease-out 1.6s infinite; }
 
+/* ---------- logo ---------- */
+@keyframes logodraw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes topfill { from { fill-opacity: 0; } to { fill-opacity: 1; } }
+@keyframes slide { from { transform: translateX(-6px); } to { transform: translateX(6px); } }
+@keyframes numflash { from { -webkit-text-stroke-color: var(--fg); } }
+
+.logo { display: block; width: 100%; height: auto; overflow: visible; color: var(--fg); }
+.logo .l { fill: none; stroke: currentColor; stroke-width: var(--sw, 3); stroke-linejoin: miter; stroke-linecap: butt; stroke-dasharray: 1 2; stroke-dashoffset: 1; }
+.logo .l-top { fill: currentColor; fill-opacity: 0; translate: calc(var(--lx, 0) * -5px) 0; }
+.logo .l-mid { translate: calc(var(--lx, 0) * 5px) calc(var(--sp, 0) * 5px); }
+.logo .l-bot { translate: calc(var(--lx, 0) * -5px) calc(var(--sp, 0) * 10px); }
+.logo .l { transition: translate 500ms var(--ease); }
+.logo:hover, .mark:hover .logo, .flogo:hover .logo { --sp: 1; }
+:is(.logo.go, .flogo.in .logo) .l-bot { animation: logodraw 900ms var(--ease) var(--d, 0ms) both, slide 9s ease-in-out calc(var(--d, 0ms) + 2200ms) infinite alternate-reverse; }
+:is(.logo.go, .flogo.in .logo) .l-mid { animation: logodraw 900ms var(--ease) calc(var(--d, 0ms) + 140ms) both, slide 7s ease-in-out calc(var(--d, 0ms) + 2200ms) infinite alternate; }
+:is(.logo.go, .flogo.in .logo) .l-top { animation: logodraw 900ms var(--ease) calc(var(--d, 0ms) + 280ms) both, topfill 500ms ease calc(var(--d, 0ms) + 1150ms) both; }
+.mark { display: inline-flex; align-items: center; gap: 10px; }
+.mark .logo-sm { display: block; width: 26px; --sw: 5; }
+.hero > .hero-logo { position: absolute; top: clamp(24px, 5vw, 64px); right: 0; width: clamp(120px, 20vw, 250px); --sw: 2.6; translate: 0 calc(var(--sy, 0) * .15px); }
+@media (max-width: 700px) { .hero > .hero-logo { position: relative; top: auto; width: 76px; margin-bottom: 22px; } }
+.flogo { width: clamp(72px, 10vw, 120px); margin-bottom: 28px; --sw: 2.6; }
+
+/* ---------- section numerals ---------- */
+.page { counter-reset: sec; }
+.sec { counter-increment: sec; }
+.sec-side::before {
+  content: "0" counter(sec); font-size: clamp(3.2rem, 6vw, 5.5rem); font-weight: 900; line-height: .9; letter-spacing: -.05em; margin-bottom: 12px;
+  color: transparent; -webkit-text-stroke: 1px var(--line-strong); transition: -webkit-text-stroke-color 300ms, transform 420ms var(--ease);
+}
+.sec.seen .sec-side::before { animation: numflash 1600ms ease-out both; }
+@media (hover: hover) { .sec:hover .sec-side::before { -webkit-text-stroke-color: var(--fg); transform: translateX(6px); } }
+
+/* ---------- magnetic buttons ---------- */
+.btn { translate: var(--bx, 0px) var(--by, 0px);
+  transition: background-color 150ms, color 150ms, transform 180ms var(--ease), box-shadow 180ms var(--ease), translate 220ms var(--ease); }
+
 @media (prefers-reduced-motion: reduce) {
   .js h2:not(.in) .w > span { transform: none; }
   .hero::before { display: none; }
+  .logo .l { stroke-dashoffset: 0; }
+  .logo .l-top { fill-opacity: 1; }
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
@@ -300,7 +339,7 @@ tr.pick td:first-child::before { display: inline-block; animation: nudgeX 1.6s e
 <div class="page">
 
   <header class="bar">
-    <a class="mark" href="#top">LAZYSTACK/1.0.4</a>
+    <a class="mark" href="#top"><span class="logo-sm" data-logo aria-hidden="true"></span>LAZYSTACK/1.0.4</a>
     <nav aria-label="Sections">
       <a href="#features">Features</a>
       <a href="#layouts">Layouts</a>
@@ -313,6 +352,7 @@ tr.pick td:first-child::before { display: inline-block; animation: nudgeX 1.6s e
 
   <main id="top">
     <section class="hero">
+      <div class="hero-logo" data-logo aria-hidden="true"></div>
       <p class="eyebrow kicker">Desktop stack builder + command-line scaffolder</p>
       <h1>Mix the stack.<br><span class="thin">Scaffold the rest.</span></h1>
 
@@ -586,6 +626,7 @@ npm run dist:release  <span class="c"># build both targets</span></pre>
   </main>
 
   <footer>
+    <div class="flogo rv" data-logo aria-hidden="true"></div>
     <p class="wordmark rv" aria-hidden="true">Lazy<span class="thin">Stack</span></p>
     <div class="foot rv">
       <span>MIT License &middot; v1.0.4 &middot; by Ian-nwb</span>
@@ -602,6 +643,49 @@ npm run dist:release  <span class="c"># build both targets</span></pre>
 <script>
 (function () {
   var $ = function (s, c) { return Array.prototype.slice.call((c || document).querySelectorAll(s)); };
+
+  // logo injection
+  var LOGO = '<svg class="logo" viewBox="0 0 72 64" aria-hidden="true" focusable="false">' +
+    '<path class="l l-bot" pathLength="1" d="M6 46 30 58 54 46"/>' +
+    '<path class="l l-mid" pathLength="1" d="M14 32 38 44 62 32"/>' +
+    '<path class="l l-top" pathLength="1" d="M30 6 54 18 30 30 6 18Z"/></svg>';
+  $('[data-logo]').forEach(function (el) {
+    el.innerHTML = LOGO;
+    var s = el.firstChild;
+    if (el.classList.contains('hero-logo')) s.style.setProperty('--d', '500ms');
+    if (!el.closest('.flogo')) s.classList.add('go');
+  });
+
+  // magnetic buttons
+  var rm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  $('.btn').forEach(function (b) {
+    b.addEventListener('pointermove', function (e) {
+      if (e.pointerType !== 'mouse' || rm) return;
+      var r = b.getBoundingClientRect();
+      b.style.setProperty('--bx', (((e.clientX - r.left) / r.width - .5) * 10).toFixed(1) + 'px');
+      b.style.setProperty('--by', (((e.clientY - r.top) / r.height - .5) * 8).toFixed(1) + 'px');
+    });
+    b.addEventListener('pointerleave', function () { b.style.removeProperty('--bx'); b.style.removeProperty('--by'); });
+  });
+
+  // nav text scramble
+  var CH = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/_<>';
+  $('.bar nav a').forEach(function (a) {
+    var txt = a.textContent, run = 0;
+    a.addEventListener('mouseenter', function () {
+      if (rm) return;
+      var id = ++run, f = 0;
+      (function s() {
+        if (id !== run) return;
+        f++;
+        var out = '';
+        for (var i = 0; i < txt.length; i++) out += (txt[i] === ' ' || i < f / 1.5) ? txt[i] : CH[Math.random() * CH.length | 0];
+        a.textContent = out;
+        if (f < txt.length * 1.5) setTimeout(s, 28); else a.textContent = txt;
+      })();
+    });
+    a.addEventListener('mouseleave', function () { run++; a.textContent = txt; });
+  });
 
   // hero spec stagger index
   $('.spec div').forEach(function (el, i) { el.style.setProperty('--i', i); });
@@ -666,12 +750,13 @@ npm run dist:release  <span class="c"># build both targets</span></pre>
       var r = hero.getBoundingClientRect();
       hero.style.setProperty('--mx', (e.clientX - r.left) + 'px');
       hero.style.setProperty('--my', (e.clientY - r.top) + 'px');
+      hero.style.setProperty('--lx', ((e.clientX - r.left) / r.width * 2 - 1).toFixed(3));
     });
-    hero.addEventListener('pointerleave', function () { hero.style.removeProperty('--mx'); hero.style.removeProperty('--my'); });
+    hero.addEventListener('pointerleave', function () { hero.style.removeProperty('--mx'); hero.style.removeProperty('--my'); hero.style.removeProperty('--lx'); });
   }
 
   // scroll reveal with per-parent stagger
-  var sel = '.sec-side,.sec h2,.sec > div > p,.tree,.code,.row,tbody tr,.props li,.dl-row,.dl li,.dl h3,.dl-cols > div,.wordmark,.foot';
+  var sel = '.sec-side,.sec h2,.sec > div > p,.tree,.code,.row,tbody tr,.props li,.dl-row,.dl li,.dl h3,.dl-cols > div,.wordmark,.flogo,.foot';
   var items = $(sel);
   items.forEach(function (el) {
     el.classList.add('rv');
