@@ -62,9 +62,9 @@ scratch/
 
 # Internal Planning & Development Docs
 BUILD_PLAN.md
-COMMANDS.md
 LazyStack.md
 FUTURE_PLANS.md
 *.plan.md
 IMPLEMENTATION_PLAN.md
 LazyStack SLM Assistant Guide.pdf
+misc/
