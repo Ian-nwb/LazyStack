@@ -94,9 +94,15 @@ npm start
 
 ## CLI
 
+The standalone CLI package is being prepared as v1.0.5. It supports blueprint initialization, catalog search, validation, planning, prerequisite checks, export, and scaffolding. See [the CLI roadmap](ROADMAP-1.0.5.md) for scope and package publishing status.
+
 ```bash
 npm run build:cli
 npm run cli -- help
+npm run cli -- init --preset fastapi-react --name my-api
+npm run cli -- validate --config lazystack.json
+npm run cli -- plan --config lazystack.json
+npm run cli -- doctor --config lazystack.json
 npm run cli -- list
 npm run cli -- presets
 ```
@@ -130,9 +136,11 @@ npm run dist:release  # build both targets
 
 v1.0.4 adds native project generation with an optional unified workspace, a tested FastAPI API-service profile, generated OpenAPI TypeScript clients, expanded scaffold CI, and service/network architecture diagrams. The detailed release scope and QA record are in [ROADMAP-1.0.4.md](ROADMAP-1.0.4.md).
 
-## v1.0.5 roadmap
+## v1.0.5 roadmap: CLI-first
 
-The next release is planned to add gRPC/protobuf contracts, event schemas and broker wiring, configurable service-to-service authentication, and an opt-in observability stack. Broader generated starter coverage and feature parity across the framework catalog will continue. See [ROADMAP-1.0.5.md](ROADMAP-1.0.5.md).
+The next release will focus on making LazyStack's CLI installable and reliable as a standalone npm package, with guided project setup, blueprint validation and planning, prerequisite checks, safer scaffolding, and clean-install CI. Publishing requires an npm account with access to the chosen package name; installing a public package does not require login. See [ROADMAP-1.0.5.md](ROADMAP-1.0.5.md).
+
+The previously deferred service-platform work is now planned for [v1.0.6](ROADMAP-1.0.6.md): gRPC/protobuf, event and broker wiring, service-to-service authentication, observability, and broader starter coverage.
 
 ### Future feature ideas
 

@@ -9,9 +9,10 @@
   },
   "scripts": {
     "dev": "vite",
-    "build:cli": "esbuild src/cli/index.ts --bundle --platform=node --format=esm --target=node20 --outfile=dist-cli/cli.js --packages=external",
+    "build:cli": "esbuild src/cli/index.ts --bundle --platform=node --format=esm --target=node20 --outfile=packages/cli/dist/cli.js --packages=external",
     "build": "vite build && npm run build:cli",
     "preview": "vite preview",
+    "precli": "npm run build:cli",
     "cli": "node ./bin/lazystack.js",
     "start": "electron .",
     "pack": "npm run build && electron-builder --dir",

@@ -1,0 +1,44 @@
+{
+  "name": "lazystack",
+  "version": "1.0.5",
+  "description": "Polyglot project and monorepo scaffolding CLI",
+  "type": "module",
+  "bin": {
+    "lazystack": "./bin/lazystack.js"
+  },
+  "files": [
+    "bin/",
+    "dist/",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "prepack": "npm --prefix ../.. run build:cli"
+  },
+  "dependencies": {
+    "fs-extra": "^11.3.0"
+  },
+  "keywords": [
+    "cli",
+    "scaffolding",
+    "monorepo",
+    "polyglot",
+    "project-generator"
+  ],
+  "homepage": "https://github.com/Ian-nwb/LazyStack#readme",
+  "bugs": {
+    "url": "https://github.com/Ian-nwb/LazyStack/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ian-nwb/LazyStack.git",
+    "directory": "packages/cli"
+  },
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  }
+}

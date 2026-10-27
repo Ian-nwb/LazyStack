@@ -403,7 +403,7 @@ tr.pick td:first-child::before { display: inline-block; animation: nudgeX 1.6s e
           <div class="row"><dt>Database web UIs</dt><dd>Attach an admin UI to a database instance: Adminer, pgAdmin, Prisma Studio, phpMyAdmin, Mongo Express, or Redis Commander, matched to the engine. Prisma Studio gets a generated local launch command.</dd></div>
           <div class="row"><dt>Testing tools</dt><dd>Choose tools per app, grouped by purpose. They are opt-in, so no test runner lands in a service that did not ask for one.</dd></div>
           <div class="row"><dt>Infrastructure output</dt><dd>Docker Compose, optional Nginx or Apache routing, environment files, scripts, shared packages, and starter documentation.</dd></div>
-          <div class="row"><dt>Blueprints + CLI</dt><dd>Export a JSON blueprint, then scaffold it from the command line without opening the desktop app.</dd></div>
+          <div class="row"><dt>Blueprints + CLI</dt><dd>Create, search, validate, and preview JSON blueprints, then scaffold from the terminal without opening the desktop app.</dd></div>
         </dl>
       </div>
     </section>
@@ -504,11 +504,23 @@ tr.pick td:first-child::before { display: inline-block; animation: nudgeX 1.6s e
     <section class="sec" id="cli">
       <div class="sec-side">
         <span class="eyebrow">CLI</span>
-        <span class="count">No window required</span>
+        <span class="count">v1.0.5 package prep</span>
       </div>
       <div>
         <h2>Scaffold from <span class="thin">the terminal.</span></h2>
-        <p>Build the CLI once, list what it knows, then export a blueprint and scaffold it. <code>--out</code> is the parent directory where the generated project will be created.</p>
+        <p>The standalone npm package is prepared for v1.0.5. Create a starter blueprint, search the catalog, validate and preview a configuration, check local tools, then scaffold. npm publication is pending package-name and account confirmation.</p>
+
+        <div class="code">
+          <div class="code-head"><span class="eyebrow">CLI workflow</span><button class="copy" type="button" data-copy="c0">Copy</button></div>
+<pre id="c0">lazystack init --preset fastapi-react --name my-api
+lazystack search playwright
+lazystack validate --config lazystack.json
+lazystack plan --config lazystack.json
+lazystack doctor --config lazystack.json
+lazystack scaffold --config lazystack.json --out ./generated</pre>
+        </div>
+
+        <p><code>init</code> can also guide you interactively. <code>plan</code> and <code>scaffold --dry-run</code> preview without writing files; <code>scaffold --force</code> opts into updating a non-empty target.</p>
 
         <div class="code">
           <div class="code-head"><span class="eyebrow">Explore</span><button class="copy" type="button" data-copy="c1">Copy</button></div>
@@ -599,11 +611,16 @@ npm run dist:release  <span class="c"># build both targets</span></pre>
     <section class="sec" id="roadmap">
       <div class="sec-side">
         <span class="eyebrow">Proposals</span>
-        <span class="count">15 ideas, none shipped</span>
+        <span class="count">v1.0.5 → v1.0.6</span>
       </div>
       <div>
-        <h2>What might <span class="thin">come next.</span></h2>
-        <p>These are ideas under consideration. None of them are in v1.0.4.</p>
+        <h2>What comes <span class="thin">after 1.0.4.</span></h2>
+        <p>v1.0.5 focuses on the standalone CLI. v1.0.6 carries forward the service-platform work; longer-range ideas remain listed below.</p>
+        <dl class="rows">
+          <div class="row"><dt>v1.0.5 · CLI</dt><dd>Standalone npm package, guided blueprint setup, catalog search, validation, generation planning, prerequisite checks, and safer scaffolding.</dd></div>
+          <div class="row"><dt>v1.0.6 · Service platform</dt><dd>gRPC and protobuf contracts, event schemas and broker wiring, service-to-service authentication, observability, and broader native starter coverage.</dd></div>
+        </dl>
+        <p style="margin-top:24px">Longer-range ideas under consideration:</p>
         <ul class="props">
           <li>Local AI stack assistant that drafts blueprints from natural-language requests</li>
           <li>Separate development, staging, and production profiles</li>

@@ -29,6 +29,37 @@ jobs:
       - name: Typecheck TypeScript codebase
         run: npx tsc --noEmit
 
+  cli_package_smoke:
+    name: npm CLI Package Smoke Check
+    needs: build_and_typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Pack and install the standalone CLI
+        run: |
+          npm pack ./packages/cli --pack-destination "$RUNNER_TEMP" --json > "$RUNNER_TEMP/pack.json"
+          TARBALL="$(node -p "JSON.parse(require('fs').readFileSync('$RUNNER_TEMP/pack.json', 'utf8'))[0].filename")"
+          npm install --prefix "$RUNNER_TEMP/cli-smoke" "$RUNNER_TEMP/$TARBALL"
+
+      - name: Exercise installed CLI commands
+        run: |
+          CLI="$RUNNER_TEMP/cli-smoke/node_modules/.bin/lazystack"
+          "$CLI" --version
+          "$CLI" init --preset fastapi-react --name ci-cli --out "$RUNNER_TEMP/lazystack.json"
+          "$CLI" validate --config "$RUNNER_TEMP/lazystack.json"
+          "$CLI" plan --config "$RUNNER_TEMP/lazystack.json"
+          "$CLI" search playwright --json
+
   scaffold_boot_matrix:
     name: Scaffold & Boot (${{ matrix.preset }})
     needs: build_and_typecheck
