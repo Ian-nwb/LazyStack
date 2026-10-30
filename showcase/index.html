@@ -358,7 +358,7 @@ tr.pick td:first-child::before { display: inline-block; animation: nudgeX 1.6s e
 
       <div class="hero-grid">
         <div>
-          <p class="lead">LazyStack lets you choose languages, frameworks, databases, service connections, testing tools, and an architecture layout. It then writes the project structure and the configuration around it.</p>
+          <p class="lead">LazyStack lets you compose, visualize, and scaffold production-ready fullstack architectures and polyglot monorepos. Choose from 74 frameworks, 24 databases and caches, 10 architectural layouts, testing suites, and container orchestration with one unified blueprint.</p>
           <div class="actions">
             <a class="btn btn-solid" href="#download">Download v1.0.5 &#8595;</a>
             <a class="btn btn-line" href="https://github.com/Ian-nwb/LazyStack">View source &#8599;</a>
@@ -366,10 +366,11 @@ tr.pick td:first-child::before { display: inline-block; animation: nudgeX 1.6s e
         </div>
         <dl class="spec">
           <div><dt>Version</dt><dd>1.0.5</dd></div>
-          <div><dt>Status</dt><dd class="live">In development</dd></div>
+          <div><dt>Status</dt><dd class="live">v1.0.5 Released</dd></div>
           <div><dt>Platforms</dt><dd>Linux x64, Windows x64</dd></div>
           <div><dt>Builds</dt><dd>AppImage, portable EXE</dd></div>
-          <div><dt>Needs</dt><dd>Docker + Docker Compose to run generated stacks</dd></div>
+          <div><dt>CLI</dt><dd>lazystack v1.0.5 (npm)</dd></div>
+          <div><dt>Catalog</dt><dd>74 frameworks · 24 DBs</dd></div>
           <div><dt>From source</dt><dd>Node.js 20+, npm 10+</dd></div>
           <div><dt>License</dt><dd>MIT</dd></div>
         </dl>
@@ -378,10 +379,10 @@ tr.pick td:first-child::before { display: inline-block; animation: nudgeX 1.6s e
 
     <div class="ticker" aria-hidden="true">
       <div class="ticker-row"><div class="ticker-track">
-        <span>React</span><span>Vue</span><span>Angular</span><span>SolidJS</span><span>Qwik</span><span>HTMX</span><span>Lit</span><span>Kotlin/JS</span><span>SwiftUI</span><span>Reflex</span><span>NiceGUI</span><span>Go Chi</span><span>Go Echo</span><span>Laravel</span><span>Ktor</span><span>Vapor</span>
+        <span>React 19</span><span>Vue 3</span><span>Angular 18</span><span>SolidJS</span><span>Qwik City</span><span>HTMX</span><span>Inferno</span><span>Next.js 15</span><span>Nuxt 3</span><span>Remix</span><span>SvelteKit</span><span>Astro</span><span>FastAPI</span><span>Go Chi</span><span>Rust Axum</span><span>Spring Boot</span><span>Laravel 11</span><span>Phoenix LiveView</span><span>React Native (Expo)</span><span>SwiftUI</span><span>Tauri</span><span>Flutter</span><span>Google Apps Script</span>
       </div></div>
       <div class="ticker-row rev"><div class="ticker-track">
-        <span>PostgreSQL</span><span>MySQL</span><span>MongoDB</span><span>Redis</span><span>Valkey</span><span>ClickHouse</span><span>Neo4j</span><span>Qdrant</span><span>Supabase</span><span>Firebase</span><span>Neon</span><span>Turso</span><span>Playwright</span><span>Vitest</span><span>k6</span><span>Storybook</span>
+        <span>PostgreSQL 16</span><span>MySQL 8.4</span><span>MongoDB 7</span><span>Redis 7</span><span>Valkey 8</span><span>ClickHouse</span><span>SurrealDB</span><span>Neo4j</span><span>Qdrant</span><span>Supabase</span><span>Firebase</span><span>Neon</span><span>Turso</span><span>Playwright</span><span>Vitest</span><span>Jest</span><span>k6</span><span>Storybook</span><span>Docker Compose</span>
       </div></div>
     </div>
 
@@ -394,16 +395,16 @@ tr.pick td:first-child::before { display: inline-block; animation: nudgeX 1.6s e
       <div>
         <h2>One blueprint, <span class="thin">every layer.</span></h2>
         <dl class="rows">
-          <div class="row"><dt>Mix application roles</dt><dd>Generate frontend clients, backend services, full-stack apps, workers, and desktop or mobile clients in the same project.</dd></div>
-          <div class="row"><dt>Broad catalog</dt><dd>Start from an established framework or a plain language runtime template: React, Vue, Angular, Solid, Qwik, HTMX, Lit, Kotlin/JS, SwiftUI, Reflex, NiceGUI, Anvil, Go, Rust, Java and many more.</dd></div>
-          <div class="row"><dt>Architecture layouts</dt><dd>Pick a preset, or set your own root directories, extra folders, and per-app paths.</dd></div>
+          <div class="row"><dt>Mix application roles</dt><dd>Generate frontend clients, backend services, full-stack apps, background workers, mobile/desktop clients, and automation scripts all in one cohesive project.</dd></div>
+          <div class="row"><dt>74-framework catalog</dt><dd>Choose from low-level systems (Assembly, C, C++, Zig), modern JS/TS, Python (FastAPI, Django, Reflex), Go, Rust, JVM, PHP, Ruby, Elixir, mobile/desktop, and Google Workspace scripting.</dd></div>
+          <div class="row"><dt>Architecture layouts</dt><dd>Pick a preset, or set your own root directories, extra folders, and per-app paths across 10 architectural models.</dd></div>
           <div class="row"><dt>Polyglot layout</dt><dd>Browser clients go to <code>frontend/clients/</code>, API services to <code>backend/services/</code>, workers to <code>backend/workers/</code>, and deployment files to <code>deploy/</code>.</dd></div>
-          <div class="row"><dt>Service connections</dt><dd>Configure API URLs, environment variable names, health checks, and startup dependencies between services.</dd></div>
+          <div class="row"><dt>Service connections</dt><dd>Configure API URLs, environment variable names, health checks, and startup dependencies between interconnected microservices.</dd></div>
           <div class="row"><dt>Database setup</dt><dd>Add self-hosted databases or managed cloud providers, set per-service database scope, and get local credentials generated into <code>.env</code>.</dd></div>
           <div class="row"><dt>Database web UIs</dt><dd>Attach an admin UI to a database instance: Adminer, pgAdmin, Prisma Studio, phpMyAdmin, Mongo Express, or Redis Commander, matched to the engine. Prisma Studio gets a generated local launch command.</dd></div>
-          <div class="row"><dt>Testing tools</dt><dd>Choose tools per app, grouped by purpose. They are opt-in, so no test runner lands in a service that did not ask for one.</dd></div>
-          <div class="row"><dt>Infrastructure output</dt><dd>Docker Compose, optional Nginx or Apache routing, environment files, scripts, shared packages, and starter documentation.</dd></div>
-          <div class="row"><dt>Blueprints + CLI</dt><dd>Create, search, validate, and preview JSON blueprints, then scaffold from the terminal without opening the desktop app.</dd></div>
+          <div class="row"><dt>Testing suites</dt><dd>Choose opt-in tools per app: unit/component (Jest, Vitest, pytest), API integration (Supertest, Bruno), browser E2E (Playwright, Cypress), performance (k6), contract (Pact), UI (Storybook), and security (OWASP ZAP).</dd></div>
+          <div class="row"><dt>Infrastructure output</dt><dd>Docker Compose orchestration, optional Nginx or Apache routing, environment files, scripts, shared packages, and complete starter documentation.</dd></div>
+          <div class="row"><dt>Blueprints + CLI v1.0.5</dt><dd>Create, search, validate, and preview JSON blueprints, run prerequisite doctor checks, and scaffold from the terminal without opening the desktop app.</dd></div>
         </dl>
       </div>
     </section>
@@ -455,45 +456,52 @@ tr.pick td:first-child::before { display: inline-block; animation: nudgeX 1.6s e
     <section class="sec" id="catalog">
       <div class="sec-side">
         <span class="eyebrow">Catalog</span>
-        <span class="count">16 + 8 databases</span>
+        <span class="count">74 frameworks + 24 databases</span>
       </div>
       <div>
         <h2>Frameworks, databases, <span class="thin">test tools.</span></h2>
-        <p>The tool list changes with the selected stack, and you can pick more than one tool per app.</p>
+        <p>The tool list adapts to the selected stack. You can compose multi-language services and select multiple test suites per app.</p>
 
         <div class="rows">
-          <div class="row"><div class="k">Frontend + UI</div><div class="v"><ul class="tags">
-            <li class="t">React + Vite</li><li class="t">React + MUI</li><li class="t">Vue + Vite</li><li class="t">Angular</li><li class="t">SolidJS</li><li class="t">Qwik</li><li class="t">HTMX</li><li class="t">Lit</li><li class="t">Vanilla HTML/CSS/JS</li><li class="t">Kotlin/JS</li><li class="t">SwiftUI</li>
+          <div class="row"><div class="k">Systems (4)</div><div class="v"><ul class="tags">
+            <li class="t">Assembly (x86_64 NASM)</li><li class="t">C (libmicrohttpd / POSIX)</li><li class="t">C++ (Drogon)</li><li class="t">Zig (HTTP / Zap)</li>
+          </ul><p class="sub">High-performance systems programming and low-level HTTP services.</p></div></div>
+          <div class="row"><div class="k">Frontend (11)</div><div class="v"><ul class="tags">
+            <li class="t">React 19 + Vite</li><li class="t">React + MUI</li><li class="t">Vue 3 + Vite</li><li class="t">Angular 18+</li><li class="t">SolidJS + Vite</li><li class="t">Qwik + Qwik City</li><li class="t">HTMX + Modern Web</li><li class="t">Inferno (React-Compatible)</li><li class="t">Lit (Web Components)</li><li class="t">Kotlin/JS Frontend</li><li class="t">Vanilla HTML5/CSS/JS</li>
           </ul></div></div>
-          <div class="row"><div class="k">Python UI</div><div class="v"><ul class="tags"><li class="t">Reflex</li><li class="t">NiceGUI</li><li class="t">Anvil</li></ul>
-            <p class="sub">Reflex and NiceGUI pair a Python backend with a browser UI. Anvil is a hosted Python full-stack option, continued in the Anvil editor.</p></div></div>
-          <div class="row"><div class="k">Plain services</div><div class="v"><ul class="tags">
-            <li class="t">Vanilla Node.js</li><li class="t">PHP</li><li class="t">Go net/http</li><li class="t">Python stdlib HTTP</li><li class="t">Java JDK HttpServer</li>
-          </ul><p class="sub">Framework-free starters with runnable source and README instructions.</p></div></div>
-          <div class="row"><div class="k">Framework services</div><div class="v"><ul class="tags">
-            <li class="t">Go Chi</li><li class="t">Go Echo</li><li class="t">PHP Laravel</li><li class="t">Kotlin Ktor</li><li class="t">Swift Vapor</li><li class="t">and others</li>
+          <div class="row"><div class="k">Backend (35)</div><div class="v"><ul class="tags">
+            <li class="t">Go Chi</li><li class="t">Go Echo</li><li class="t">Go Gin</li><li class="t">Go Fiber</li><li class="t">Go net/http</li><li class="t">Rust Axum</li><li class="t">Rust Actix-Web</li><li class="t">Rust Poem OpenAPI</li><li class="t">Python FastAPI</li><li class="t">Python Flask</li><li class="t">Python WSGI</li><li class="t">Node.js Express</li><li class="t">Node.js Fastify</li><li class="t">Node.js NestJS</li><li class="t">Node.js Hono</li><li class="t">Node.js http</li><li class="t">Deno 2.0 (Oak)</li><li class="t">Bun (ElysiaJS)</li><li class="t">C# ASP.NET Core</li><li class="t">Java Spring Boot 3</li><li class="t">Java JDK HttpServer</li><li class="t">Kotlin Ktor</li><li class="t">Elixir Phoenix LiveView</li><li class="t">Swift Vapor 4</li><li class="t">PHP (Vanilla)</li><li class="t">Scala Play</li><li class="t">Clojure Ring</li><li class="t">OCaml Dream</li><li class="t">Julia Genie.jl</li><li class="t">Lua OpenResty</li><li class="t">R Plumber API</li><li class="t">Erlang Cowboy</li><li class="t">Nim HappyX</li><li class="t">Crystal Kemal</li><li class="t">Haskell Scotty/Servant</li>
           </ul></div></div>
-          <div class="row"><div class="k">Self-hosted DBs</div><div class="v"><ul class="tags">
-            <li class="t">SQLite</li><li class="t">PostgreSQL</li><li class="t">MySQL</li><li class="t">MariaDB</li><li class="t">MongoDB</li><li class="t">Redis</li><li class="t">Valkey</li><li class="t">ClickHouse</li><li class="t">SurrealDB</li><li class="t">Neo4j</li><li class="t">Qdrant</li><li class="t">Meilisearch</li><li class="t">MinIO</li><li class="t">ScyllaDB</li><li class="t">RabbitMQ</li><li class="t">PocketBase</li>
+          <div class="row"><div class="k">Fullstack (15)</div><div class="v"><ul class="tags">
+            <li class="t">Next.js (App Router)</li><li class="t">Nuxt 3</li><li class="t">Remix / Router v7</li><li class="t">SvelteKit</li><li class="t">Astro</li><li class="t">PHP Laravel 11</li><li class="t">Ruby on Rails 7/8</li><li class="t">TanStack Start</li><li class="t">SolidStart</li><li class="t">C# Blazor Server/WASM</li><li class="t">Python Django</li><li class="t">Deno Fresh</li><li class="t">Reflex (Python UI)</li><li class="t">NiceGUI (Python Web)</li><li class="t">Anvil (Python Fullstack)</li>
           </ul></div></div>
-          <div class="row"><div class="k">Cloud + BaaS</div><div class="v"><ul class="tags">
-            <li class="t">Supabase</li><li class="t">Firebase</li><li class="t">PlanetScale</li><li class="t">Neon</li><li class="t">Turso</li><li class="t">Upstash</li><li class="t">Appwrite</li><li class="t">Convex</li>
+          <div class="row"><div class="k">Mobile &amp; Desktop (6)</div><div class="v"><ul class="tags">
+            <li class="t">React Native (Expo Router)</li><li class="t">Tauri (Rust + Web)</li><li class="t">Dart (Flutter)</li><li class="t">Electron Desktop</li><li class="t">SwiftUI Apple Client</li><li class="t">Ionic (Capacitor)</li>
           </ul></div></div>
-          <div class="row"><div class="k">DB admin UIs</div><div class="v"><ul class="tags">
-            <li class="t">Adminer</li><li class="t">pgAdmin</li><li class="t">Prisma Studio</li><li class="t">phpMyAdmin</li><li class="t">Mongo Express</li><li class="t">Redis Commander</li>
+          <div class="row"><div class="k">Scripting &amp; Tools (3)</div><div class="v"><ul class="tags">
+            <li class="t">Google Apps Script (clasp)</li><li class="t">Bash Worker / CLI</li><li class="t">SQL Migration &amp; Seeder</li>
+          </ul><p class="sub">Automation, Google Workspace scripts, and database initialization pipelines.</p></div></div>
+          <div class="row"><div class="k">Self-hosted DBs (16)</div><div class="v"><ul class="tags">
+            <li class="t">PostgreSQL 16</li><li class="t">MySQL 8.4 LTS</li><li class="t">MariaDB 11</li><li class="t">MongoDB 7</li><li class="t">Redis 7</li><li class="t">Valkey 8</li><li class="t">SQLite</li><li class="t">ClickHouse OLAP</li><li class="t">SurrealDB v2</li><li class="t">Neo4j Graph</li><li class="t">Qdrant Vector DB</li><li class="t">Meilisearch</li><li class="t">MinIO S3</li><li class="t">ScyllaDB</li><li class="t">RabbitMQ Broker</li><li class="t">PocketBase</li>
           </ul></div></div>
-          <div class="row"><div class="k">Unit + component</div><div class="v"><ul class="tags">
+          <div class="row"><div class="k">Cloud &amp; BaaS (8)</div><div class="v"><ul class="tags">
+            <li class="t">Supabase</li><li class="t">Firebase</li><li class="t">PlanetScale</li><li class="t">Neon Postgres</li><li class="t">Turso libSQL</li><li class="t">Upstash</li><li class="t">Appwrite</li><li class="t">Convex</li>
+          </ul></div></div>
+          <div class="row"><div class="k">DB admin UIs (6)</div><div class="v"><ul class="tags">
+            <li class="t">Prisma Studio</li><li class="t">pgAdmin</li><li class="t">Adminer</li><li class="t">phpMyAdmin</li><li class="t">Mongo Express</li><li class="t">Redis Commander</li>
+          </ul></div></div>
+          <div class="row"><div class="k">Unit &amp; component</div><div class="v"><ul class="tags">
             <li class="t">Jest</li><li class="t">Vitest</li><li class="t">Testing Library</li><li class="t">pytest</li><li class="t">Go testing</li><li class="t">PHPUnit</li><li class="t">JUnit</li>
           </ul></div></div>
-          <div class="row"><div class="k">API + integration</div><div class="v"><ul class="tags">
-            <li class="t">Supertest</li><li class="t">Newman</li><li class="t">Bruno</li><li class="t">REST Assured</li><li class="t">Swagger UI + OpenAPI lint</li><li class="t">Postman via Newman</li>
+          <div class="row"><div class="k">API &amp; integration</div><div class="v"><ul class="tags">
+            <li class="t">Supertest</li><li class="t">Newman</li><li class="t">Bruno</li><li class="t">REST Assured</li><li class="t">Swagger UI + OpenAPI lint</li>
           </ul></div></div>
           <div class="row"><div class="k">Browser end-to-end</div><div class="v"><ul class="tags">
             <li class="t">Playwright</li><li class="t">Cypress</li><li class="t">WebdriverIO</li><li class="t">Puppeteer</li>
           </ul></div></div>
           <div class="row"><div class="k">UI development</div><div class="v"><ul class="tags"><li class="t">Storybook</li></ul></div></div>
           <div class="row"><div class="k">Performance</div><div class="v"><ul class="tags"><li class="t">k6</li><li class="t">Artillery</li></ul></div></div>
-          <div class="row"><div class="k">Contract + schema</div><div class="v"><ul class="tags"><li class="t">Pact</li><li class="t">Swagger / OpenAPI validation</li></ul></div></div>
+          <div class="row"><div class="k">Contract &amp; schema</div><div class="v"><ul class="tags"><li class="t">Pact</li><li class="t">Swagger / OpenAPI validation</li></ul></div></div>
           <div class="row"><div class="k">Security</div><div class="v"><ul class="tags"><li class="t">OWASP ZAP</li></ul></div></div>
         </div>
         <p class="note" style="margin-top:18px">Missing a test tool? Add a custom one by name and package.</p>
@@ -504,41 +512,40 @@ tr.pick td:first-child::before { display: inline-block; animation: nudgeX 1.6s e
     <section class="sec" id="cli">
       <div class="sec-side">
         <span class="eyebrow">CLI</span>
-        <span class="count">v1.0.5 package prep</span>
+        <span class="count">10 commands</span>
       </div>
       <div>
         <h2>Scaffold from <span class="thin">the terminal.</span></h2>
-        <p>The standalone npm package is prepared for v1.0.5. Create a starter blueprint, search the catalog, validate and preview a configuration, check local tools, then scaffold. npm publication is pending package-name and account confirmation.</p>
+        <p>The standalone LazyStack CLI is released in v1.0.5. Initialize blueprints interactively or from presets, search the polyglot catalog, validate configurations, preview service graphs, run toolchain doctor checks, and scaffold complete stacks directly from your terminal.</p>
 
         <div class="code">
-          <div class="code-head"><span class="eyebrow">CLI workflow</span><button class="copy" type="button" data-copy="c0">Copy</button></div>
-<pre id="c0">lazystack init --preset fastapi-react --name my-api
-lazystack search playwright
-lazystack validate --config lazystack.json
-lazystack plan --config lazystack.json
-lazystack doctor --config lazystack.json
+          <div class="code-head"><span class="eyebrow">Quick start with npx</span><button class="copy" type="button" data-copy="c0">Copy</button></div>
+<pre id="c0">npx lazystack init --preset fastapi-react --name my-api
+npx lazystack search playwright
+npx lazystack validate --config lazystack.json
+npx lazystack plan --config lazystack.json
+npx lazystack doctor --config lazystack.json
+npx lazystack scaffold --config lazystack.json --out ./generated</pre>
+        </div>
+
+        <p><code>init</code> guides you through stack selection interactively. <code>plan</code> and <code>scaffold --dry-run</code> preview without writing files; <code>scaffold --force</code> opts into updating an existing non-empty directory.</p>
+
+        <div class="code">
+          <div class="code-head"><span class="eyebrow">Catalog exploration &amp; presets</span><button class="copy" type="button" data-copy="c1">Copy</button></div>
+<pre id="c1">lazystack list
+lazystack presets
+lazystack search --json redis</pre>
+        </div>
+
+        <div class="code">
+          <div class="code-head"><span class="eyebrow">Export blueprint config, then scaffold</span><button class="copy" type="button" data-copy="c2">Copy</button></div>
+<pre id="c2">lazystack export --preset modern-mern --name my-app --out lazystack.json
 lazystack scaffold --config lazystack.json --out ./generated</pre>
         </div>
 
-        <p><code>init</code> can also guide you interactively. <code>plan</code> and <code>scaffold --dry-run</code> preview without writing files; <code>scaffold --force</code> opts into updating a non-empty target.</p>
-
         <div class="code">
-          <div class="code-head"><span class="eyebrow">Explore</span><button class="copy" type="button" data-copy="c1">Copy</button></div>
-<pre id="c1">npm run build:cli
-npm run cli -- help
-npm run cli -- list
-npm run cli -- presets</pre>
-        </div>
-
-        <div class="code">
-          <div class="code-head"><span class="eyebrow">Export a blueprint, then scaffold it</span><button class="copy" type="button" data-copy="c2">Copy</button></div>
-<pre id="c2">npm run cli -- export --preset modern-mern --name my-app --out lazystack.json
-npm run cli -- scaffold --config lazystack.json --out ./generated</pre>
-        </div>
-
-        <div class="code">
-          <div class="code-head"><span class="eyebrow">Or scaffold straight from a preset</span><button class="copy" type="button" data-copy="c3">Copy</button></div>
-<pre id="c3">npm run cli -- scaffold --preset fastapi-react --name my-api --out ./generated</pre>
+          <div class="code-head"><span class="eyebrow">1-Click scaffold directly from preset</span><button class="copy" type="button" data-copy="c3">Copy</button></div>
+<pre id="c3">lazystack scaffold --preset t3-stack --name my-fullstack-app --out ./generated</pre>
         </div>
       </div>
     </section>
@@ -567,7 +574,7 @@ npm run cli -- scaffold --config lazystack.json --out ./generated</pre>
           <div class="dl-row none">
             <span class="plat">macOS</span>
             <span class="pkg">No package</span>
-            <span class="plat mute">Not built for this release</span>
+            <span class="plat mute">sponsor me a Macbook for app signature</span>
           </div>
         </div>
 
@@ -614,11 +621,11 @@ npm run dist:release  <span class="c"># build both targets</span></pre>
         <span class="count">v1.0.5 → v1.0.6</span>
       </div>
       <div>
-        <h2>What comes <span class="thin">after 1.0.4.</span></h2>
-        <p>v1.0.5 focuses on the standalone CLI. v1.0.6 carries forward the service-platform work; longer-range ideas remain listed below.</p>
+        <h2>What comes <span class="thin">after 1.0.5.</span></h2>
+        <p>v1.0.5 is released with expanded catalog starters, updated desktop builds, and the standalone npm CLI. v1.0.6 carries forward the service-platform architecture; longer-range proposals remain tracked below.</p>
         <dl class="rows">
-          <div class="row"><dt>v1.0.5 · CLI</dt><dd>Standalone npm package, guided blueprint setup, catalog search, validation, generation planning, prerequisite checks, and safer scaffolding.</dd></div>
-          <div class="row"><dt>v1.0.6 · Service platform</dt><dd>gRPC and protobuf contracts, event schemas and broker wiring, service-to-service authentication, observability, and broader native starter coverage.</dd></div>
+          <div class="row"><dt>v1.0.5 · Released</dt><dd>Shipped: Standalone npm CLI with init, search, validate, plan, doctor, and safe dry-run scaffold; Google Apps Script, React Native Expo, and Inferno.js starters; Linux AppImage &amp; Windows portable EXE.</dd></div>
+          <div class="row"><dt>v1.0.6 · Service platform</dt><dd>gRPC and protobuf contracts, event schemas and message broker wiring, service-to-service mutual authentication, OpenTelemetry tracing, and broader native starter coverage.</dd></div>
         </dl>
         <p style="margin-top:24px">Longer-range ideas under consideration:</p>
         <ul class="props">
