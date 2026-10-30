@@ -25,6 +25,7 @@ COMMANDS:
   init       Create a blueprint file from a preset
   export     Export a complete lazystack.json blueprint configuration
   scaffold   Generate and scaffold a production-ready monorepo stack
+  dev        Start unified dev orchestrator (background databases + concurrent apps)
   search     Search frameworks, databases, presets, and testing tools
   list       List all supported frameworks, languages, and databases
   presets    List all available 1-click production stack presets
@@ -33,6 +34,10 @@ COMMANDS:
   plan       Preview the services and layout in a blueprint
   version    Show current version
   help       Show this help message
+
+OPTIONS FOR 'dev':
+  --dir, -d <dir>       Target project directory (default: current working directory)
+  --docker              Run full containerized stack via docker compose instead
 
 OPTIONS FOR 'export':
   --preset, -p <name>   Preset to export (t3-stack, fastapi-react, modern-mern, etc.)
@@ -521,10 +526,51 @@ export async function runCli(args: string[] = process.argv.slice(2)) {
       console.log(`  Files Created:    ${result.filesCreated}`)
       console.log(`\nNext Steps:`)
       console.log(`  1. cd ${result.targetDir}`)
-      console.log(`  2. docker compose up -d`)
+      console.log(`  2. lazystack dev  (or 'npm run dev' to boot DBs & apps concurrently)`)
       console.log(`  3. View running services on configured gateway ports.`)
     } else {
       console.error(`\nScaffolding failed: ${result.error}`)
+      process.exit(1)
+    }
+    return
+  }
+
+  if (command === 'dev') {
+    let targetDir = process.cwd()
+    let useDocker = false
+    for (let i = 0; i < args.length; i++) {
+      if (args[i] === '--dir' || args[i] === '-d') {
+        targetDir = path.resolve(process.cwd(), args[++i] || '')
+      } else if (args[i] === '--docker') {
+        useDocker = true
+      }
+    }
+
+    const orchestratorPath = path.join(targetDir, 'scripts', 'dev-orchestrator.mjs')
+    const devShPath = path.join(targetDir, 'scripts', 'dev.sh')
+
+    if (useDocker) {
+      if (await fs.pathExists(devShPath)) {
+        console.log(`Starting containerized environment in ${targetDir}...`)
+        const proc = spawnSync('bash', [devShPath, '--docker'], { cwd: targetDir, stdio: 'inherit' })
+        process.exit(proc.status ?? 0)
+      } else {
+        console.error(`Error: scripts/dev.sh not found in ${targetDir}`)
+        process.exit(1)
+      }
+    }
+
+    if (await fs.pathExists(orchestratorPath)) {
+      console.log(`Starting LazyStack Dev Orchestrator in ${targetDir}...`)
+      const proc = spawnSync('node', [orchestratorPath], { cwd: targetDir, stdio: 'inherit' })
+      process.exit(proc.status ?? 0)
+    } else if (await fs.pathExists(devShPath)) {
+      console.log(`Notice: scripts/dev-orchestrator.mjs not found. Invoking scripts/dev.sh in ${targetDir}...`)
+      const proc = spawnSync('bash', [devShPath], { cwd: targetDir, stdio: 'inherit' })
+      process.exit(proc.status ?? 0)
+    } else {
+      console.error(`Error: No LazyStack development launcher found in ${targetDir}.`)
+      console.error(`Make sure you are in the root directory of a project scaffolded with LazyStack.`)
       process.exit(1)
     }
     return

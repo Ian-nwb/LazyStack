@@ -169,6 +169,13 @@ export function generateDockerCompose(settings: ProjectSettings): string {
         yaml += `    volumes:\n      - ${sName}_data:/var/lib/rabbitmq\n`
         yaml += `    healthcheck:\n      test: ["CMD", "rabbitmq-diagnostics", "check_running"]\n      interval: 5s\n      timeout: 5s\n      retries: 5\n`
         break
+      case 'kafka':
+        yaml += `    image: apache/kafka:3.7.0\n`
+        yaml += `    environment:\n      KAFKA_NODE_ID: 1\n      KAFKA_PROCESS_ROLES: 'broker,controller'\n      KAFKA_LISTENERS: 'PLAINTEXT://:9092,CONTROLLER://:9093'\n      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://localhost:\${${sName.toUpperCase()}_PORT:-${db.port}}'\n      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'\n      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT'\n      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@localhost:9093'\n      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1\n      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1\n      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1\n      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0\n      KAFKA_NUM_PARTITIONS: 3\n`
+        yaml += `    ports:\n      - "\${${sName.toUpperCase()}_PORT:-${db.port}}:9092"\n`
+        yaml += `    volumes:\n      - ${sName}_data:/var/lib/kafka/data\n`
+        yaml += `    healthcheck:\n      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 || exit 1"]\n      interval: 10s\n      timeout: 5s\n      retries: 5\n`
+        break
       case 'pocketbase':
         yaml += `    image: ghcr.io/muchobien/pocketbase:latest\n`
         yaml += `    ports:\n      - "\${${sName.toUpperCase()}_PORT:-${db.port}}:8090"\n`

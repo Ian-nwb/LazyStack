@@ -94,6 +94,7 @@ export type DatabaseType =
   | 'minio'
   | 'scylladb'
   | 'rabbitmq'
+  | 'kafka'
   // Cloud & BaaS providers
   | 'supabase'
   | 'firebase'

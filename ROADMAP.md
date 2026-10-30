@@ -1,10 +1,10 @@
-# LazyStack Roadmap: Next Priorities
+# LazyStack Roadmap: Implemented & Upcoming Priorities
 
-This roadmap documents the two core priorities selected for upcoming LazyStack releases.
+This roadmap documents major features implemented in LazyStack.
 
 ---
 
-## 1. Unified Dev Orchestrator (`lazystack dev` / `npm run dev:all`)
+## 1. Unified Dev Orchestrator (`lazystack dev` / `npm run dev:all`) — [Implemented in v1.0.6]
 
 ### The Problem
 Currently, running a polyglot monorepo requires either running full Docker container builds for every code edit or manually opening 4–5 separate terminal tabs to run each frontend, API service, and background worker on the host machine.
@@ -18,7 +18,7 @@ Generate a unified root development orchestration script (`npm run dev:all` / `l
 
 ---
 
-## 2. Event-Driven Message Brokers & Worker Wiring (RabbitMQ, Kafka, Redis Streams)
+## 2. Event-Driven Message Brokers & Worker Wiring (RabbitMQ, Kafka, Redis Streams) — [Implemented in v1.0.6]
 
 ### The Problem
 While message brokers like RabbitMQ and Redis are available in the catalog, scaffolded microservices lack pre-wired event publishers, subscriber listeners, and typed message schemas out of the box. Developers still have to write boilerplate connection pooling, channel lifecycle, serialization, and retry logic from scratch.

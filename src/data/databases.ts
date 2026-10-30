@@ -155,6 +155,16 @@ export const DATABASE_CATALOG: DatabaseOption[] = [
     healthcheckCmd: 'rabbitmq-diagnostics check_running',
     badgeColor: 'bg-orange-500/20 text-orange-300 border-orange-500/40'
   },
+  {
+    id: 'kafka',
+    name: 'Apache Kafka (Event Streaming / KRaft)',
+    defaultPort: 9092,
+    category: 'message-broker',
+    description: 'Distributed event streaming platform for high-throughput pub/sub, real-time analytics, and event-driven microservices.',
+    imageTag: 'apache/kafka:3.7.0',
+    healthcheckCmd: '/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092',
+    badgeColor: 'bg-indigo-600/20 text-indigo-300 border-indigo-600/40'
+  },
 
   // ─── Cloud & BaaS Providers ────────────────────────────────────────
 
