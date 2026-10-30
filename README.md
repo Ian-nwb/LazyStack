@@ -4,12 +4,12 @@ LazyStack is a desktop stack builder and command-line scaffolder for composing a
 
 ## Download
 
-Download **Linux AppImage** or **Windows portable EXE** from the [GitHub Releases](https://github.com/Ian-nwb/LazyStack/releases).
+Download **Linux AppImage** or **Windows portable .exe** from the [GitHub Releases](https://github.com/Ian-nwb/LazyStack/releases).
 
 | Platform | Package |
 | --- | --- |
 | Linux x64 | AppImage |
-| Windows x64 | Portable EXE |
+| Windows x64 | Portable .exe |
 
 macOS package not yet available (sponsor me a Macbook for app signature)
 
