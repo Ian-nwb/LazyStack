@@ -136,6 +136,22 @@ npm run dist:release  # build both targets
 
 v1.0.5 introduces AssemblyScript (WebAssembly), Google Apps Script, React Native (Expo), and Inferno.js templates, adds the standalone `lazystack` CLI v1.0.5 npm package with interactive `init`, `search`, `validate`, `plan`, and `doctor` commands, and ships desktop builds for Linux and Windows. See [CHANGELOG.md](CHANGELOG.md) and [GitHub Releases](https://github.com/Ian-nwb/LazyStack/releases/tag/v1.0.5).
 
+## Next Milestones: Core Priorities
+
+See [ROADMAP.md](ROADMAP.md) for full technical design and specifications.
+
+### 1. Unified Dev Orchestrator (`lazystack dev` / `npm run dev:all`)
+- **The Problem:** Currently, running a polyglot monorepo requires either starting full Docker containers for every code edit or manually opening 4–5 separate terminal tabs for each service.
+- **The Solution:** Generate a root development orchestration launcher (`npm run dev:all` / `lazystack dev`) in the scaffolded project:
+  - Automatically spins up required databases via `docker compose up -d`.
+  - Runs host applications concurrently with live colored prefixes (e.g., `[web]`, `[api]`, `[worker]`).
+  - Injects mutual environment variables dynamically from the generated `.env`.
+
+### 2. Event-Driven Message Brokers & Worker Wiring (RabbitMQ, Kafka, Redis Streams)
+- Pre-wired publisher stubs and consumer worker starters across Go, Python, and Node.js.
+- Shared typed event schemas in `packages/events/`.
+- Dead-letter exchange and retry queue topology configured in container orchestration.
+
 ### Future feature ideas
 
 These are proposals, not features included in the current release.
