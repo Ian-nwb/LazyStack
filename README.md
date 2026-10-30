@@ -2,9 +2,9 @@
 
 LazyStack is a desktop stack builder and command-line scaffolder for composing application stacks. Choose languages, frameworks, databases, service connections, testing tools, and an architecture layout; LazyStack generates a project structure and supporting configuration.
 
-## Download v1.0.5
+## Download
 
-Download **Linux AppImage** or **Windows portable EXE** from the [v1.0.5 GitHub release](https://github.com/Ian-nwb/LazyStack/releases/tag/v1.0.5).
+Download **Linux AppImage** or **Windows portable EXE** from the [GitHub Releases](https://github.com/Ian-nwb/LazyStack/releases).
 
 | Platform | Package |
 | --- | --- |
@@ -16,7 +16,7 @@ macOS package not yet available (sponsor me a Macbook for app signature)
 ## Features
 
 - **Mix application roles:** Generate frontend clients, backend services, full-stack apps, workers, and desktop/mobile clients together.
-- **Broad technology catalog:** Use established frameworks or start with plain language/runtime templates. Current options include React, Vue, Angular, Solid, Qwik, HTMX, Lit, Kotlin/JS, SwiftUI, Reflex, NiceGUI, Anvil, Python, PHP, Go, Java, Node.js, Kotlin/Ktor, Swift/Vapor, Rust, and many more.
+- **Broad technology catalog:** Use established frameworks or start with plain language/runtime templates. Current options include React, Vue, Angular, Solid, Qwik, HTMX, Lit, Kotlin/JS, SwiftUI, Reflex, NiceGUI, Anvil, Python, PHP, Go, Java, Node.js, Kotlin/Ktor, Swift/Vapor, Rust, AssemblyScript, Google Apps Script, React Native (Expo), Inferno.js, and many more.
 - **Architecture layouts:** Choose a preset or customize root directories, additional folders, and per-app paths.
 - **Polyglot layout:** Route browser clients to `frontend/clients/`, API services to `backend/services/`, workers to `backend/workers/`, and deployment files to `deploy/`.
 - **Service connections:** Configure API URLs, environment variable names, health checks, and startup dependencies between services.
@@ -25,6 +25,8 @@ macOS package not yet available (sponsor me a Macbook for app signature)
 - **Testing tools:** Select tools per app, organized by test purpose. See [Testing tools](#testing-tools).
 - **Infrastructure output:** Generate Docker Compose, optional Nginx or Apache routing, environment files, scripts, shared packages, and starter documentation.
 - **Blueprints and CLI:** Export JSON blueprints and scaffold them without opening the desktop interface.
+- **Unified Dev Orchestrator:** Run your entire polyglot stack from a single `npm run dev` command with auto database spin-up, concurrent hot-reload, and live ANSI-colored output per service.
+- **Event-Driven Worker Wiring:** Auto-scaffold typed event contracts, dead-letter queues, and polyglot worker starters (Node.js, Python, Go) when brokers are in the stack.
 
 ## Frontend and vanilla starters
 
@@ -34,11 +36,11 @@ For plain services, choose Vanilla Node.js, PHP, Go (`net/http`), Python standar
 
 ## Testing tools
 
-Testing is a first-class stack choice. Select tools for the app’s language and testing needs; the generator records the choices in the project configuration and adds available starter/configuration files.
+Testing is a first-class stack choice. Select tools for the app's language and testing needs; the generator records the choices in the project configuration and adds available starter/configuration files.
 
 | Test area | Available examples |
 | --- | --- |
-| Unit and component | Jest, Vitest, Testing Library, pytest, Go `testing`, PHPUnit, JUnit, 
+| Unit and component | Jest, Vitest, Testing Library, pytest, Go `testing`, PHPUnit, JUnit |
 | API and integration | Supertest, Newman, Bruno, REST Assured, Swagger UI, and Swagger/OpenAPI spec validation with the Redocly CLI |
 | Browser end-to-end | Playwright, Cypress, WebdriverIO, Puppeteer |
 | UI component development | Storybook |
@@ -125,9 +127,7 @@ npm run cli -- scaffold --preset fastapi-react --name my-api --out ./generated
 
 ---
 
-## 🛠️ Feature Guide: Dev Orchestrator & Event-Driven Architecture (v1.0.6)
-
-### 1. Unified Dev Orchestrator (`lazystack dev` / `npm run dev`)
+## Unified Dev Orchestrator
 
 Running a polyglot monorepo traditionally requires either running full container builds for every minor code edit or opening multiple terminal tabs manually. LazyStack generates an automated zero-dependency dev orchestrator in `scripts/dev-orchestrator.mjs`:
 
@@ -138,7 +138,8 @@ npm run dev
 lazystack dev
 ```
 
-#### How it works:
+### How it works
+
 1. **Background Infrastructure Auto-Boot**: If your stack includes databases or message brokers (Postgres, Redis, Kafka, RabbitMQ, MongoDB, etc.), the orchestrator automatically boots only those background infrastructure containers via `docker compose --env-file .env -f infra/docker-compose.yml up -d`.
 2. **Concurrent Host Execution**: All frontend apps, backend APIs, and workers run directly on your host machine with hot-reloading enabled.
 3. **Live Colored Prefixes**: Standard output and error streams from every service are line-buffered and multiplexed in a single terminal with distinctive ANSI colors:
@@ -157,11 +158,12 @@ lazystack dev
 
 ---
 
-### 2. Event-Driven Message Brokers & Worker Wiring
+## Event-Driven Message Brokers & Worker Wiring
 
 When your stack includes a message broker (RabbitMQ, Apache Kafka, Redis, or Valkey) or worker services, LazyStack automatically scaffolds an event-driven architecture with shared typed event contracts in `packages/events/`:
 
-#### Architecture & Capabilities:
+### Architecture & Capabilities
+
 - **Apache Kafka (KRaft mode)**: Zero-ZooKeeper event streaming container (`apache/kafka:3.7.0`) pre-configured with healthchecks and topic partitions.
 - **Battle-Tested RabbitMQ & Redis Streams**: Pre-configured AMQP management UI (port 15672) and Redis stream consumer groups.
 - **Shared Typed Contracts (`packages/events/src/index.ts`)**:
@@ -180,25 +182,17 @@ When your stack includes a message broker (RabbitMQ, Apache Kafka, Redis, or Val
 
 ## Build packages
 
-The v1.0.6 scripts build Linux AppImage and Windows portable EXE packages; they do not build for macOS.
+Scripts build Linux AppImage and Windows portable EXE packages; macOS is not yet supported.
 
 ```bash
-npm run dist:linux    # release/1.0.6/LazyStack-1.0.6.AppImage
-npm run dist:win      # release/1.0.6/LazyStack 1.0.6.exe
+npm run dist:linux    # Linux AppImage
+npm run dist:win      # Windows portable EXE
 npm run dist:release  # build both targets
 ```
 
-## v1.0.6
+## Future feature ideas
 
-v1.0.6 introduces the **Unified Dev Orchestrator** (`lazystack dev` / `npm run dev`) for concurrent host execution with live colored prefixes and automated background database spin-up, **Event-Driven Message Brokers & Worker Wiring** with shared typed schemas in `packages/events/` across Node.js, Python, and Go with dead-letter queue (DLQ) retry policies, adds **Apache Kafka (KRaft)** to the database catalog, and bumps all distribution packages to 1.0.6. See [CHANGELOG.md](CHANGELOG.md) and [ROADMAP.md](ROADMAP.md).
-
-## v1.0.5
-
-v1.0.5 introduced AssemblyScript (WebAssembly), Google Apps Script, React Native (Expo), and Inferno.js templates, added the standalone `lazystack` CLI v1.0.5 npm package with interactive `init`, `search`, `validate`, `plan`, and `doctor` commands, and desktop builds for Linux and Windows. See [CHANGELOG.md](CHANGELOG.md) and [GitHub Releases](https://github.com/Ian-nwb/LazyStack/releases/tag/v1.0.5).
-
-### Future feature ideas
-
-These are proposals, not features included in the current release.
+These are proposals, not currently included features.
 
 1. Local AI stack assistant that drafts blueprints from natural-language requests.
 2. Separate development, staging, and production profiles.
@@ -212,9 +206,9 @@ These are proposals, not features included in the current release.
 10. More framework-specific unit, integration, contract, and browser test starters.
 11. CPU, memory, and storage sizing estimates.
 12. Team review and merge workflows for blueprint changes.
-13. Optional OpenTelemetry, Prometheus, Grafana, and log collection (planned for v1.0.5).
-14. gRPC/protobuf and event schemas with broker wiring (planned for v1.0.5).
-15. Configurable service-to-service authentication (planned for v1.0.5).
+13. Optional OpenTelemetry, Prometheus, Grafana, and log collection.
+14. gRPC/protobuf and event schemas with broker wiring.
+15. Configurable service-to-service authentication.
 
 ## Repository layout
 
