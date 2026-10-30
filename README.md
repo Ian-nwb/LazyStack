@@ -66,7 +66,7 @@ The tool list varies with the selected stack, and teams can choose more than one
 
 ## Databases
 
-Self-hosted options include SQLite, PostgreSQL, MySQL, MariaDB, MongoDB, Redis, Valkey, ClickHouse, SurrealDB, Neo4j, Qdrant, Meilisearch, MinIO, ScyllaDB, RabbitMQ, and PocketBase. Cloud and backend-as-a-service options include Supabase, Firebase, PlanetScale, Neon, Turso, Upstash, Appwrite, and Convex.
+Self-hosted options include SQLite, PostgreSQL, MySQL, MariaDB, MongoDB, Redis, Valkey, Apache Kafka (KRaft), ClickHouse, SurrealDB, Neo4j, Qdrant, Meilisearch, MinIO, ScyllaDB, RabbitMQ, and PocketBase. Cloud and backend-as-a-service options include Supabase, Firebase, PlanetScale, Neon, Turso, Upstash, Appwrite, and Convex.
 
 Generated database passwords are stored in the project root `.env`. Keep that file private; `.env.example` contains safe placeholders.
 
@@ -94,7 +94,7 @@ npm start
 
 ## CLI
 
-The standalone CLI package is prepared as v1.0.5; npm publication is pending account and package-name confirmation. It supports blueprint initialization, catalog search, validation, planning, prerequisite checks, export, and scaffolding. See the [project changelog](CHANGELOG.md), [CLI release notes](packages/cli/CHANGELOG.md), and [npm build and publishing guide](docs/releases/npm-cli-v1.0.5.md).
+The standalone CLI package is available in `packages/cli` (`lazystack`). It supports blueprint initialization, catalog search, validation, planning, prerequisite checks, export, scaffolding, and unified dev orchestration. See [CHANGELOG.md](CHANGELOG.md).
 
 ```bash
 npm run build:cli
@@ -103,6 +103,7 @@ npm run cli -- init --preset fastapi-react --name my-api
 npm run cli -- validate --config lazystack.json
 npm run cli -- plan --config lazystack.json
 npm run cli -- doctor --config lazystack.json
+npm run cli -- dev --dir ./my-api
 npm run cli -- list
 npm run cli -- presets
 ```
@@ -122,35 +123,78 @@ npm run cli -- scaffold --preset fastapi-react --name my-api --out ./generated
 
 `--out` is the parent directory where the generated project will be created.
 
-## Build packages
+---
 
-The v1.0.5 scripts build Linux AppImage and Windows portable EXE packages; they do not build for macOS.
+## 🛠️ Feature Guide: Dev Orchestrator & Event-Driven Architecture (v1.0.6)
+
+### 1. Unified Dev Orchestrator (`lazystack dev` / `npm run dev`)
+
+Running a polyglot monorepo traditionally requires either running full container builds for every minor code edit or opening multiple terminal tabs manually. LazyStack generates an automated zero-dependency dev orchestrator in `scripts/dev-orchestrator.mjs`:
 
 ```bash
-npm run dist:linux    # release/1.0.5/LazyStack-1.0.5.AppImage
-npm run dist:win      # release/1.0.5/LazyStack 1.0.5.exe
+# In any scaffolded project root:
+npm run dev
+# Or using the LazyStack CLI:
+lazystack dev
+```
+
+#### How it works:
+1. **Background Infrastructure Auto-Boot**: If your stack includes databases or message brokers (Postgres, Redis, Kafka, RabbitMQ, MongoDB, etc.), the orchestrator automatically boots only those background infrastructure containers via `docker compose --env-file .env -f infra/docker-compose.yml up -d`.
+2. **Concurrent Host Execution**: All frontend apps, backend APIs, and workers run directly on your host machine with hot-reloading enabled.
+3. **Live Colored Prefixes**: Standard output and error streams from every service are line-buffered and multiplexed in a single terminal with distinctive ANSI colors:
+   - `[client]` in Cyan
+   - `[api]` in Green
+   - `[worker]` in Magenta
+   - `[docs]` in Yellow
+4. **Dynamic Environment Variable Injection**: Parses root `.env` variables and automatically propagates them to each child process's execution environment.
+5. **Clean Process Teardown**: Intercepts `SIGINT` (Ctrl+C) and `SIGTERM`, killing all spawned process trees gracefully without orphaned background ports.
+6. **Docker Alternative**: If you prefer running the entire application stack in containers, simply pass `--docker`:
+   ```bash
+   npm run dev:docker
+   # or
+   lazystack dev --docker
+   ```
+
+---
+
+### 2. Event-Driven Message Brokers & Worker Wiring
+
+When your stack includes a message broker (RabbitMQ, Apache Kafka, Redis, or Valkey) or worker services, LazyStack automatically scaffolds an event-driven architecture with shared typed event contracts in `packages/events/`:
+
+#### Architecture & Capabilities:
+- **Apache Kafka (KRaft mode)**: Zero-ZooKeeper event streaming container (`apache/kafka:3.7.0`) pre-configured with healthchecks and topic partitions.
+- **Battle-Tested RabbitMQ & Redis Streams**: Pre-configured AMQP management UI (port 15672) and Redis stream consumer groups.
+- **Shared Typed Contracts (`packages/events/src/index.ts`)**:
+  - `BaseEvent<T>` envelope containing unique event IDs, topics, source metadata, timestamps, and correlation IDs for distributed tracing.
+  - Domain payload interfaces: `UserRegisteredPayload`, `OrderCreatedPayload`, `TaskQueuedPayload`, `TaskCompletedPayload`, and `DeadLetterPayload`.
+- **Dead-Letter Queue (DLQ) & Exponential Backoff**:
+  - Built-in `RetryPolicy` supporting customizable retry attempts, base backoff delay, and automatic routing of poisoned messages to `events.dead_letter`.
+- **Pre-Wired Worker Starters**:
+  - **TypeScript / Node.js**: `packages/events/src/publisher.ts` and `consumer.ts` with typed error handling and DLQ emission.
+  - **Python**: `packages/events/examples/worker.py` handling broker subscription loops, exception recovery, and message ack/nack.
+  - **Go**: `packages/events/examples/worker.go` leveraging lightweight goroutines, channel multiplexing, and graceful OS signal teardown.
+- **Environment Integration**:
+  - Automatically exports `EVENT_BROKER_TYPE`, `EVENT_RETRY_LIMIT`, `EVENT_BACKOFF_MS`, and `EVENT_DLQ_TOPIC` in `.env` and `.env.example`.
+
+---
+
+## Build packages
+
+The v1.0.6 scripts build Linux AppImage and Windows portable EXE packages; they do not build for macOS.
+
+```bash
+npm run dist:linux    # release/1.0.6/LazyStack-1.0.6.AppImage
+npm run dist:win      # release/1.0.6/LazyStack 1.0.6.exe
 npm run dist:release  # build both targets
 ```
 
+## v1.0.6
+
+v1.0.6 introduces the **Unified Dev Orchestrator** (`lazystack dev` / `npm run dev`) for concurrent host execution with live colored prefixes and automated background database spin-up, **Event-Driven Message Brokers & Worker Wiring** with shared typed schemas in `packages/events/` across Node.js, Python, and Go with dead-letter queue (DLQ) retry policies, adds **Apache Kafka (KRaft)** to the database catalog, and bumps all distribution packages to 1.0.6. See [CHANGELOG.md](CHANGELOG.md) and [ROADMAP.md](ROADMAP.md).
+
 ## v1.0.5
 
-v1.0.5 introduces AssemblyScript (WebAssembly), Google Apps Script, React Native (Expo), and Inferno.js templates, adds the standalone `lazystack` CLI v1.0.5 npm package with interactive `init`, `search`, `validate`, `plan`, and `doctor` commands, and ships desktop builds for Linux and Windows. See [CHANGELOG.md](CHANGELOG.md) and [GitHub Releases](https://github.com/Ian-nwb/LazyStack/releases/tag/v1.0.5).
-
-## Next Milestones: Core Priorities
-
-See [ROADMAP.md](ROADMAP.md) for full technical design and specifications.
-
-### 1. Unified Dev Orchestrator (`lazystack dev` / `npm run dev:all`)
-- **The Problem:** Currently, running a polyglot monorepo requires either starting full Docker containers for every code edit or manually opening 4–5 separate terminal tabs for each service.
-- **The Solution:** Generate a root development orchestration launcher (`npm run dev:all` / `lazystack dev`) in the scaffolded project:
-  - Automatically spins up required databases via `docker compose up -d`.
-  - Runs host applications concurrently with live colored prefixes (e.g., `[web]`, `[api]`, `[worker]`).
-  - Injects mutual environment variables dynamically from the generated `.env`.
-
-### 2. Event-Driven Message Brokers & Worker Wiring (RabbitMQ, Kafka, Redis Streams)
-- Pre-wired publisher stubs and consumer worker starters across Go, Python, and Node.js.
-- Shared typed event schemas in `packages/events/`.
-- Dead-letter exchange and retry queue topology configured in container orchestration.
+v1.0.5 introduced AssemblyScript (WebAssembly), Google Apps Script, React Native (Expo), and Inferno.js templates, added the standalone `lazystack` CLI v1.0.5 npm package with interactive `init`, `search`, `validate`, `plan`, and `doctor` commands, and desktop builds for Linux and Windows. See [CHANGELOG.md](CHANGELOG.md) and [GitHub Releases](https://github.com/Ian-nwb/LazyStack/releases/tag/v1.0.5).
 
 ### Future feature ideas
 

@@ -5,6 +5,29 @@ All notable changes to LazyStack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.6] - 2026-10-30
+
+### Added
+- **Unified Dev Orchestrator (`lazystack dev` / `npm run dev`)**:
+  - Automatically spins up required background databases, caches, and message brokers via `docker compose --env-file .env -f infra/docker-compose.yml up -d` without needing to containerize host frontend or backend applications.
+  - Concurrently runs all host applications with live, line-buffered ANSI color prefixes (`[client]`, `[api]`, `[worker]`, `[docs]`).
+  - Injects mutual environment variables dynamically from the generated `.env` into each child process.
+  - Zero-dependency Node.js ES module runner generated at `scripts/dev-orchestrator.mjs`.
+  - Added CLI `lazystack dev` command with `--dir` and `--docker` options.
+  - Updated `scripts/dev.sh` and `scripts/dev.ps1` to prefer the orchestrator when Node.js is present on the host.
+  - Added `dev:all`, `dev:docker`, `dev:sh`, and `dev:ps1` scripts to generated monorepo workspace `package.json`.
+- **Event-Driven Message Brokers & Worker Wiring**:
+  - Added Apache Kafka (KRaft mode, zero-ZooKeeper) container orchestration on port 9092 using `apache/kafka:3.7.0`.
+  - Automatically scaffolds shared typed contracts in `packages/events/` (`@<scope>/events`) whenever RabbitMQ, Kafka, Redis Streams, or worker services are present.
+  - Strongly typed `BaseEvent<T>` envelope with UUIDs, correlation IDs, timestamps, and retry counts.
+  - Domain event schemas: `UserRegisteredPayload`, `OrderCreatedPayload`, `TaskQueuedPayload`, `TaskCompletedPayload`, and `DeadLetterPayload`.
+  - Dead-letter queue pipeline (`events.dead_letter`) with exponential backoff and retry policy configuration (`DEFAULT_RETRY_POLICY`).
+  - Polyglot publisher and consumer harnesses:
+    - TypeScript/Node: `packages/events/src/publisher.ts` and `packages/events/src/consumer.ts`.
+    - Python: `packages/events/examples/worker.py`.
+    - Go: `packages/events/examples/worker.go`.
+  - Broker configuration exported in `.env` (`EVENT_BROKER_TYPE`, `EVENT_RETRY_LIMIT`, `EVENT_BACKOFF_MS`, `EVENT_DLQ_TOPIC`).
+
 ## [1.0.5] - 2026-10-30
 
 ### Added
