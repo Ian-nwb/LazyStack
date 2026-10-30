@@ -471,6 +471,248 @@ fn main() {
     return files
   }
 
+  if (techId === 'google-apps-script') {
+    files['.clasp.json'] = `{\n  "scriptId": "YOUR_SCRIPT_ID_HERE",\n  "rootDir": "${isTS ? 'dist' : '.'}" \n}\n`
+    files['.claspignore'] = `node_modules/\n*.lock\ntsconfig.json\n${isTS ? 'src/\n' : ''}README.md\n`
+    if (isTS) {
+      files['tsconfig.json'] = `{
+  "compilerOptions": {
+    "target": "ES2019",
+    "lib": ["ESNext"],
+    "module": "commonjs",
+    "rootDir": "src",
+    "outDir": "dist",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "types": ["google-apps-script"]
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}
+`
+      files['package.json'] = `{
+  "name": "${folderName}",
+  "version": "1.0.0",
+  "description": "Google Apps Script automation — scaffolded by LazyStack",
+  "scripts": {
+    "build": "tsc",
+    "push": "npm run build && clasp push",
+    "open": "clasp open"
+  },
+  "devDependencies": {
+    "@types/google-apps-script": "^1.0.0",
+    "typescript": "^5.4.0",
+    "@google/clasp": "^2.4.2"
+  }
+}
+`
+      files['src/Code.ts'] = `// Google Apps Script — ${folderName}
+// Scaffolded by LazyStack | Docs: https://developers.google.com/apps-script
+
+/**
+ * Runs when the Google Sheet (or other bound document) is opened.
+ * Add a custom menu to the spreadsheet UI.
+ */
+function onOpen(e: GoogleAppsScript.Events.SheetsOnOpen): void {
+  SpreadsheetApp.getUi()
+    .createMenu('${folderName}')
+    .addItem('Run Sample', 'runSample')
+    .addToUi();
+}
+
+/**
+ * Sample function triggered from the custom menu.
+ */
+function runSample(): void {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  const timestamp = new Date().toISOString();
+  sheet.appendRow(['LazyStack', '${folderName}', timestamp]);
+  SpreadsheetApp.getUi().alert('Row appended at ' + timestamp);
+}
+
+/**
+ * HTTP GET handler — deploy as a Web App to enable this.
+ */
+function doGet(e: GoogleAppsScript.Events.DoGet): GoogleAppsScript.Content.TextOutput {
+  return ContentService.createTextOutput(
+    JSON.stringify({ service: '${folderName}', status: 'ok', ts: new Date().toISOString() })
+  ).setMimeType(ContentService.MimeType.JSON);
+}
+`
+    } else {
+      files['package.json'] = `{
+  "name": "${folderName}",
+  "version": "1.0.0",
+  "description": "Google Apps Script automation — scaffolded by LazyStack",
+  "scripts": {
+    "push": "clasp push",
+    "open": "clasp open"
+  },
+  "devDependencies": {
+    "@google/clasp": "^2.4.2"
+  }
+}
+`
+      files['Code.js'] = `// Google Apps Script — ${folderName}
+// Scaffolded by LazyStack | Docs: https://developers.google.com/apps-script
+
+/**
+ * Runs when the bound document (Sheets, Docs, etc.) is opened.
+ */
+function onOpen(e) {
+  SpreadsheetApp.getUi()
+    .createMenu('${folderName}')
+    .addItem('Run Sample', 'runSample')
+    .addToUi();
+}
+
+/**
+ * Sample function triggered from the custom menu.
+ */
+function runSample() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var timestamp = new Date().toISOString();
+  sheet.appendRow(['LazyStack', '${folderName}', timestamp]);
+  SpreadsheetApp.getUi().alert('Row appended at ' + timestamp);
+}
+
+/**
+ * HTTP GET handler — deploy as a Web App to enable.
+ */
+function doGet(e) {
+  return ContentService.createTextOutput(
+    JSON.stringify({ service: '${folderName}', status: 'ok', ts: new Date().toISOString() })
+  ).setMimeType(ContentService.MimeType.JSON);
+}
+`
+    }
+    files['README.md'] = `# ${folderName} (Google Apps Script)
+
+Scaffolded by LazyStack. Automates Google Workspace (Sheets, Docs, Drive, Gmail, etc.)
+using ${isTS ? 'TypeScript (compiled to JS via tsc)' : 'JavaScript'} and pushed to Google with **clasp**.
+
+## Quick start
+
+\`\`\`bash
+# 1. Install dependencies
+${isTS ? 'npm install\n\n# 2. Log in to clasp\nnpx clasp login\n\n# 3. Create or link a script project\nnpx clasp create --type standalone --title "${folderName}"\n# or link an existing project:\n# npx clasp clone <SCRIPT_ID>\n\n# 4. Build TypeScript and push\nnpm run push' : '# Install clasp globally if needed\nnpm install\n\n# Log in\nnpx clasp login\n\n# Create or link a script project\nnpx clasp create --type standalone --title "${folderName}"\n# or: npx clasp clone <SCRIPT_ID>\n\n# Push to Google\nnpm run push'}
+\`\`\`
+
+## Resources
+
+- Clasp docs: https://github.com/google/clasp
+- Apps Script reference: https://developers.google.com/apps-script/reference
+- Deploy as Web App: https://developers.google.com/apps-script/guides/web
+`
+    return files
+  }
+
+  if (techId === 'react-native-expo') {
+    files['package.json'] = `{
+  "name": "${folderName}",
+  "version": "1.0.0",
+  "main": "expo-router/entry",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web"
+  },
+  "dependencies": {
+    "expo": "~51.0.0",
+    "expo-router": "~3.5.0",
+    "expo-status-bar": "~1.12.1",
+    "react": "18.2.0",
+    "react-native": "0.74.3",
+    "react-native-safe-area-context": "4.10.1",
+    "react-native-screens": "3.31.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.24.0",
+    ${isTS ? '"@types/react": "~18.2.0",\n    "@types/react-native": "~0.73.0",\n    "typescript": "~5.3.3",' : ''}
+    "@expo/metro-config": "~0.18.0"
+  }
+}
+`
+    if (isTS) {
+      files['tsconfig.json'] = `{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "paths": {
+      "@/*": ["./*"]
+    }
+  }
+}
+`
+    }
+    files['app.json'] = `{
+  "expo": {
+    "name": "${folderName}",
+    "slug": "${folderName}",
+    "version": "1.0.0",
+    "scheme": "${folderName.replace(/-/g, '')}",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#09090b"
+    },
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": ${isTS ? 'true' : 'false'}
+    },
+    "android": {
+      "package": "com.lazystack.${folderName.replace(/-/g, '')}"
+    },
+    "ios": {
+      "bundleIdentifier": "com.lazystack.${folderName.replace(/-/g, '')}"
+    },
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}
+`
+    files[`app/_layout.${isTS ? 'tsx' : 'jsx'}`] = `import { Stack } from 'expo-router'${isTS ? "\nimport { StatusBar } from 'expo-status-bar'" : "\nimport { StatusBar } from 'expo-status-bar'"}\n\nexport default function RootLayout() {\n  return (\n    <>\n      <Stack screenOptions={{ headerStyle: { backgroundColor: '#09090b' }, headerTintColor: '#fff', contentStyle: { backgroundColor: '#09090b' } }} />\n      <StatusBar style="light" />\n    </>\n  )\n}\n`
+    files[`app/index.${isTS ? 'tsx' : 'jsx'}`] = `import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'\nimport { Link } from 'expo-router'\n\nexport default function HomeScreen() {\n  return (\n    <View style={styles.container}>\n      <Text style={styles.title}>${folderName}</Text>\n      <Text style={styles.sub}>React Native + Expo — scaffolded by LazyStack</Text>\n      <Link href="/about" asChild>\n        <TouchableOpacity style={styles.btn}>\n          <Text style={styles.btnText}>Go to About →</Text>\n        </TouchableOpacity>\n      </Link>\n    </View>\n  )\n}\n\nconst styles = StyleSheet.create({\n  container: { flex: 1, backgroundColor: '#09090b', alignItems: 'center', justifyContent: 'center', padding: 24 },\n  title: { fontSize: 28, fontWeight: '700', color: '#f4f4f5', marginBottom: 8 },\n  sub: { fontSize: 14, color: '#71717a', marginBottom: 32, textAlign: 'center' },\n  btn: { backgroundColor: '#27272a', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12, borderWidth: 1, borderColor: '#3f3f46' },\n  btnText: { color: '#e4e4e7', fontWeight: '600' },\n})\n`
+    files[`app/about.${isTS ? 'tsx' : 'jsx'}`] = `import { View, Text, StyleSheet } from 'react-native'\n\nexport default function AboutScreen() {\n  return (\n    <View style={styles.container}>\n      <Text style={styles.title}>About</Text>\n      <Text style={styles.body}>${folderName} is a cross-platform React Native app built with Expo Router.</Text>\n    </View>\n  )\n}\n\nconst styles = StyleSheet.create({\n  container: { flex: 1, backgroundColor: '#09090b', padding: 24, paddingTop: 48 },\n  title: { fontSize: 22, fontWeight: '700', color: '#f4f4f5', marginBottom: 12 },\n  body: { fontSize: 15, color: '#a1a1aa', lineHeight: 22 },\n})\n`
+    files['babel.config.js'] = `module.exports = function (api) {\n  api.cache(true);\n  return { presets: ['babel-preset-expo'] };\n};\n`
+    files['.gitignore'] = `node_modules/\n.expo/\ndist/\nweb-build/\n*.jks\n*.p8\n*.p12\n*.key\n*.mobileprovision\n*.orig.*\n`
+    files['README.md'] = `# ${folderName} (React Native + Expo)
+
+Cross-platform iOS, Android, and Web app scaffolded by LazyStack using **Expo Router** (file-based routing).
+
+## Quick start
+
+\`\`\`bash
+npm install
+npm start        # Expo dev server + QR code
+npm run android  # Android emulator / device
+npm run ios      # iOS simulator (macOS + Xcode)
+npm run web      # Browser (Metro + React DOM)
+\`\`\`
+
+Scan the QR code with the **Expo Go** app on your device, or press \`a\` / \`i\` / \`w\` in the terminal.
+
+## Screens
+
+- \`app/index.${isTS ? 'tsx' : 'jsx'}\` — Home screen
+- \`app/about.${isTS ? 'tsx' : 'jsx'}\` — About screen
+- \`app/_layout.${isTS ? 'tsx' : 'jsx'}\` — Root layout (Stack navigator)
+
+## Resources
+
+- Expo docs: https://docs.expo.dev/
+- Expo Router: https://expo.github.io/router/docs
+- React Native docs: https://reactnative.dev/
+`
+    return files
+  }
+
   if (techId === 'python-fastapi') {
     if (starterProfile === 'api-service') {
       files['main.py'] = `from app.main import app\n\n__all__ = ["app"]\n`
@@ -2084,6 +2326,131 @@ render(() => <App />, document.getElementById('root')!);
 `
     files['.gitignore'] = `node_modules\ndist\n.env\n`
     files['README.md'] = `# ${folderName} (SolidJS)\n\n### Run in Development\n\`\`\`bash\nnpm install\nnpm run dev\n\`\`\`\n`
+    return files
+  }
+
+  if (techId === 'inferno-js') {
+    files['package.json'] = `{
+  "name": "${folderName}",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite --port ${port} --host",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "inferno": "^8.2.5"${isTS ? '' : ''}
+  },
+  "devDependencies": {
+    "vite": "^5.3.0",
+    "@vitejs/plugin-react": "^4.3.0"${isTS ? `,\n    "typescript": "~5.4.0",\n    "@types/node": "^20.0.0"` : ''}
+  }
+}
+`
+    if (isTS) {
+      files['tsconfig.json'] = `{
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react",
+    "jsxFactory": "createElement",
+    "jsxFragmentFactory": "Fragment",
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": ["src"]
+}
+`
+    }
+    files['vite.config.js'] = `import { defineConfig } from 'vite'
+
+export default defineConfig({
+  esbuild: {
+    jsxFactory: 'createElement',
+    jsxFragment: 'Fragment',
+    jsxInject: \`import { createElement, Fragment } from 'inferno'\`
+  },
+  server: {
+    port: ${port},
+    host: true
+  }
+})
+`
+    files[`src/main.${isTS ? 'tsx' : 'jsx'}`] = `import { render } from 'inferno'
+import App from './App'
+
+render(<App />, document.getElementById('root'))
+`
+    files[`src/App.${isTS ? 'tsx' : 'jsx'}`] = `import { Component } from 'inferno'
+
+${isTS ? `interface State { count: number }\n\n` : ''}export default class App extends Component${isTS ? '<{}, State>' : ''} {
+  state${isTS ? ': State' : ''} = { count: 0 }
+
+  increment = () => this.setState(({ count }) => ({ count: count + 1 }))
+  decrement = () => this.setState(({ count }) => ({ count: count - 1 }))
+
+  render() {
+    return (
+      <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', background: '#09090b', color: '#fff', fontFamily: 'sans-serif' }}>
+        <div style={{ border: '1px solid #27272e', padding: '2rem', borderRadius: '12px', background: '#141418', textAlign: 'center', minWidth: '280px' }}>
+          <h1 style={{ color: '#ef4444', marginBottom: '0.5rem' }}>Inferno</h1>
+          <p style={{ color: '#71717a', marginBottom: '1.5rem' }}>${folderName} on port ${port}</p>
+          <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', alignItems: 'center' }}>
+            <button onClick={this.decrement} style={btnStyle}>−</button>
+            <span style={{ fontSize: '1.5rem', fontWeight: '700', minWidth: '3rem', textAlign: 'center' }}>{this.state.count}</span>
+            <button onClick={this.increment} style={btnStyle}>+</button>
+          </div>
+          <p style={{ marginTop: '1rem', fontSize: '0.75rem', color: '#52525b' }}>React-compatible · zero virtual DOM overhead</p>
+        </div>
+      </div>
+    )
+  }
+}
+
+const btnStyle = {
+  background: '#27272a',
+  border: '1px solid #3f3f46',
+  color: '#e4e4e7',
+  borderRadius: '8px',
+  width: '2.25rem',
+  height: '2.25rem',
+  fontSize: '1.25rem',
+  cursor: 'pointer',
+} as const
+`
+    files['index.html'] = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${folderName}</title>
+</head>
+<body style="margin:0">
+  <div id="root"></div>
+  <script type="module" src="/src/main.${isTS ? 'tsx' : 'jsx'}"></script>
+</body>
+</html>
+`
+    files['.gitignore'] = `node_modules\ndist\n.env\n`
+    files['README.md'] = `# ${folderName} (Inferno)
+
+Blazing-fast React-compatible frontend scaffolded by LazyStack.
+
+### Run in Development
+\`\`\`bash
+npm install
+npm run dev
+\`\`\`
+
+Inferno uses the same JSX syntax as React but renders with near-native DOM speed and ~9 KB bundle size.
+
+- Docs: https://infernojs.org/docs/guides/getting-started
+- API: https://infernojs.org/docs/api/inferno
+`
     return files
   }
 

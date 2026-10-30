@@ -601,6 +601,21 @@ export const TECH_CATALOG: TechItem[] = [
     badgeColor: 'bg-teal-500/20 text-teal-300 border-teal-500/40'
   },
   {
+    id: 'inferno-js',
+    name: 'Inferno (React-Compatible)',
+    language: 'JS / TS',
+    category: 'frontend',
+    role: 'frontend',
+    defaultPort: 5173,
+    description: 'Blazing-fast React-compatible UI library with the smallest bundle size and near-native DOM rendering speed. Drop-in alternative to React.',
+    badgeColor: 'bg-red-500/20 text-red-300 border-red-500/40',
+    supportsFlavor: true,
+    requires: [
+      { binary: 'node', label: 'Node.js Runtime', installHint: 'https://nodejs.org' },
+      { binary: 'npm', label: 'npm (Node PM)', installHint: 'Installed with Node.js' }
+    ]
+  },
+  {
     id: 'kotlin-js',
     name: 'Kotlin/JS Browser Frontend',
     language: 'Kotlin',
@@ -677,6 +692,21 @@ export const TECH_CATALOG: TechItem[] = [
     defaultPort: 5173,
     description: 'Cross-platform native desktop wrapper for Linux, Windows, and macOS.',
     badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
+    supportsFlavor: true,
+    requires: [
+      { binary: 'node', label: 'Node.js Runtime', installHint: 'https://nodejs.org' },
+      { binary: 'npm', label: 'npm (Node PM)', installHint: 'Installed with Node.js' }
+    ]
+  },
+  {
+    id: 'react-native-expo',
+    name: 'React Native (Expo)',
+    language: 'JS / TS',
+    category: 'mobile-desktop',
+    role: 'desktop-mobile',
+    defaultPort: 8081,
+    description: 'Cross-platform iOS, Android, and Web apps with React Native powered by the Expo managed workflow and Expo Router.',
+    badgeColor: 'bg-sky-500/20 text-sky-300 border-sky-500/40',
     supportsFlavor: true,
     requires: [
       { binary: 'node', label: 'Node.js Runtime', installHint: 'https://nodejs.org' },
@@ -767,6 +797,21 @@ export const TECH_CATALOG: TechItem[] = [
     defaultPort: 0,
     description: 'Automated database schema migration engine & test fixtures.',
     badgeColor: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/40'
+  },
+  {
+    id: 'google-apps-script',
+    name: 'Google Apps Script',
+    language: 'JavaScript / TypeScript',
+    category: 'scripting',
+    role: 'worker',
+    defaultPort: 0,
+    description: 'Server-side JavaScript automation for Google Workspace (Sheets, Docs, Drive, Gmail). Pushed to Google via clasp. TypeScript supported with transpilation.',
+    badgeColor: 'bg-green-500/20 text-green-300 border-green-500/40',
+    supportsFlavor: true,
+    requires: [
+      { binary: 'node', label: 'Node.js', installHint: 'https://nodejs.org/' },
+      { binary: 'clasp', label: 'Google clasp CLI', installHint: 'npm install -g @google/clasp' }
+    ]
   },
 
   // --- MODERN FULLSTACK & RESUMABLE ---

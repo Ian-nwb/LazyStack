@@ -99,6 +99,9 @@ const FRAMEWORK_ICON_OVERRIDES: Record<string, string> = {
   'ruby-rails':        `${DEVICON_BASE}/rails/rails-original-wordmark.svg`,
   'ts-nestjs':         `${DEVICON_BASE}/nestjs/nestjs-original.svg`,
   'tauri-app':         `${DEVICON_BASE}/tauri/tauri-original.svg`,
+  'google-apps-script': `${DEVICON_BASE}/google/google-original.svg`,
+  'react-native-expo':  `${DEVICON_BASE}/react/react-original.svg`,
+  'inferno-js':         `${DEVICON_BASE}/react/react-original.svg`,
 }
 
 /**

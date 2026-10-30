@@ -2,9 +2,9 @@
 
 LazyStack is a desktop stack builder and command-line scaffolder for composing application stacks. Choose languages, frameworks, databases, service connections, testing tools, and an architecture layout; LazyStack generates a project structure and supporting configuration.
 
-## Download v1.0.4
+## Download v1.0.5
 
-Download **Linux AppImage** or **Windows portable EXE** from the [v1.0.4 GitHub release](https://github.com/Ian-nwb/LazyStack/releases/tag/v1.0.4).
+Download **Linux AppImage** or **Windows portable EXE** from the [v1.0.5 GitHub release](https://github.com/Ian-nwb/LazyStack/releases/tag/v1.0.5).
 
 | Platform | Package |
 | --- | --- |
@@ -94,7 +94,7 @@ npm start
 
 ## CLI
 
-The standalone CLI package is being prepared as v1.0.5. It supports blueprint initialization, catalog search, validation, planning, prerequisite checks, export, and scaffolding. See [the CLI roadmap](ROADMAP-1.0.5.md) for scope and package publishing status.
+The standalone CLI package is prepared as v1.0.5; npm publication is pending account and package-name confirmation. It supports blueprint initialization, catalog search, validation, planning, prerequisite checks, export, and scaffolding. See the [CLI roadmap](ROADMAP-1.0.5.md), [release notes](packages/cli/CHANGELOG.md), and [npm build and publishing guide](docs/releases/npm-cli-v1.0.5.md).
 
 ```bash
 npm run build:cli
@@ -124,23 +124,17 @@ npm run cli -- scaffold --preset fastapi-react --name my-api --out ./generated
 
 ## Build packages
 
-The v1.0.4 scripts build Linux AppImage and Windows portable EXE packages; they do not build for macOS.
+The v1.0.5 scripts build Linux AppImage and Windows portable EXE packages; they do not build for macOS.
 
 ```bash
-npm run dist:linux    # release/1.0.4/LazyStack-1.0.4.AppImage
-npm run dist:win      # release/1.0.4/LazyStack 1.0.4.exe
+npm run dist:linux    # release/1.0.5/LazyStack-1.0.5.AppImage
+npm run dist:win      # release/1.0.5/LazyStack 1.0.5.exe
 npm run dist:release  # build both targets
 ```
 
-## v1.0.4
+## v1.0.5
 
-v1.0.4 adds native project generation with an optional unified workspace, a tested FastAPI API-service profile, generated OpenAPI TypeScript clients, expanded scaffold CI, and service/network architecture diagrams. The detailed release scope and QA record are in [ROADMAP-1.0.4.md](ROADMAP-1.0.4.md).
-
-## v1.0.5 roadmap: CLI-first
-
-The next release will focus on making LazyStack's CLI installable and reliable as a standalone npm package, with guided project setup, blueprint validation and planning, prerequisite checks, safer scaffolding, and clean-install CI. Publishing requires an npm account with access to the chosen package name; installing a public package does not require login. See [ROADMAP-1.0.5.md](ROADMAP-1.0.5.md).
-
-The previously deferred service-platform work is now planned for [v1.0.6](ROADMAP-1.0.6.md): gRPC/protobuf, event and broker wiring, service-to-service authentication, observability, and broader starter coverage.
+v1.0.5 introduces Google Apps Script, React Native (Expo), and Inferno.js templates, adds the standalone `lazystack` CLI v1.0.5 npm package with interactive `init`, `search`, `validate`, `plan`, and `doctor` commands, and ships desktop builds for Linux and Windows. See [RELEASE_NOTES_1.0.5.md](RELEASE_NOTES_1.0.5.md) and [CHANGELOG.md](CHANGELOG.md).
 
 ### Future feature ideas
 
