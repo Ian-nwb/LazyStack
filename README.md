@@ -94,7 +94,7 @@ npm start
 
 ## CLI
 
-The standalone CLI package is prepared as v1.0.5; npm publication is pending account and package-name confirmation. It supports blueprint initialization, catalog search, validation, planning, prerequisite checks, export, and scaffolding. See the [CLI roadmap](ROADMAP-1.0.5.md), [release notes](packages/cli/CHANGELOG.md), and [npm build and publishing guide](docs/releases/npm-cli-v1.0.5.md).
+The standalone CLI package is prepared as v1.0.5; npm publication is pending account and package-name confirmation. It supports blueprint initialization, catalog search, validation, planning, prerequisite checks, export, and scaffolding. See the [project changelog](CHANGELOG.md), [CLI release notes](packages/cli/CHANGELOG.md), and [npm build and publishing guide](docs/releases/npm-cli-v1.0.5.md).
 
 ```bash
 npm run build:cli
@@ -134,7 +134,7 @@ npm run dist:release  # build both targets
 
 ## v1.0.5
 
-v1.0.5 introduces AssemblyScript (WebAssembly), Google Apps Script, React Native (Expo), and Inferno.js templates, adds the standalone `lazystack` CLI v1.0.5 npm package with interactive `init`, `search`, `validate`, `plan`, and `doctor` commands, and ships desktop builds for Linux and Windows. See [RELEASE_NOTES_1.0.5.md](RELEASE_NOTES_1.0.5.md) and [CHANGELOG.md](CHANGELOG.md).
+v1.0.5 introduces AssemblyScript (WebAssembly), Google Apps Script, React Native (Expo), and Inferno.js templates, adds the standalone `lazystack` CLI v1.0.5 npm package with interactive `init`, `search`, `validate`, `plan`, and `doctor` commands, and ships desktop builds for Linux and Windows. See [CHANGELOG.md](CHANGELOG.md) and [GitHub Releases](https://github.com/Ian-nwb/LazyStack/releases/tag/v1.0.5).
 
 ### Future feature ideas
 
