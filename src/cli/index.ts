@@ -142,10 +142,14 @@ function validateBlueprint(settings: ProjectSettings): string[] {
   for (const app of apps) {
     if (!app || typeof app !== 'object') { errors.push('Every apps entry must be an object.'); continue }
     if (typeof app.folderName !== 'string' || !validateFolderName(app.folderName, 'app').valid) errors.push(`Invalid folderName for service '${app.folderName ?? '(unnamed)'}'.`)
-    if (!TECH_CATALOG.some(tech => tech.id === app.techId)) errors.push(`Unknown technology '${app.techId}' on '${app.folderName}'.`)
-    if (!Number.isInteger(app.port) || app.port < 1 || app.port > 65535) errors.push(`Invalid port on '${app.folderName}'.`)
-    else if (ports.has(app.port)) errors.push(`Port ${app.port} is shared by '${ports.get(app.port)}' and '${app.folderName}'.`)
-    else ports.set(app.port, app.folderName)
+    const tech = TECH_CATALOG.find(t => t.id === app.techId)
+    if (!tech) errors.push(`Unknown technology '${app.techId}' on '${app.folderName}'.`)
+    const allowsZeroPort = tech?.defaultPort === 0 || app.role === 'worker' || app.role === 'desktop-mobile'
+    if (!Number.isInteger(app.port) || (app.port === 0 ? !allowsZeroPort : (app.port < 1 || app.port > 65535))) errors.push(`Invalid port on '${app.folderName}'.`)
+    else if (app.port > 0) {
+      if (ports.has(app.port)) errors.push(`Port ${app.port} is shared by '${ports.get(app.port)}' and '${app.folderName}'.`)
+      else ports.set(app.port, app.folderName)
+    }
     edges.set(app.id, [])
     for (const connection of Array.isArray(app.connections) ? app.connections : []) {
       if (!connection || !ids.has(connection.targetAppId) || connection.targetAppId === app.id || !['http', 'https', 'grpc', 'custom'].includes(connection.protocol)) errors.push(`Invalid service connection on '${app.folderName}'.`)

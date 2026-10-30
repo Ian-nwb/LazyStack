@@ -20,8 +20,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added to the `frontend` catalog category for blazing-fast, React-compatible DOM rendering with minimal bundle overhead.
   - Configured with Vite, `@vitejs/plugin-react` (aliasing `inferno`), and JSX support.
   - Supports both TypeScript and JavaScript flavors with interactive state demonstration.
+- **AssemblyScript (WebAssembly) Starter**:
+  - Added to the `scripting` catalog category for high-performance WebAssembly compilation.
+  - Strict TypeScript code compiled directly to `.wasm` binaries via AssemblyScript compiler (`asc`).
+  - Pre-configured with `asconfig.json`, `assembly/tsconfig.json`, Node.js Wasm executor, and unit test suite.
 - **Icon Overrides**:
-  - Added icon mappings in `src/utils/techIcons.ts` for Google Apps Script, React Native Expo, and Inferno.js.
+  - Added icon mappings in `src/utils/techIcons.ts` for Google Apps Script, AssemblyScript (Wasm), React Native Expo, and Inferno.js.
 - **Standalone CLI Package (v1.0.5)**:
   - Independent npm package distribution in `packages/cli` (`lazystack`).
   - Added interactive and flag-driven `init` for preset-based blueprint creation.

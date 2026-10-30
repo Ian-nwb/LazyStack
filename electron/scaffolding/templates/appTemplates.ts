@@ -608,6 +608,175 @@ ${isTS ? 'npm install\n\n# 2. Log in to clasp\nnpx clasp login\n\n# 3. Create or
     return files
   }
 
+  if (techId === 'assemblyscript') {
+    files['package.json'] = `{
+  "name": "${folderName}",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "AssemblyScript WebAssembly module — scaffolded by LazyStack",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "asbuild:debug": "asc assembly/index.ts --target debug",
+    "asbuild:release": "asc assembly/index.ts --target release",
+    "asbuild": "npm run asbuild:debug && npm run asbuild:release",
+    "build": "npm run asbuild",
+    "start": "node index.js",
+    "test": "node tests/index.js"
+  },
+  "devDependencies": {
+    "assemblyscript": "^0.27.36"
+  },
+  "dependencies": {
+    "@assemblyscript/loader": "^0.27.36"
+  }
+}
+`
+    files['asconfig.json'] = `{
+  "targets": {
+    "debug": {
+      "outFile": "build/debug.wasm",
+      "textFile": "build/debug.wat",
+      "sourceMap": true,
+      "debug": true
+    },
+    "release": {
+      "outFile": "build/release.wasm",
+      "textFile": "build/release.wat",
+      "sourceMap": true,
+      "optimizeLevel": 3,
+      "shrinkLevel": 0,
+      "converge": false,
+      "noAssert": false
+    }
+  },
+  "options": {
+    "bindings": "esm"
+  }
+}
+`
+    files['assembly/tsconfig.json'] = `{
+  "extends": "assemblyscript/std/assembly.json",
+  "include": [
+    "./**/*.ts"
+  ]
+}
+`
+    files['assembly/index.ts'] = `// AssemblyScript WebAssembly Module — ${folderName}
+// Docs: https://www.assemblyscript.org
+
+/**
+ * Adds two 32-bit signed integers.
+ */
+export function add(a: i32, b: i32): i32 {
+  return a + b;
+}
+
+/**
+ * Computes the nth Fibonacci number in WebAssembly.
+ */
+export function fibonacci(n: i32): i32 {
+  if (n <= 1) return n;
+  let a: i32 = 0;
+  let b: i32 = 1;
+  for (let i: i32 = 2; i <= n; i++) {
+    let c: i32 = a + b;
+    a = b;
+    b = c;
+  }
+  return b;
+}
+`
+    files['index.js'] = `import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const wasmPath = join(__dirname, 'build', 'release.wasm');
+
+async function main() {
+  if (!fs.existsSync(wasmPath)) {
+    console.log('⚡ WebAssembly binary not found. Please compile with:');
+    console.log('   npm install && npm run asbuild\\n');
+    return;
+  }
+
+  try {
+    const wasmBuffer = fs.readFileSync(wasmPath);
+    const wasmModule = await WebAssembly.instantiate(wasmBuffer, {});
+    const { add, fibonacci } = wasmModule.instance.exports;
+
+    console.log('⚡ AssemblyScript WebAssembly module loaded successfully:');
+    console.log('   add(25, 17)      =', add(25, 17));
+    console.log('   fibonacci(10)    =', fibonacci(10));
+    console.log('   fibonacci(20)    =', fibonacci(20));
+  } catch (err) {
+    console.error('Error running WebAssembly module:', err);
+  }
+}
+
+main();
+`
+    files['tests/index.js'] = `import assert from 'node:assert';
+import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const wasmPath = join(__dirname, '..', 'build', 'debug.wasm');
+
+if (!fs.existsSync(wasmPath)) {
+  console.log('Debug wasm not found. Run "npm run asbuild:debug" first.');
+  process.exit(1);
+}
+
+const wasmBuffer = fs.readFileSync(wasmPath);
+const wasmModule = await WebAssembly.instantiate(wasmBuffer, {});
+const { add, fibonacci } = wasmModule.instance.exports;
+
+assert.strictEqual(add(1, 2), 3);
+assert.strictEqual(fibonacci(7), 13);
+console.log('✓ All AssemblyScript WebAssembly unit tests passed!');
+`
+    files['.gitignore'] = `node_modules/
+build/
+.env
+`
+    files['README.md'] = `# ${folderName} (AssemblyScript / WebAssembly)
+
+Scaffolded by LazyStack. AssemblyScript compiles strictly typed TypeScript directly to high-performance **WebAssembly (Wasm)** binaries.
+
+## Getting Started
+
+\`\`\`bash
+# 1. Install dependencies
+npm install
+
+# 2. Compile to WebAssembly (builds build/release.wasm and build/debug.wasm)
+npm run asbuild
+
+# 3. Run the Node.js Wasm executor
+npm start
+
+# 4. Run tests
+npm test
+\`\`\`
+
+## Project Structure
+
+- \`assembly/index.ts\`: WebAssembly module source code (AssemblyScript)
+- \`asconfig.json\`: AssemblyScript compiler configuration
+- \`index.js\`: Node.js loader and executor for the compiled \`.wasm\` binary
+- \`tests/index.js\`: Unit tests asserting WebAssembly exported functions
+
+## Documentation
+
+- AssemblyScript Documentation: https://www.assemblyscript.org
+- WebAssembly MDN: https://developer.mozilla.org/en-US/docs/WebAssembly
+`
+    return files
+  }
+
   if (techId === 'react-native-expo') {
     files['package.json'] = `{
   "name": "${folderName}",

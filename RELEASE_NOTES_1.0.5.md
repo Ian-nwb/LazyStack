@@ -1,9 +1,10 @@
 # LazyStack v1.0.5
 
-This release expands the polyglot stack catalog with Google Apps Script, React Native (Expo), and Inferno.js starters, introduces the standalone LazyStack CLI v1.0.5 npm package with interactive initialization, blueprint planning, search, and system doctor checks, and delivers updated desktop builds for Linux and Windows.
+This release expands the polyglot stack catalog with AssemblyScript (WebAssembly), Google Apps Script, React Native (Expo), and Inferno.js starters, introduces the standalone LazyStack CLI v1.0.5 npm package with interactive initialization, blueprint planning, search, and system doctor checks, and delivers updated desktop builds for Linux and Windows.
 
 ## What's New in v1.0.5
 
+- **AssemblyScript (WebAssembly) Starter**: High-performance WebAssembly compilation from strictly typed TypeScript code, with `asc` compile scripts, `asconfig.json`, Node.js loader, and unit test suite.
 - **Google Apps Script Starter**: Complete clasp-driven workspace project for Google Sheets, Docs, and Web Apps, supporting both TypeScript and JavaScript flavors.
 - **React Native (Expo) Starter**: Cross-platform mobile/web starter featuring file-based navigation via Expo Router, tabs, and TypeScript/JavaScript configurations.
 - **Inferno.js Starter**: Ultra-fast React-compatible frontend Vite template with TypeScript/JavaScript flavors and counter demo.

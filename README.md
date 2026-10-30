@@ -134,7 +134,7 @@ npm run dist:release  # build both targets
 
 ## v1.0.5
 
-v1.0.5 introduces Google Apps Script, React Native (Expo), and Inferno.js templates, adds the standalone `lazystack` CLI v1.0.5 npm package with interactive `init`, `search`, `validate`, `plan`, and `doctor` commands, and ships desktop builds for Linux and Windows. See [RELEASE_NOTES_1.0.5.md](RELEASE_NOTES_1.0.5.md) and [CHANGELOG.md](CHANGELOG.md).
+v1.0.5 introduces AssemblyScript (WebAssembly), Google Apps Script, React Native (Expo), and Inferno.js templates, adds the standalone `lazystack` CLI v1.0.5 npm package with interactive `init`, `search`, `validate`, `plan`, and `doctor` commands, and ships desktop builds for Linux and Windows. See [RELEASE_NOTES_1.0.5.md](RELEASE_NOTES_1.0.5.md) and [CHANGELOG.md](CHANGELOG.md).
 
 ### Future feature ideas
 

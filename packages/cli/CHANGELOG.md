@@ -13,6 +13,7 @@ First standalone npm package release for the LazyStack command-line scaffolder.
 - Retain preset and config-based scaffold, export, list, help, and version commands.
 - Require Node.js 20 or newer.
 - Add **Google Apps Script** to the scripting category (clasp-based, TypeScript and JavaScript, with `onOpen`, `runSample`, and `doGet` starters).
+- Add **AssemblyScript (Wasm)** to the scripting category (strict TypeScript compiled to WebAssembly, `asc` scripts, Node.js Wasm executor, and unit test suite).
 - Add **React Native (Expo)** to the mobile-desktop category (Expo Router file-based routing, TypeScript and JavaScript, iOS / Android / Web targets).
 - Add **Inferno** to the frontend category (React-compatible Vite starter with TypeScript and JavaScript, class-based counter demo).
 

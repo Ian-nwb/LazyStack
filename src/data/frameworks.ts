@@ -813,6 +813,20 @@ export const TECH_CATALOG: TechItem[] = [
       { binary: 'clasp', label: 'Google clasp CLI', installHint: 'npm install -g @google/clasp' }
     ]
   },
+  {
+    id: 'assemblyscript',
+    name: 'AssemblyScript (Wasm)',
+    language: 'AssemblyScript / TypeScript',
+    category: 'scripting',
+    role: 'worker',
+    defaultPort: 0,
+    description: 'TypeScript-like language that compiles strictly typed code directly to WebAssembly (Wasm). Blazing fast binaries for Node.js, Web workers, and edge computing.',
+    badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40',
+    supportsFlavor: false,
+    requires: [
+      { binary: 'node', label: 'Node.js', installHint: 'https://nodejs.org/' }
+    ]
+  },
 
   // --- MODERN FULLSTACK & RESUMABLE ---
   {
