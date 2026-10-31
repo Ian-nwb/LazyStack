@@ -25,6 +25,7 @@ export const EnvironmentAuditor: React.FC = () => {
       }
     } catch (err: any) {
       console.error('Audit error:', err)
+      setStatusMessage({ text: `Host audit failed: ${err.message || 'Unable to scan host environment'}`, type: 'error' })
     } finally {
       setLoading(false)
     }

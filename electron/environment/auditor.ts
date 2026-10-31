@@ -24,17 +24,44 @@ export interface BinaryAudit {
 // Ensure common user directories are in process.env.PATH
 export function ensureUserPathsInEnv(): void {
   const home = os.homedir()
-  const userPaths = [
-    path.join(home, '.bun', 'bin'),
-    path.join(home, '.cargo', 'bin'),
-    path.join(home, '.deno', 'bin'),
-    path.join(home, '.local', 'bin'),
-    '/usr/local/bin',
-    '/usr/bin',
-    '/bin',
-    '/usr/sbin',
-    '/sbin'
-  ]
+  const userPaths: string[] = []
+
+  if (process.platform === 'win32') {
+    const localAppData = process.env.LOCALAPPDATA || path.join(home, 'AppData', 'Local')
+    const appData = process.env.APPDATA || path.join(home, 'AppData', 'Roaming')
+    const programFiles = process.env.ProgramFiles || 'C:\\Program Files'
+    const programFilesX86 = process.env['ProgramFiles(x86)'] || 'C:\\Program Files (x86)'
+
+    userPaths.push(
+      path.join(home, '.cargo', 'bin'),
+      path.join(home, '.bun', 'bin'),
+      path.join(home, '.deno', 'bin'),
+      path.join(home, 'scoop', 'shims'),
+      path.join(localAppData, 'Microsoft', 'WinGet', 'Links'),
+      path.join(localAppData, 'Programs'),
+      path.join(localAppData, 'Programs', 'Git', 'bin'),
+      path.join(localAppData, 'Programs', 'Git', 'cmd'),
+      path.join(appData, 'npm'),
+      path.join(programFiles, 'nodejs'),
+      path.join(programFiles, 'Git', 'cmd'),
+      path.join(programFiles, 'Git', 'bin'),
+      path.join(programFiles, 'Docker', 'Docker', 'resources', 'bin'),
+      path.join(programFiles, 'dotnet'),
+      path.join(programFilesX86, 'dotnet')
+    )
+  } else {
+    userPaths.push(
+      path.join(home, '.bun', 'bin'),
+      path.join(home, '.cargo', 'bin'),
+      path.join(home, '.deno', 'bin'),
+      path.join(home, '.local', 'bin'),
+      '/usr/local/bin',
+      '/usr/bin',
+      '/bin',
+      '/usr/sbin',
+      '/sbin'
+    )
+  }
 
   const currentPath = process.env.PATH || ''
   const currentSegments = currentPath.split(path.delimiter)
@@ -412,35 +439,36 @@ export const MONITORED_BINARIES: Array<{
 
 export async function auditEnvironment(): Promise<BinaryAudit[]> {
   ensureUserPathsInEnv()
-  const results: BinaryAudit[] = []
 
-  for (const item of MONITORED_BINARIES) {
-    try {
-      const { stdout, stderr } = await execAsync(`${item.binary} ${item.versionFlag}`, { 
-        timeout: 3000,
-        env: process.env
-      })
-      const output = (stdout || stderr || '').trim().split('\n')[0]
-      results.push({
-        id: item.id,
-        name: item.name,
-        binary: item.binary,
-        category: item.category,
-        installed: true,
-        version: output,
-        installCommand: item.installCommand
-      })
-    } catch {
-      results.push({
-        id: item.id,
-        name: item.name,
-        binary: item.binary,
-        category: item.category,
-        installed: false,
-        installCommand: item.installCommand
-      })
-    }
-  }
+  const results = await Promise.all(
+    MONITORED_BINARIES.map(async (item) => {
+      try {
+        const { stdout, stderr } = await execAsync(`${item.binary} ${item.versionFlag}`, { 
+          timeout: 4000,
+          env: process.env
+        })
+        const output = (stdout || stderr || '').trim().split('\n')[0]
+        return {
+          id: item.id,
+          name: item.name,
+          binary: item.binary,
+          category: item.category,
+          installed: true,
+          version: output,
+          installCommand: item.installCommand
+        }
+      } catch {
+        return {
+          id: item.id,
+          name: item.name,
+          binary: item.binary,
+          category: item.category,
+          installed: false,
+          installCommand: item.installCommand
+        }
+      }
+    })
+  )
 
   return results
 }

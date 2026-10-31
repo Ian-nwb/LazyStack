@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `event-driven-kafka`: NestJS producer API + Python consumer worker + Apache Kafka + PostgreSQL.
 - **CLI Ecosystem Listing**: `lazystack list` now outputs all 16 architecture and directory structure presets with their IDs and taglines.
 
+### Fixed
+- **Production Preload Script & Host Auditor**: Configured CommonJS format for the Electron preload bundle in `vite.config.ts` so `window.electronAPI` initializes cleanly in production packages (AppImage and Windows portable `.exe`), eliminating the `Failed to fetch` error on `/api/audit`.
+- **Concurrent Host Diagnostics & Enhanced PATH Discovery**: Optimized binary auditing to run in parallel via `Promise.all`, dropping latency to under 1 second, and added automatic PATH resolution for common Windows (`WinGet`, `scoop`, `%LOCALAPPDATA%`, `Program Files`) and Linux developer paths.
+
 ## [1.0.7] - 2026-10-31
 
 ### Added
