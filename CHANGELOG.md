@@ -5,6 +5,14 @@ All notable changes to LazyStack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.9] - 2026-10-31
+
+### Added
+- **Universal 75+ Framework Out-of-the-Box Runtime**: Dev orchestrator now maps native launch commands for all 75+ supported technologies (Python, Go, Rust, C#, PHP, Ruby, Elixir, Zig, C, C++, Java, Kotlin, Scala, Clojure, OCaml, Julia, Lua, R, Erlang, Nim, Crystal, Swift, Dart, Bun, Deno).
+- **Automated Python Virtualenv & First-Boot Migrations**: Scaffolding and runtime automatically build a local `.venv`, install `requirements.txt` via isolated pip, and run database migrations on initial startup (Django, FastAPI Alembic, Flask) to eliminate PEP 668 errors.
+- **PHP Symfony 7 & Go Goravel Starters**: Added Symfony 7 and Go Goravel backends with complete directory scaffolding (`app/http/controllers`, `routes`, `config`), Dockerfiles, and dev server orchestration.
+- **Multi-Language Dependency Installer**: Automated package management across all project candidate folders (`npm`, `pip`, `composer`, `bundle`, `mix`, `cargo`, `go mod`, `dotnet`, `flutter`, `shards`, `rebar3`, `julia`).
+
 ## [1.0.8] - 2026-10-31
 
 ### Added

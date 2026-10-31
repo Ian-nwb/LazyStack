@@ -88,6 +88,7 @@ const FRAMEWORK_ICON_OVERRIDES: Record<string, string> = {
   'fullstack-nuxt':    `${DEVICON_BASE}/nuxtjs/nuxtjs-original.svg`,
   'fullstack-sveltekit': `${DEVICON_BASE}/svelte/svelte-original.svg`,
   'fullstack-laravel': `${DEVICON_BASE}/laravel/laravel-original.svg`,
+  'go-goravel':        `${DEVICON_BASE}/go/go-original-wordmark.svg`,
   'php-symfony':       `${DEVICON_BASE}/symfony/symfony-original.svg`,
   'fullstack-astro':   `${DEVICON_BASE}/astro/astro-original.svg`,
   'fullstack-remix':   `${DEVICON_BASE}/react/react-original.svg`,

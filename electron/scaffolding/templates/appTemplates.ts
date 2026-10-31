@@ -987,6 +987,90 @@ require github.com/go-chi/chi/v5 v5.1.0
     return files
   }
 
+  if (techId === 'go-goravel') {
+    files['main.go'] = `package main
+
+import (
+	"fmt"
+	"net/http"
+	"os"
+
+	"${folderName}/app/http/controllers"
+	"github.com/gin-gonic/gin"
+)
+
+func main() {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "${port}"
+	}
+
+	r := gin.Default()
+
+	apiCtrl := controllers.NewApiController()
+	api := r.Group("/api")
+	{
+		api.GET("/ping", apiCtrl.Ping)
+	}
+
+	r.GET("/", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"service":   "${folderName}",
+			"framework": "Goravel (Go + Laravel)",
+			"status":    "online",
+			"docs":      "https://www.goravel.dev/",
+		})
+	})
+
+	fmt.Printf("[Goravel] Server listening on http://0.0.0.0:%s\\n", port)
+	if err := r.Run(":" + port); err != nil {
+		panic(err)
+	}
+}
+`
+    files['app/http/controllers/api_controller.go'] = `package controllers
+
+import (
+	"net/http"
+	"github.com/gin-gonic/gin"
+)
+
+type ApiController struct{}
+
+func NewApiController() *ApiController {
+	return &ApiController{}
+}
+
+func (ctrl *ApiController) Ping(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"service":   "${folderName}",
+		"framework": "Goravel",
+		"status":    "online",
+		"message":   "pong",
+	})
+}
+`
+    files['go.mod'] = `module ${folderName}
+
+go 1.23
+
+require (
+	github.com/gin-gonic/gin v1.10.0
+)
+`
+    files['README.md'] = `# ${folderName} · Goravel (Go)
+
+A Laravel-like web framework for Go with expressive routing and architecture.
+
+## Run Locally
+
+\`\`\`bash
+go run .
+\`\`\`
+`
+    return files
+  }
+
   if (techId.startsWith('go-')) {
     files['main.go'] = `package main
 

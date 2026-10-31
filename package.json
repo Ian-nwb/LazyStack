@@ -42,7 +42,7 @@
     "productName": "LazyStack",
     "icon": "build/icon.png",
     "directories": {
-      "output": "release/1.0.8"
+      "output": "release/1.0.9"
     },
     "files": [
       "dist/**/*",

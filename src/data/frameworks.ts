@@ -273,6 +273,19 @@ export const TECH_CATALOG: TechItem[] = [
       { binary: 'go', label: 'Go Toolchain', installHint: 'https://go.dev/dl/' }
     ]
   },
+  {
+    id: 'go-goravel',
+    name: 'Go (Goravel)',
+    language: 'Go',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 3000,
+    description: 'A Laravel-like web framework for Go with elegant routing, ORM, and artisan architecture.',
+    badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
+    requires: [
+      { binary: 'go', label: 'Go Toolchain', installHint: 'https://go.dev/dl/' }
+    ]
+  },
 
   // --- C# / .NET ---
   {
