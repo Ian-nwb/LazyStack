@@ -339,7 +339,7 @@ tr.pick td:first-child::before { display: inline-block; animation: nudgeX 1.6s e
 <div class="page">
 
   <header class="bar">
-    <a class="mark" href="#top"><span class="logo-sm" data-logo aria-hidden="true"></span>LAZYSTACK/1.0.6</a>
+    <a class="mark" href="#top"><span class="logo-sm" data-logo aria-hidden="true"></span>LAZYSTACK/1.0.7</a>
     <nav aria-label="Sections">
       <a href="#features">Features</a>
       <a href="#layouts">Layouts</a>
@@ -358,18 +358,18 @@ tr.pick td:first-child::before { display: inline-block; animation: nudgeX 1.6s e
 
       <div class="hero-grid">
         <div>
-          <p class="lead">LazyStack lets you compose, visualize, and scaffold production-ready fullstack architectures and polyglot monorepos. Choose from 75 frameworks, 25 databases and caches (including Apache Kafka), 10 architectural layouts, testing suites, and container orchestration with one unified blueprint.</p>
+          <p class="lead">LazyStack lets you compose, visualize, and scaffold production-ready fullstack architectures and polyglot monorepos. Choose from 75 frameworks, 25 databases and caches (including Apache Kafka), 10 architectural layouts, testing suites, Terraform/OpenTofu export, Kubernetes &amp; Helm manifests, and CI/CD workflows — with one unified blueprint.</p>
           <div class="actions">
-            <a class="btn btn-solid" href="#download">Download v1.0.6 &#8595;</a>
+            <a class="btn btn-solid" href="#download">Download v1.0.7 &#8595;</a>
             <a class="btn btn-line" href="https://github.com/Ian-nwb/LazyStack">View source &#8599;</a>
           </div>
         </div>
         <dl class="spec">
-          <div><dt>Version</dt><dd>1.0.6</dd></div>
-          <div><dt>Status</dt><dd class="live">v1.0.6 Released</dd></div>
+          <div><dt>Version</dt><dd>1.0.7</dd></div>
+          <div><dt>Status</dt><dd class="live">v1.0.7 Released</dd></div>
           <div><dt>Platforms</dt><dd>Linux x64, Windows x64</dd></div>
           <div><dt>Builds</dt><dd>AppImage, portable EXE</dd></div>
-          <div><dt>CLI</dt><dd>lazystack v1.0.6 (npm)</dd></div>
+          <div><dt>CLI</dt><dd>lazystack v1.0.7 (npm)</dd></div>
           <div><dt>Catalog</dt><dd>75 frameworks · 25 DBs</dd></div>
           <div><dt>From source</dt><dd>Node.js 20+, npm 10+</dd></div>
           <div><dt>License</dt><dd>MIT</dd></div>
@@ -554,22 +554,22 @@ lazystack scaffold --config lazystack.json --out ./generated</pre>
     <section class="sec dl" id="download">
       <div class="sec-side">
         <span class="eyebrow">Download</span>
-        <span class="count">v1.0.6</span>
+        <span class="count">v1.0.7</span>
       </div>
       <div>
-        <h2>Get <span class="thin">v1.0.6.</span></h2>
-        <p>Packages are attached to the v1.0.6 release on GitHub. This release ships for Linux and Windows only.</p>
+        <h2>Get <span class="thin">v1.0.7.</span></h2>
+        <p>Packages are attached to the v1.0.7 release on GitHub. This release ships for Linux and Windows only.</p>
 
         <div class="dl-rows">
           <div class="dl-row">
             <span class="plat">Linux x64</span>
             <span class="pkg">AppImage</span>
-            <a class="btn btn-solid" href="https://github.com/Ian-nwb/LazyStack/releases/tag/v1.0.6">Get it on GitHub &#8599;</a>
+            <a class="btn btn-solid" href="https://github.com/Ian-nwb/LazyStack/releases/download/v1.0.7/LazyStack-1.0.7.AppImage">Download &#8595;</a>
           </div>
           <div class="dl-row">
             <span class="plat">Windows x64</span>
             <span class="pkg">Portable <span class="thin">EXE</span></span>
-            <a class="btn btn-solid" href="https://github.com/Ian-nwb/LazyStack/releases/tag/v1.0.6">Get it on GitHub &#8599;</a>
+            <a class="btn btn-solid" href="https://github.com/Ian-nwb/LazyStack/releases/download/v1.0.7/LazyStack.1.0.7.exe">Download &#8595;</a>
           </div>
           <div class="dl-row none">
             <span class="plat">macOS</span>
@@ -617,13 +617,14 @@ npm run dist:release  <span class="c"># build both targets</span></pre>
     <!-- PROPOSALS -->
     <section class="sec" id="roadmap">
       <div class="sec-side">
-        <span class="eyebrow">Proposals</span>
-        <span class="count">v1.0.6</span>
+        <span class="eyebrow">Changelog</span>
+        <span class="count">v1.0.7</span>
       </div>
       <div>
-        <h2>What comes <span class="thin">with 1.0.6.</span></h2>
-        <p>v1.0.6 delivers the Unified Dev Orchestrator and Event-Driven Message Brokers with worker wiring and Kafka KRaft streaming.</p>
+        <h2>What shipped <span class="thin">in 1.0.7.</span></h2>
+        <p>v1.0.7 delivers cloud deployment exports — Terraform/OpenTofu, Kubernetes/Helm, and GitHub Actions CI/CD deploy pipelines — auto-generated alongside every scaffolded project.</p>
         <dl class="rows">
+          <div class="row"><dt>v1.0.7 · Released</dt><dd>Shipped: Terraform/OpenTofu <code>.tf</code> modules for AWS ECS/Fargate, GCP Cloud Run, and DigitalOcean App Platform; Kubernetes Deployment, Service, ConfigMap, Secret, and Ingress YAML per service; Helm chart skeleton; <code>.github/workflows/deploy.yml</code> with container build &amp; push to GHCR via matrix strategy. All generated automatically from the scaffolded topology.</dd></div>
           <div class="row"><dt>v1.0.6 · Released</dt><dd>Shipped: Unified Dev Orchestrator (<code>lazystack dev</code> / <code>npm run dev</code>) with automatic database spin-up and colored concurrent terminal output; Apache Kafka (KRaft mode); Shared typed event contracts in <code>packages/events/</code> with Dead-Letter Queues (DLQ) and exponential backoff retry policies across TypeScript, Python, and Go.</dd></div>
           <div class="row"><dt>v1.0.5 · Released</dt><dd>Shipped: Standalone npm CLI with init, search, validate, plan, doctor, and safe dry-run scaffold; AssemblyScript (Wasm), Google Apps Script, React Native Expo, and Inferno.js starters; Linux AppImage &amp; Windows portable EXE.</dd></div>
         </dl>
@@ -631,19 +632,16 @@ npm run dist:release  <span class="c"># build both targets</span></pre>
         <ul class="props">
           <li>Local AI stack assistant that drafts blueprints from natural-language requests</li>
           <li>Separate development, staging, and production profiles</li>
-          <li>Kubernetes manifests and Helm chart export</li>
-          <li>Terraform and Pulumi infrastructure export</li>
           <li>Interactive service and network topology diagrams</li>
-          <li>Typed API client generation from OpenAPI documents</li>
           <li>OpenTelemetry, Prometheus, Grafana, and log collection</li>
           <li>Database backup and restore workflows</li>
           <li>Vault, 1Password, and cloud secret store integrations</li>
-          <li>Deployment workflow generators for cloud and self-hosted platforms</li>
           <li>Shareable plugin and template registry</li>
           <li>Architecture migration assistant for evolving generated projects</li>
           <li>More framework-specific unit, integration, contract, and browser test starters</li>
           <li>CPU, memory, and storage sizing estimates</li>
           <li>Team review and merge workflows for blueprint changes</li>
+          <li>Pulumi infrastructure export</li>
         </ul>
       </div>
     </section>
@@ -653,10 +651,10 @@ npm run dist:release  <span class="c"># build both targets</span></pre>
     <div class="flogo rv" data-logo aria-hidden="true"></div>
     <p class="wordmark rv" aria-hidden="true">Lazy<span class="thin">Stack</span></p>
     <div class="foot rv">
-      <span>MIT License &middot; v1.0.6 &middot; by Ian-nwb</span>
+      <span>MIT License &middot; v1.0.7 &middot; by Ian-nwb</span>
       <nav aria-label="Project links">
         <a href="https://github.com/Ian-nwb/LazyStack">Repository</a>
-        <a href="https://github.com/Ian-nwb/LazyStack/releases/tag/v1.0.6">Release v1.0.6</a>
+        <a href="https://github.com/Ian-nwb/LazyStack/releases/tag/v1.0.7">Release v1.0.7</a>
         <a href="https://github.com/Ian-nwb/LazyStack/blob/main/LICENSE">License</a>
         <a href="https://github.com/Ian-nwb">Ian-nwb</a>
       </nav>

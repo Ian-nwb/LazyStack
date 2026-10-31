@@ -27,6 +27,9 @@ macOS package not yet available (sponsor me a Macbook for app signature)
 - **Blueprints and CLI:** Export JSON blueprints and scaffold them without opening the desktop interface.
 - **Unified Dev Orchestrator:** Run your entire polyglot stack from a single `npm run dev` command with auto database spin-up, concurrent hot-reload, and live ANSI-colored output per service.
 - **Event-Driven Worker Wiring:** Auto-scaffold typed event contracts, dead-letter queues, and polyglot worker starters (Node.js, Python, Go) when brokers are in the stack.
+- **Terraform / OpenTofu Export:** Auto-generate ready-to-deploy `.tf` modules for AWS ECS/Fargate, GCP Cloud Run, or DigitalOcean App Platform alongside every scaffolded project.
+- **Kubernetes & Helm Charts:** Generate Deployment, Service, ConfigMap, Secret, and Ingress YAML definitions tailored to the scaffolded topology, plus a Helm chart skeleton.
+- **CI/CD Workflows:** Ready-to-use `.github/workflows/deploy.yml` with container build and push pipelines to GHCR via matrix strategy, one job per service.
 
 ## Frontend and vanilla starters
 
@@ -177,6 +180,52 @@ When your stack includes a message broker (RabbitMQ, Apache Kafka, Redis, or Val
   - **Go**: `packages/events/examples/worker.go` leveraging lightweight goroutines, channel multiplexing, and graceful OS signal teardown.
 - **Environment Integration**:
   - Automatically exports `EVENT_BROKER_TYPE`, `EVENT_RETRY_LIMIT`, `EVENT_BACKOFF_MS`, and `EVENT_DLQ_TOPIC` in `.env` and `.env.example`.
+
+---
+
+## Cloud Deployment
+
+Every scaffolded project ships ready-to-use infrastructure export files in `infra/`.
+
+### Terraform / OpenTofu
+
+`.tf` modules are generated under `infra/terraform/` covering three providers:
+
+- **AWS ECS/Fargate** — task definitions, services, ECS cluster, and security groups per app
+- **GCP Cloud Run** — Cloud Run v2 service definitions (commented out, uncomment to activate)
+- **DigitalOcean App Platform** — App spec with GHCR image source (commented out)
+
+```bash
+cd infra/terraform
+terraform init
+terraform plan
+terraform apply
+```
+
+### Kubernetes & Helm
+
+Raw manifests under `infra/k8s/`:
+- **`<service>.yaml`** — Deployment + ClusterIP Service with resource limits and liveness probe
+- **`configmap.yaml`** — Non-secret environment variables
+- **`secret.yaml`** — Placeholder secrets (replace before applying; use Sealed Secrets or External Secrets Operator in production)
+- **`ingress.yaml`** — Nginx Ingress with per-service path routing (generated when a proxy is configured)
+
+Helm chart under `infra/helm/<project>/`:
+
+```bash
+# Apply raw manifests
+kubectl apply -f infra/k8s/
+
+# Or via Helm
+helm install my-project ./infra/helm/my-project
+```
+
+### GitHub Actions CI/CD
+
+Two workflows are generated in `.github/workflows/`:
+
+- **`ci.yml`** — Validates Docker Compose config on every push and PR
+- **`deploy.yml`** — Builds and pushes all service containers to GHCR via a matrix job, then triggers deployment on every merge to `main`
 
 ---
 

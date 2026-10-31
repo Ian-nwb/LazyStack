@@ -5,6 +5,25 @@ All notable changes to LazyStack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.7] - 2026-10-31
+
+### Added
+- **Terraform / OpenTofu Export**:
+  - Auto-generates `infra/terraform/main.tf` with provider blocks for AWS, GCP, and DigitalOcean (multi-provider, one to activate).
+  - Per-app `infra/terraform/services/<service>.tf` with AWS ECS Fargate task definition and service, plus commented GCP Cloud Run and DigitalOcean App Platform alternatives.
+  - Shared `cluster.tf` (ECS cluster + security group) and `outputs.tf`.
+- **Kubernetes / Helm Charts**:
+  - Per-app `infra/k8s/<service>.yaml` — Deployment with resource requests/limits and liveness probe + ClusterIP Service.
+  - Shared `infra/k8s/configmap.yaml`, `infra/k8s/secret.yaml`, and `infra/k8s/ingress.yaml` (Nginx Ingress, generated when a proxy is configured).
+  - Helm chart skeleton under `infra/helm/<project>/` with `Chart.yaml` and a structured `values.yaml` with per-service image, port, and resource overrides.
+- **CI/CD Deploy Workflow**:
+  - `.github/workflows/deploy.yml` generated in every scaffolded project.
+  - Matrix build strategy — one container image build+push job per service.
+  - Publishes to GitHub Container Registry (GHCR) with `latest` and commit SHA tags.
+  - Layer caching via `type=gha` for fast incremental builds.
+  - Separate `deploy` job triggered after build-push completes on `main`.
+- **Generated project README** updated to document all cloud deployment paths, manifest locations, and usage commands.
+
 ## [1.0.6] - 2026-10-30
 
 ### Added
