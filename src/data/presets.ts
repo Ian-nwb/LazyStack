@@ -246,5 +246,94 @@ export const STACK_PRESETS: StackPreset[] = [
       { type: 'upstash', enabled: true, port: 0 }
     ],
     proxy: { type: 'none', httpPort: 80 }
+  },
+  {
+    id: 'ai-agent-platform',
+    name: 'AI Agent & LLM Stack',
+    tagline: 'FastAPI Agent with React UI, Redis Streams & Qdrant vector DB',
+    icon: '🤖',
+    badgeColor: 'border-pink-500/40 bg-pink-500/10 text-pink-300',
+    apps: [
+      {
+        folderName: 'dashboard',
+        role: 'frontend',
+        techId: 'react-vite',
+        port: 3000,
+        runMode: 'docker',
+        routePrefix: '/'
+      },
+      {
+        folderName: 'inference',
+        role: 'backend',
+        techId: 'python-fastapi',
+        port: 8000,
+        runMode: 'docker',
+        routePrefix: '/api'
+      }
+    ],
+    databases: [
+      { type: 'redis', enabled: true, port: 6379 },
+      { type: 'qdrant', enabled: true, port: 6333 }
+    ],
+    proxy: { type: 'nginx', httpPort: 80 }
+  },
+  {
+    id: 'clean-go-onion',
+    name: 'Clean Architecture Go',
+    tagline: 'Go Echo Clean Architecture backend with Vue 3 client & Postgres',
+    icon: '🧅',
+    badgeColor: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300',
+    apps: [
+      {
+        folderName: 'web',
+        role: 'frontend',
+        techId: 'vue-vite',
+        port: 3000,
+        runMode: 'docker',
+        routePrefix: '/'
+      },
+      {
+        folderName: 'core-service',
+        role: 'backend',
+        techId: 'go-echo',
+        port: 8080,
+        runMode: 'docker',
+        routePrefix: '/api'
+      }
+    ],
+    databases: [
+      { type: 'postgres', enabled: true, port: 5432 }
+    ],
+    proxy: { type: 'nginx', httpPort: 80 }
+  },
+  {
+    id: 'event-driven-kafka',
+    name: 'Event-Driven Kafka Services',
+    tagline: 'NestJS producer with Python consumer worker, Kafka & Postgres',
+    icon: '📨',
+    badgeColor: 'border-orange-500/40 bg-orange-500/10 text-orange-300',
+    apps: [
+      {
+        folderName: 'gateway',
+        role: 'backend',
+        techId: 'ts-nestjs',
+        port: 3000,
+        runMode: 'docker',
+        routePrefix: '/api'
+      },
+      {
+        folderName: 'event-consumer',
+        role: 'worker',
+        techId: 'python-fastapi',
+        port: 8000,
+        runMode: 'docker',
+        routePrefix: '/worker'
+      }
+    ],
+    databases: [
+      { type: 'kafka', enabled: true, port: 9092 },
+      { type: 'postgres', enabled: true, port: 5432 }
+    ],
+    proxy: { type: 'nginx', httpPort: 80 }
   }
 ]

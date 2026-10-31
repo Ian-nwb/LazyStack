@@ -67,6 +67,12 @@ The tool list varies with the selected stack, and teams can choose more than one
 | Serverless & Cloud-Native | `functions/`, shared packages, cloud infrastructure |
 | Event-Driven Services | APIs, consumers, event schemas, and broker infrastructure |
 | Data Platform | Pipelines, ingestion services, dashboards, and schemas |
+| **AI / ML & LLM Platform** | `models/`, `agents/`, `services/inference/`, DSPy/LangChain `prompts/` |
+| **Clean Architecture / Onion** | `domain/`, `usecases/`, `adapters/`, `services/` with strict concentric boundaries |
+| **CQRS & Event Sourcing** | `services/commands/`, `services/projections/`, `events/` contracts |
+| **JAMstack & Edge Platform** | `sites/`, `edge/workers/`, `edge/schedulers/`, `deploy/` edge runtimes |
+| **Mobile & Cross-Platform** | `apps/mobile/`, `apps/web/`, `apps/desktop/`, shared `packages/ui/` |
+| **CLI & Tooling Monorepo** | `packages/cli/`, `packages/core/`, `plugins/`, `build-infra/` |
 | Custom Structure | User-defined roots, custom folders, and per-app paths |
 
 ## Databases

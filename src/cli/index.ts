@@ -6,6 +6,7 @@ import { scaffoldProject } from '../../electron/scaffolding/generator'
 import { TECH_CATALOG } from '../data/frameworks'
 import { DATABASE_CATALOG } from '../data/databases'
 import { STACK_PRESETS, StackPreset } from '../data/presets'
+import { ARCHITECTURE_PRESETS } from '../data/structurePresets'
 import { ProjectSettings, CartApp } from '../types'
 import { TESTING_TOOLS } from '../data/testingTools'
 import cliPackage from '../../packages/cli/package.json'
@@ -232,7 +233,12 @@ export async function runCli(args: string[] = process.argv.slice(2)) {
 
     console.log('\n--- 1-CLICK STACK PRESETS ---')
     STACK_PRESETS.forEach(p => {
-      console.log(`  • ${p.id.padEnd(20)} ${p.name}: ${p.tagline}`)
+      console.log(`  • ${p.id.padEnd(24)} ${p.name}: ${p.tagline}`)
+    })
+
+    console.log(`\n--- ARCHITECTURE & DIRECTORY LAYOUTS (${ARCHITECTURE_PRESETS.length}) ---`)
+    ARCHITECTURE_PRESETS.forEach(a => {
+      console.log(`  • ${a.id.padEnd(24)} ${a.name}: ${a.tagline}`)
     })
     console.log('')
     return

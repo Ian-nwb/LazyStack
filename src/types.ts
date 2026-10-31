@@ -143,16 +143,22 @@ export interface SelectedDatabase {
 }
 
 export type ArchitecturePreset =
-  | 'monorepo'           // apps/, packages/, infra/
-  | 'microservices'      // services/, shared/, infra/, gateway/
-  | 'domain-driven'      // domains/<domain>/, core/, infra/
-  | 'polyglot'           // backend/services/, frontend/clients/, deploy/
-  | 'modular-monolith'   // modules/<feature>/, libs/, infra/
-  | 'hexagonal'          // services/, adapters/, core/, infra/
-  | 'serverless'         // functions/, web/, infra/
-  | 'event-driven'       // services/, consumers/, events/contracts/
-  | 'data-platform'      // pipelines/, schemas/, analytics apps/
-  | 'custom'             // User custom paths
+  | 'monorepo'             // apps/, packages/, infra/
+  | 'microservices'        // services/, shared/, infra/, gateway/
+  | 'domain-driven'        // domains/<domain>/, core/, infra/
+  | 'polyglot'             // backend/services/, frontend/clients/, deploy/
+  | 'modular-monolith'     // modules/<feature>/, libs/, infra/
+  | 'hexagonal'            // services/, adapters/, core/, infra/
+  | 'serverless'           // functions/, web/, infra/
+  | 'event-driven'         // services/, consumers/, events/contracts/
+  | 'data-platform'        // pipelines/, schemas/, analytics apps/
+  | 'ai-ml-platform'       // models/, agents/, services/inference, pipelines/eval
+  | 'clean-architecture'   // domain/, usecases/, adapters/, services/
+  | 'cqrs'                 // services/commands, services/projections, events/
+  | 'jamstack-edge'        // sites/, edge/workers, deploy/
+  | 'mobile-crossplatform' // apps/mobile, apps/web, apps/desktop, packages/ui
+  | 'cli-tooling'          // packages/cli, packages/core, plugins/, examples/
+  | 'custom'               // User custom paths
 
 export type DatabaseIsolationMode =
   | 'service-isolated'   // Database-per-Service: db/ folder inside each service + service-scoped env

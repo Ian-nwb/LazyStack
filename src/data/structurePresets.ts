@@ -293,6 +293,203 @@ export const ARCHITECTURE_PRESETS: ArchitecturePresetMeta[] = [
 └── 📁 docs/`
   },
   {
+    id: 'ai-ml-platform',
+    name: 'AI / ML & LLM Platform',
+    tagline: 'Models, agent workflows, pipelines, and inference serving',
+    description: 'Structured for AI products: model definitions and prompt pipelines in models/, autonomous agent workers in agents/, inference gateways in services/, and evaluation pipelines alongside shared vector schemas.',
+    icon: '🤖',
+    badgeColor: 'border-pink-500/40 bg-pink-500/10 text-pink-300',
+    config: {
+      preset: 'ai-ml-platform',
+      isCustom: false,
+      appsDir: 'models',
+      appDirectories: {
+        frontend: 'apps/dashboard',
+        backend: 'services/inference',
+        worker: 'agents/workers',
+        fullstack: 'apps/platform',
+        'desktop-mobile': 'clients/mobile',
+        other: 'pipelines/eval'
+      },
+      infraDir: 'infra',
+      packagesDir: 'prompts',
+      docsDir: 'docs',
+      scriptsDir: 'scripts',
+      databaseIsolation: 'centralized'
+    },
+    previewTree: `├── 📁 models/ (weights, prompts, fine-tuning)
+├── 📁 agents/workers/ (background agent loop)
+├── 📁 services/inference/ (FastAPI / Triton serving)
+├── 📁 apps/dashboard/ (UI & playground)
+├── 📁 pipelines/eval/ (benchmarks & RAG eval)
+├── 📁 prompts/ (versioned DSPy/LangChain schemas)
+└── 📁 infra/ (vector DBs, GPUs & compose)`
+  },
+  {
+    id: 'clean-architecture',
+    name: 'Clean Architecture / Onion',
+    tagline: 'Strict concentric domain isolation & dependency inversion',
+    description: 'Separates enterprise core business logic from outer delivery mechanisms: domain entities in domain/, application use-cases in usecases/, inbound/outbound controllers in adapters/, and drivers in infrastructure/.',
+    icon: '🧅',
+    badgeColor: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300',
+    config: {
+      preset: 'clean-architecture',
+      isCustom: false,
+      appsDir: 'services',
+      appDirectories: {
+        frontend: 'apps/ui',
+        backend: 'services',
+        worker: 'services/workers',
+        fullstack: 'apps/fullstack',
+        'desktop-mobile': 'clients/desktop',
+        other: 'services/other'
+      },
+      infraDir: 'infra',
+      packagesDir: 'domain',
+      docsDir: 'docs',
+      scriptsDir: 'scripts',
+      databaseIsolation: 'service-isolated'
+    },
+    previewTree: `├── 📁 services/
+│   └── 📁 core-service/
+│       ├── 📁 domain/ (entities & business rules)
+│       ├── 📁 usecases/ (application workflows)
+│       ├── 📁 adapters/ (controllers, presenters)
+│       └── 📁 infrastructure/ (DB repos, HTTP, gRPC)
+├── 📁 domain/ (shared enterprise business rules)
+├── 📁 infra/ (docker-compose & terraform)
+└── 📁 docs/`
+  },
+  {
+    id: 'cqrs',
+    name: 'CQRS & Event Sourcing',
+    tagline: 'Separated Command / Query paths with append-only event store',
+    description: 'Decouples write-side command processors from read-side query projections with an append-only event store and pub/sub message bus.',
+    icon: '⚡',
+    badgeColor: 'border-yellow-500/40 bg-yellow-500/10 text-yellow-300',
+    config: {
+      preset: 'cqrs',
+      isCustom: false,
+      appsDir: 'services',
+      appDirectories: {
+        frontend: 'apps/queries-ui',
+        backend: 'services/commands',
+        worker: 'services/projections',
+        fullstack: 'apps/fullstack',
+        'desktop-mobile': 'clients/desktop',
+        other: 'services/other'
+      },
+      infraDir: 'infra',
+      packagesDir: 'events',
+      docsDir: 'docs',
+      scriptsDir: 'scripts',
+      databaseIsolation: 'service-isolated'
+    },
+    previewTree: `├── 📁 services/commands/ (write-side handlers)
+├── 📁 services/projections/ (read-side query builders)
+├── 📁 apps/queries-ui/ (read-model view clients)
+├── 📁 events/ (versioned event contracts)
+├── 📁 infra/ (event store, Kafka, Postgres read replica)
+└── 📁 docs/`
+  },
+  {
+    id: 'jamstack-edge',
+    name: 'JAMstack & Edge Platform',
+    tagline: 'Edge computing workers, headless backends & static CDNs',
+    description: 'Optimized for globally distributed architectures with edge functions (Cloudflare Workers/Fastly/Vercel Edge), headless CMS/API services, and ultra-fast static web clients.',
+    icon: '🚀',
+    badgeColor: 'border-purple-500/40 bg-purple-500/10 text-purple-300',
+    config: {
+      preset: 'jamstack-edge',
+      isCustom: false,
+      appsDir: 'sites',
+      appDirectories: {
+        frontend: 'sites/web',
+        backend: 'edge/workers',
+        worker: 'edge/schedulers',
+        fullstack: 'sites/app',
+        'desktop-mobile': 'clients/native',
+        other: 'edge/other'
+      },
+      infraDir: 'deploy',
+      packagesDir: 'packages',
+      docsDir: 'docs',
+      scriptsDir: 'scripts',
+      databaseIsolation: 'centralized'
+    },
+    previewTree: `├── 📁 sites/web/ (SSR / SSG storefront)
+├── 📁 edge/workers/ (Cloudflare / Edge runtime API)
+├── 📁 edge/schedulers/ (cron edge tasks)
+├── 📁 packages/ (shared components & SDKs)
+├── 📁 deploy/ (Terraform, Wrangler, Vercel configs)
+└── 📁 docs/`
+  },
+  {
+    id: 'mobile-crossplatform',
+    name: 'Mobile & Cross-Platform Monorepo',
+    tagline: 'Shared core & UI design system across Web, Mobile & Desktop',
+    description: 'Unified codebase powering iOS/Android (React Native / Flutter / Expo), Desktop (Electron / Tauri), and Web apps with a shared multiplatform UI and state store.',
+    icon: '📱',
+    badgeColor: 'border-teal-500/40 bg-teal-500/10 text-teal-300',
+    config: {
+      preset: 'mobile-crossplatform',
+      isCustom: false,
+      appsDir: 'apps',
+      appDirectories: {
+        frontend: 'apps/web',
+        'desktop-mobile': 'apps/mobile',
+        backend: 'services/api',
+        worker: 'services/workers',
+        fullstack: 'apps/fullstack',
+        other: 'apps/desktop'
+      },
+      infraDir: 'infra',
+      packagesDir: 'packages',
+      docsDir: 'docs',
+      scriptsDir: 'scripts',
+      databaseIsolation: 'service-isolated'
+    },
+    previewTree: `├── 📁 apps/mobile/ (React Native / Flutter / Expo)
+├── 📁 apps/web/ (Next.js / Vite web client)
+├── 📁 apps/desktop/ (Tauri / Electron desktop)
+├── 📁 services/api/ (GraphQL / REST backend)
+├── 📁 packages/ui/ (cross-platform design tokens)
+├── 📁 packages/core/ (business logic & state)
+└── 📁 infra/`
+  },
+  {
+    id: 'cli-tooling',
+    name: 'Developer Tooling & CLI Monorepo',
+    tagline: 'Multi-package CLI toolchains, plugins & native binaries',
+    description: 'Engineered for developer tool builders and open-source ecosystems: binary CLI runners in packages/cli, core logic in packages/core, pluggable extensions in plugins/, and release automation in scripts/.',
+    icon: '🧰',
+    badgeColor: 'border-blue-500/40 bg-blue-500/10 text-blue-300',
+    config: {
+      preset: 'cli-tooling',
+      isCustom: false,
+      appsDir: 'packages',
+      appDirectories: {
+        backend: 'packages/cli',
+        worker: 'packages/core',
+        frontend: 'packages/docs-site',
+        fullstack: 'packages/studio',
+        'desktop-mobile': 'packages/gui',
+        other: 'plugins'
+      },
+      infraDir: 'build-infra',
+      packagesDir: 'packages',
+      docsDir: 'docs',
+      scriptsDir: 'scripts',
+      databaseIsolation: 'centralized'
+    },
+    previewTree: `├── 📁 packages/cli/ (binary entrypoint & CLI commands)
+├── 📁 packages/core/ (engine & compiler logic)
+├── 📁 plugins/ (pluggable runtime extensions)
+├── 📁 examples/ (sandbox verification apps)
+├── 📁 build-infra/ (cross-compilation & packaging)
+└── 📁 scripts/ (release & publishing pipelines)`
+  },
+  {
     id: 'custom',
     name: 'Custom Structure',
     tagline: 'Define your own directory contract and paths',

@@ -339,7 +339,7 @@ tr.pick td:first-child::before { display: inline-block; animation: nudgeX 1.6s e
 <div class="page">
 
   <header class="bar">
-    <a class="mark" href="#top"><span class="logo-sm" data-logo aria-hidden="true"></span>LAZYSTACK/1.0.7</a>
+    <a class="mark" href="#top"><span class="logo-sm" data-logo aria-hidden="true"></span>LAZYSTACK/1.0.8</a>
     <nav aria-label="Sections">
       <a href="#features">Features</a>
       <a href="#layouts">Layouts</a>
@@ -358,19 +358,19 @@ tr.pick td:first-child::before { display: inline-block; animation: nudgeX 1.6s e
 
       <div class="hero-grid">
         <div>
-          <p class="lead">LazyStack lets you compose, visualize, and scaffold production-ready fullstack architectures and polyglot monorepos. Choose from 75 frameworks, 25 databases and caches (including Apache Kafka), 10 architectural layouts, testing suites, Terraform/OpenTofu export, Kubernetes &amp; Helm manifests, and CI/CD workflows — with one unified blueprint.</p>
+          <p class="lead">LazyStack lets you compose, visualize, and scaffold production-ready fullstack architectures and polyglot monorepos. Choose from 75 frameworks, 25 databases and caches, 16 architectural layout presets (including AI/ML Platform, Clean Architecture, CQRS, Edge, and Cross-Platform), testing suites, Terraform/OpenTofu export, Kubernetes &amp; Helm manifests, and CI/CD workflows — with one unified blueprint.</p>
           <div class="actions">
-            <a class="btn btn-solid" href="#download">Download v1.0.7 &#8595;</a>
+            <a class="btn btn-solid" href="#download">Download v1.0.8 &#8595;</a>
             <a class="btn btn-line" href="https://github.com/Ian-nwb/LazyStack">View source &#8599;</a>
           </div>
         </div>
         <dl class="spec">
-          <div><dt>Version</dt><dd>1.0.7</dd></div>
-          <div><dt>Status</dt><dd class="live">v1.0.7 Released</dd></div>
+          <div><dt>Version</dt><dd>1.0.8</dd></div>
+          <div><dt>Status</dt><dd class="live">v1.0.8 Released</dd></div>
           <div><dt>Platforms</dt><dd>Linux x64, Windows x64</dd></div>
           <div><dt>Builds</dt><dd>AppImage, portable EXE</dd></div>
-          <div><dt>CLI</dt><dd>lazystack v1.0.7 (npm)</dd></div>
-          <div><dt>Catalog</dt><dd>75 frameworks · 25 DBs</dd></div>
+          <div><dt>CLI</dt><dd>lazystack v1.0.8 (npm)</dd></div>
+          <div><dt>Catalog</dt><dd>75 frameworks · 25 DBs · 16 layouts</dd></div>
           <div><dt>From source</dt><dd>Node.js 20+, npm 10+</dd></div>
           <div><dt>License</dt><dd>MIT</dd></div>
         </dl>
@@ -445,6 +445,12 @@ tr.pick td:first-child::before { display: inline-block; animation: nudgeX 1.6s e
               <tr><td>Serverless &amp; Cloud-Native</td><td><code>functions/</code>, shared packages, cloud infrastructure</td></tr>
               <tr><td>Event-Driven Services</td><td>APIs, consumers, event schemas, and broker infrastructure</td></tr>
               <tr><td>Data Platform</td><td>Pipelines, ingestion services, dashboards, and schemas</td></tr>
+              <tr><td>AI / ML &amp; LLM Platform</td><td><code>models/</code>, <code>agents/</code>, <code>services/inference/</code>, DSPy/LangChain <code>prompts/</code></td></tr>
+              <tr><td>Clean Architecture / Onion</td><td><code>domain/</code>, <code>usecases/</code>, <code>adapters/</code>, <code>services/</code> with concentric boundaries</td></tr>
+              <tr><td>CQRS &amp; Event Sourcing</td><td><code>services/commands/</code>, <code>services/projections/</code>, <code>events/</code> contracts</td></tr>
+              <tr><td>JAMstack &amp; Edge Platform</td><td><code>sites/</code>, <code>edge/workers/</code>, <code>edge/schedulers/</code>, <code>deploy/</code> edge runtimes</td></tr>
+              <tr><td>Mobile &amp; Cross-Platform</td><td><code>apps/mobile/</code>, <code>apps/web/</code>, <code>apps/desktop/</code>, shared <code>packages/ui/</code></td></tr>
+              <tr><td>CLI &amp; Tooling Monorepo</td><td><code>packages/cli/</code>, <code>packages/core/</code>, <code>plugins/</code>, <code>build-infra/</code></td></tr>
               <tr><td>Custom Structure</td><td>User-defined roots, custom folders, and per-app paths</td></tr>
             </tbody>
           </table>
@@ -554,22 +560,22 @@ lazystack scaffold --config lazystack.json --out ./generated</pre>
     <section class="sec dl" id="download">
       <div class="sec-side">
         <span class="eyebrow">Download</span>
-        <span class="count">v1.0.7</span>
+        <span class="count">v1.0.8</span>
       </div>
       <div>
-        <h2>Get <span class="thin">v1.0.7.</span></h2>
-        <p>Packages are attached to the v1.0.7 release on GitHub. This release ships for Linux and Windows only.</p>
+        <h2>Get <span class="thin">v1.0.8.</span></h2>
+        <p>Packages are attached to the v1.0.8 release on GitHub. This release ships for Linux and Windows only.</p>
 
         <div class="dl-rows">
           <div class="dl-row">
             <span class="plat">Linux x64</span>
             <span class="pkg">AppImage</span>
-            <a class="btn btn-solid" href="https://github.com/Ian-nwb/LazyStack/releases/download/v1.0.7/LazyStack-1.0.7.AppImage">Download &#8595;</a>
+            <a class="btn btn-solid" href="https://github.com/Ian-nwb/LazyStack/releases/download/v1.0.8/LazyStack-1.0.8.AppImage">Download &#8595;</a>
           </div>
           <div class="dl-row">
             <span class="plat">Windows x64</span>
             <span class="pkg">Portable <span class="thin">EXE</span></span>
-            <a class="btn btn-solid" href="https://github.com/Ian-nwb/LazyStack/releases/download/v1.0.7/LazyStack.1.0.7.exe">Download &#8595;</a>
+            <a class="btn btn-solid" href="https://github.com/Ian-nwb/LazyStack/releases/download/v1.0.8/LazyStack.1.0.8.exe">Download &#8595;</a>
           </div>
           <div class="dl-row none">
             <span class="plat">macOS</span>
@@ -607,8 +613,8 @@ npm start</pre>
         <h3 style="margin-top:12px">Build the packages yourself</h3>
         <div class="code">
           <div class="code-head"><span class="eyebrow">Linux AppImage + Windows portable EXE</span><button class="copy" type="button" data-copy="c6">Copy</button></div>
-<pre id="c6">npm run dist:linux    <span class="c"># release/1.0.6/LazyStack-1.0.6.AppImage</span>
-npm run dist:win      <span class="c"># release/1.0.6/LazyStack 1.0.6.exe</span>
+<pre id="c6">npm run dist:linux    <span class="c"># release/1.0.8/LazyStack-1.0.8.AppImage</span>
+npm run dist:win      <span class="c"># release/1.0.8/LazyStack 1.0.8.exe</span>
 npm run dist:release  <span class="c"># build both targets</span></pre>
         </div>
       </div>
@@ -618,12 +624,13 @@ npm run dist:release  <span class="c"># build both targets</span></pre>
     <section class="sec" id="roadmap">
       <div class="sec-side">
         <span class="eyebrow">Changelog</span>
-        <span class="count">v1.0.7</span>
+        <span class="count">v1.0.8</span>
       </div>
       <div>
-        <h2>What shipped <span class="thin">in 1.0.7.</span></h2>
-        <p>v1.0.7 delivers cloud deployment exports — Terraform/OpenTofu, Kubernetes/Helm, and GitHub Actions CI/CD deploy pipelines — auto-generated alongside every scaffolded project.</p>
+        <h2>What shipped <span class="thin">in 1.0.8.</span></h2>
+        <p>v1.0.8 expands architecture layouts with 6 new production-grade directory templates, automatic signature folder scaffolding, and new 1-click full-stack presets.</p>
         <dl class="rows">
+          <div class="row"><dt>v1.0.8 · Released</dt><dd>Shipped: 6 new battle-tested architecture presets (AI/ML &amp; LLM Platform, Clean Architecture / Onion, CQRS &amp; Event Sourcing, JAMstack &amp; Edge Platform, Mobile &amp; Cross-Platform Monorepo, Developer Tooling &amp; CLI Monorepo); automated signature folder creation on disk; 3 new 1-click presets (AI Agent &amp; LLM Stack, Clean Architecture Go, Event-Driven Kafka Services); and CLI contract listings.</dd></div>
           <div class="row"><dt>v1.0.7 · Released</dt><dd>Shipped: Terraform/OpenTofu <code>.tf</code> modules for AWS ECS/Fargate, GCP Cloud Run, and DigitalOcean App Platform; Kubernetes Deployment, Service, ConfigMap, Secret, and Ingress YAML per service; Helm chart skeleton; <code>.github/workflows/deploy.yml</code> with container build &amp; push to GHCR via matrix strategy. All generated automatically from the scaffolded topology.</dd></div>
           <div class="row"><dt>v1.0.6 · Released</dt><dd>Shipped: Unified Dev Orchestrator (<code>lazystack dev</code> / <code>npm run dev</code>) with automatic database spin-up and colored concurrent terminal output; Apache Kafka (KRaft mode); Shared typed event contracts in <code>packages/events/</code> with Dead-Letter Queues (DLQ) and exponential backoff retry policies across TypeScript, Python, and Go.</dd></div>
           <div class="row"><dt>v1.0.5 · Released</dt><dd>Shipped: Standalone npm CLI with init, search, validate, plan, doctor, and safe dry-run scaffold; AssemblyScript (Wasm), Google Apps Script, React Native Expo, and Inferno.js starters; Linux AppImage &amp; Windows portable EXE.</dd></div>
@@ -651,10 +658,10 @@ npm run dist:release  <span class="c"># build both targets</span></pre>
     <div class="flogo rv" data-logo aria-hidden="true"></div>
     <p class="wordmark rv" aria-hidden="true">Lazy<span class="thin">Stack</span></p>
     <div class="foot rv">
-      <span>MIT License &middot; v1.0.7 &middot; by Ian-nwb</span>
+      <span>MIT License &middot; v1.0.8 &middot; by Ian-nwb</span>
       <nav aria-label="Project links">
         <a href="https://github.com/Ian-nwb/LazyStack">Repository</a>
-        <a href="https://github.com/Ian-nwb/LazyStack/releases/tag/v1.0.7">Release v1.0.7</a>
+        <a href="https://github.com/Ian-nwb/LazyStack/releases/tag/v1.0.8">Release v1.0.8</a>
         <a href="https://github.com/Ian-nwb/LazyStack/blob/main/LICENSE">License</a>
         <a href="https://github.com/Ian-nwb">Ian-nwb</a>
       </nav>

@@ -193,10 +193,25 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
     await fs.ensureDir(targetDir)
 
     // 2. Scaffold configured directory contract
+    const presetExtraDirs: Record<string, string[]> = {
+      'ai-ml-platform': ['models', 'prompts', 'pipelines/eval', 'agents/workers'],
+      'clean-architecture': ['domain'],
+      'cqrs': ['events'],
+      'jamstack-edge': ['edge/workers', 'edge/schedulers'],
+      'mobile-crossplatform': ['packages/ui', 'packages/core'],
+      'cli-tooling': ['plugins', 'examples'],
+      'data-platform': ['schemas'],
+      'event-driven': ['events'],
+      'domain-driven': ['core']
+    }
+    const currentPreset = settings.structureConfig?.preset || 'monorepo'
+    const extraDirs = presetExtraDirs[currentPreset] || []
+
     const directories = [
       '.github/workflows',
       '.vscode',
       ...appRootDirectories,
+      ...extraDirs,
       paths.docsDir,
       paths.infraDir,
       paths.scriptsDir,

@@ -5,6 +5,23 @@ All notable changes to LazyStack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.8] - 2026-10-31
+
+### Added
+- **6 New Architecture & Directory Layout Presets**:
+  - **AI / ML & LLM Platform**: Tailored for modern AI products with `models/` (weights & prompts), `agents/workers/` (autonomous loops), `services/inference/` (FastAPI/Triton serving), `pipelines/eval/` (benchmarking), and `prompts/` (versioned DSPy/LangChain schemas).
+  - **Clean Architecture / Onion**: Strict concentric boundaries decoupling business logic with `domain/` (entities), `usecases/` (application workflows), `adapters/` (controllers & presenters), and `services/` (delivery implementations).
+  - **CQRS & Event Sourcing**: Separated write-side command processors (`services/commands/`) from read-side query projections (`services/projections/`) with append-only event contracts (`events/`).
+  - **JAMstack & Edge Platform**: Globally distributed edge architecture with `sites/` (SSR/SSG storefronts), `edge/workers/` (Cloudflare Workers / Edge runtime), and `edge/schedulers/`.
+  - **Mobile & Cross-Platform Monorepo**: Unified codebase for `apps/mobile/` (React Native/Expo/Flutter), `apps/web/` (Next.js/Vite), `apps/desktop/` (Tauri/Electron), and shared `packages/ui/` design system.
+  - **Developer Tooling & CLI Monorepo**: Multi-package engine for tool builders with `packages/cli/`, `packages/core/`, `plugins/`, and `build-infra/`.
+- **Signature Directory Scaffolding**: Core generator ensures signature directories for all 16 architecture presets are physically scaffolded on disk.
+- **New 1-Click Production Stack Presets**:
+  - `ai-agent-platform`: FastAPI Agent backend + React Vite dashboard + Redis Streams + Qdrant vector DB.
+  - `clean-go-onion`: Go Echo Clean Architecture backend + Vue 3 client + PostgreSQL.
+  - `event-driven-kafka`: NestJS producer API + Python consumer worker + Apache Kafka + PostgreSQL.
+- **CLI Ecosystem Listing**: `lazystack list` now outputs all 16 architecture and directory structure presets with their IDs and taglines.
+
 ## [1.0.7] - 2026-10-31
 
 ### Added
