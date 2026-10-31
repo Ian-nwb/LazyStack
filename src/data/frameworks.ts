@@ -498,6 +498,20 @@ export const TECH_CATALOG: TechItem[] = [
       { binary: 'composer', label: 'Composer (PHP PM)', installHint: 'https://getcomposer.org/download/' }
     ]
   },
+  {
+    id: 'php-symfony',
+    name: 'PHP (Symfony 7)',
+    language: 'PHP',
+    category: 'fullstack',
+    role: 'fullstack',
+    defaultPort: 8000,
+    description: 'Enterprise PHP framework with Flex, Doctrine ORM, and Twig templating.',
+    badgeColor: 'bg-slate-400/20 text-slate-200 border-slate-400/40',
+    requires: [
+      { binary: 'php', label: 'PHP Runtime', installHint: 'apt install php / brew install php' },
+      { binary: 'composer', label: 'Composer (PHP PM)', installHint: 'https://getcomposer.org/download/' }
+    ]
+  },
 
   // --- FRONTEND SPA / HYPERMEDIA ---
   {

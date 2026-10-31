@@ -874,6 +874,22 @@ CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=${port}"]
     }
   }
 
+  if (techId === 'php-symfony') {
+    return {
+      dockerfile: `FROM php:8.3-cli-alpine
+RUN apk add --no-cache git unzip
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+WORKDIR /app
+COPY composer.json composer.lock* ./
+RUN composer install --no-dev --optimize-autoloader --no-interaction || true
+COPY . .
+EXPOSE ${port}
+CMD ["php", "-S", "0.0.0.0:${port}", "-t", "public"]
+`,
+      dockerignore: `vendor\n.git\nvar/\n`
+    }
+  }
+
   return {
     dockerfile: `FROM node:22-alpine AS builder
 WORKDIR /app

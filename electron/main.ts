@@ -241,15 +241,117 @@ app.whenReady().then(() => {
   })
 
   ipcMain.handle('install-dependencies', async (_event, targetPath: string) => {
-    return new Promise((resolve) => {
-      exec('npm install', { cwd: targetPath }, (error, stdout, stderr) => {
-        if (error) {
-          resolve({ success: false, error: error.message, output: stderr })
-        } else {
-          resolve({ success: true, output: stdout })
-        }
+    const logs: string[] = []
+
+    const runCommand = (cmd: string, cwd: string): Promise<boolean> => {
+      return new Promise((resolve) => {
+        logs.push(`[Installing] ${cmd} in ${path.relative(targetPath, cwd) || '.'}...`)
+        exec(cmd, { cwd, timeout: 300000, env: process.env }, (error, stdout, stderr) => {
+          if (stdout) logs.push(stdout.trim())
+          if (stderr) logs.push(stderr.trim())
+          resolve(!error)
+        })
       })
-    })
+    }
+
+    try {
+      // 1. Root npm install (if root package.json exists)
+      if (fs.existsSync(path.join(targetPath, 'package.json'))) {
+        await runCommand('npm install', targetPath)
+      }
+
+      // 2. Discover all nested directories (monorepo subdirectories)
+      const candidateDirs: string[] = [targetPath]
+      const rootEntries = fs.readdirSync(targetPath, { withFileTypes: true })
+      for (const entry of rootEntries) {
+        if (entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'node_modules') {
+          const sub = path.join(targetPath, entry.name)
+          candidateDirs.push(sub)
+          try {
+            const nested = fs.readdirSync(sub, { withFileTypes: true })
+            for (const n of nested) {
+              if (n.isDirectory() && !n.name.startsWith('.') && n.name !== 'node_modules') {
+                candidateDirs.push(path.join(sub, n.name))
+              }
+            }
+          } catch {}
+        }
+      }
+
+      // 3. Multi-language dependency execution across all candidate directories
+      for (const dir of candidateDirs) {
+        // Node.js / Web
+        if (dir !== targetPath && fs.existsSync(path.join(dir, 'package.json'))) {
+          await runCommand('npm install', dir)
+        }
+
+        // Python (auto-venv + requirements)
+        if (fs.existsSync(path.join(dir, 'requirements.txt'))) {
+          const isWin = process.platform === 'win32'
+          const venvCmd = isWin ? 'python -m venv .venv' : 'python3 -m venv .venv'
+          const pipCmd = isWin ? '.venv\\Scripts\\pip.exe install -r requirements.txt' : '.venv/bin/pip install -r requirements.txt'
+          await runCommand(venvCmd, dir)
+          await runCommand(pipCmd, dir)
+        }
+
+        // PHP / Composer
+        if (fs.existsSync(path.join(dir, 'composer.json'))) {
+          await runCommand('composer install --no-interaction', dir)
+        }
+
+        // Ruby / Bundler
+        if (fs.existsSync(path.join(dir, 'Gemfile'))) {
+          await runCommand('bundle install', dir)
+        }
+
+        // Elixir / Mix
+        if (fs.existsSync(path.join(dir, 'mix.exs'))) {
+          await runCommand('mix deps.get', dir)
+        }
+
+        // Rust / Cargo
+        if (fs.existsSync(path.join(dir, 'Cargo.toml'))) {
+          await runCommand('cargo check', dir)
+        }
+
+        // Go / Modules
+        if (fs.existsSync(path.join(dir, 'go.mod'))) {
+          await runCommand('go mod download', dir)
+        }
+
+        // C# / .NET
+        try {
+          const files = fs.readdirSync(dir)
+          if (files.some((f: string) => f.endsWith('.csproj'))) {
+            await runCommand('dotnet restore', dir)
+          }
+        } catch {}
+
+        // Dart / Flutter
+        if (fs.existsSync(path.join(dir, 'pubspec.yaml'))) {
+          await runCommand('flutter pub get', dir)
+        }
+
+        // Crystal / Shards
+        if (fs.existsSync(path.join(dir, 'shard.yml'))) {
+          await runCommand('shards install', dir)
+        }
+
+        // Erlang / rebar3
+        if (fs.existsSync(path.join(dir, 'rebar.config'))) {
+          await runCommand('rebar3 get-deps', dir)
+        }
+
+        // Julia / Genie
+        if (fs.existsSync(path.join(dir, 'Project.toml'))) {
+          await runCommand('julia -e "using Pkg; Pkg.instantiate()"', dir)
+        }
+      }
+
+      return { success: true, output: logs.join('\n') }
+    } catch (err: any) {
+      return { success: false, error: err.message, output: logs.join('\n') }
+    }
   })
 
   ipcMain.handle('start-stack', async (_event, targetPath: string) => {

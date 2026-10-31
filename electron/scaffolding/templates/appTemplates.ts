@@ -1836,6 +1836,108 @@ if (file_exists(__DIR__.'/../vendor/autoload.php')) {
   }
 
   // ═══════════════════════════════════════════════════════
+  // PHP — Symfony 7
+  // ═══════════════════════════════════════════════════════
+  if (techId === 'php-symfony') {
+    files['composer.json'] = `{
+  "name": "lazystack/${folderName}",
+  "type": "project",
+  "require": {
+    "php": "^8.2",
+    "symfony/framework-bundle": "^7.0",
+    "symfony/runtime": "^7.0",
+    "symfony/console": "^7.0",
+    "symfony/dotenv": "^7.0",
+    "symfony/yaml": "^7.0",
+    "doctrine/orm": "^3.0",
+    "doctrine/dbal": "^4.0"
+  },
+  "autoload": {
+    "psr-4": { "App\\\\": "src/" }
+  },
+  "scripts": {
+    "auto-scripts": {},
+    "post-install-cmd": ["@auto-scripts"],
+    "post-update-cmd": ["@auto-scripts"]
+  }
+}
+`
+    files['public/index.php'] = `<?php
+
+use App\\Kernel;
+
+require_once dirname(__DIR__).'/vendor/autoload_runtime.php';
+
+return function (array $context) {
+    return new Kernel($context['APP_ENV'], (bool) $context['APP_DEBUG']);
+};
+`
+    files['src/Kernel.php'] = `<?php
+namespace App;
+
+use Symfony\\Bundle\\FrameworkBundle\\Kernel\\MicroKernelTrait;
+use Symfony\\Component\\HttpKernel\\Kernel as BaseKernel;
+
+class Kernel extends BaseKernel
+{
+    use MicroKernelTrait;
+}
+`
+    files['src/Controller/ApiController.php'] = `<?php
+namespace App\\Controller;
+
+use Symfony\\Bundle\\FrameworkBundle\\Controller\\AbstractController;
+use Symfony\\Component\\HttpFoundation\\JsonResponse;
+use Symfony\\Component\\Routing\\Attribute\\Route;
+
+class ApiController extends AbstractController
+{
+    #[Route('/', methods: ['GET'])]
+    public function index(): JsonResponse
+    {
+        return $this->json([
+            'service' => '${folderName}',
+            'framework' => 'Symfony 7',
+            'status' => 'online',
+            'php' => phpversion()
+        ]);
+    }
+
+    #[Route('/health', methods: ['GET'])]
+    public function health(): JsonResponse
+    {
+        return $this->json(['status' => 'healthy']);
+    }
+}
+`
+    files['config/bundles.php'] = `<?php
+return [
+    Symfony\\Bundle\\FrameworkBundle\\FrameworkBundle::class => ['all' => true],
+];
+`
+    files['config/routes.yaml'] = `controllers:
+    resource:
+        path: ../src/Controller/
+        namespace: App\\Controller
+    type: attribute
+`
+    files['config/packages/framework.yaml'] = `framework:
+    secret: '%env(APP_SECRET)%'
+    http_method_override: false
+    handle_all_throwables: true
+    php_errors:
+        log: true
+`
+    files['.env'] = `APP_ENV=dev
+APP_DEBUG=1
+APP_SECRET=change-me-to-a-real-secret
+`
+    files['.gitignore'] = `/vendor\n.env.local\n.env.*.local\n/var/\n`
+    files['README.md'] = `# ${folderName} (Symfony 7)\n\n### Run in Development\n\`\`\`bash\ncomposer install\nphp -S 0.0.0.0:${port} -t public\n\`\`\`\n`
+    return files
+  }
+
+  // ═══════════════════════════════════════════════════════
   // Python — Django (override generic python- handler)
   // ═══════════════════════════════════════════════════════
   if (techId === 'python-django') {
