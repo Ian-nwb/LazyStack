@@ -17,10 +17,10 @@
     "start": "electron .",
     "pack": "npm run build && electron-builder --dir",
     "dist": "npm run build && electron-builder",
-    "dist:linux": "npm run build && electron-builder --linux AppImage --config.directories.output=release/1.0.6",
+    "dist:linux": "npm run build && electron-builder --linux AppImage",
     "dist:deb": "npm run build && electron-builder --linux deb",
-    "dist:win": "npm run build && electron-builder --win portable --config.directories.output=release/1.0.6",
-    "dist:release": "npm run build && electron-builder --linux AppImage --win portable --config.directories.output=release/1.0.6"
+    "dist:win": "npm run build && electron-builder --win portable",
+    "dist:release": "npm run build && electron-builder --linux AppImage --win portable"
   },
   "keywords": [
     "electron",
@@ -42,7 +42,7 @@
     "productName": "LazyStack",
     "icon": "build/icon.png",
     "directories": {
-      "output": "release"
+      "output": "release/1.0.7"
     },
     "files": [
       "dist/**/*",
