@@ -1,5 +1,7 @@
 # LazyStack
 
+Current development version: **1.1.0**. The v1.1.0 scope adds Rust GPUI, Yew, and Leptos starters, native framework layout previews, and Caddy/Traefik reverse proxy generation. See [the v1.1.0 plan](ROADMAP-1.1.0.md).
+
 LazyStack is a desktop stack builder and command-line scaffolder for composing application stacks. Choose languages, frameworks, databases, service connections, testing tools, and an architecture layout; LazyStack generates a project structure and supporting configuration.
 
 ## Download
@@ -17,13 +19,14 @@ macOS package not yet available (sponsor me a Macbook for app signature)
 
 - **Mix application roles:** Generate frontend clients, backend services, full-stack apps, workers, and desktop/mobile clients together.
 - **Broad technology catalog:** Use established frameworks or start with plain language/runtime templates. Current options include React, Vue, Angular, Solid, Qwik, HTMX, Lit, Kotlin/JS, SwiftUI, Reflex, NiceGUI, Anvil, Python, PHP, Go, Java, Node.js, Kotlin/Ktor, Swift/Vapor, Rust, AssemblyScript, Google Apps Script, React Native (Expo), Inferno.js, and many more.
+- **Framework-native project structure:** Each app starts inside its selected architecture root, then uses its own ecosystem conventions. Laravel gets `app/`, `bootstrap/`, `config/`, `database/`, `public/`, `resources/`, and `routes/`; Django gets `manage.py` and a settings package; Spring Boot gets Maven source/resource paths; Go and Rust get their native module manifests and source files. Blueprint previews show these paths instead of assuming every app has `src/`.
 - **Architecture layouts:** Choose a preset or customize root directories, additional folders, and per-app paths.
 - **Polyglot layout:** Route browser clients to `frontend/clients/`, API services to `backend/services/`, workers to `backend/workers/`, and deployment files to `deploy/`.
 - **Service connections:** Configure API URLs, environment variable names, health checks, and startup dependencies between services.
 - **Database configuration:** Add self-hosted databases or managed cloud providers, configure per-service database scope, and generate local credentials in `.env`.
 - **Database web UIs:** Optionally attach an admin UI to each database instance: Adminer, pgAdmin, or Prisma Studio for PostgreSQL; Adminer, phpMyAdmin, or Prisma Studio for MySQL/MariaDB; Mongo Express for MongoDB; and Redis Commander for Redis/Valkey. Prisma Studio runs on the host so its local web server is reachable; the generated project adds an `npm run prisma:studio:<database>` command. Start the database stack first, then run that command and open the configured local port. It uses Prisma CLI 7's direct connection URL support, so it does not require a Prisma schema.
 - **Testing tools:** Select tools per app, organized by test purpose. See [Testing tools](#testing-tools).
-- **Infrastructure output:** Generate Docker Compose, optional Nginx or Apache routing, environment files, scripts, shared packages, and starter documentation.
+- **Infrastructure output:** Generate Docker Compose, optional Nginx, Apache, Caddy, or Traefik routing, environment files, scripts, shared packages, and starter documentation.
 - **Blueprints and CLI:** Export JSON blueprints and scaffold them without opening the desktop interface.
 - **Unified Dev Orchestrator:** Run your entire polyglot stack from a single `npm run dev` command with auto database spin-up, concurrent hot-reload, and live ANSI-colored output per service.
 - **Event-Driven Worker Wiring:** Auto-scaffold typed event contracts, dead-letter queues, and polyglot worker starters (Node.js, Python, Go) when brokers are in the stack.
@@ -33,9 +36,9 @@ macOS package not yet available (sponsor me a Macbook for app signature)
 
 ## Frontend and vanilla starters
 
-Frontend and UI choices include React + Vite, React + MUI, Vue + Vite, Angular, SolidJS, Qwik, HTMX, Lit web components, vanilla HTML/CSS/JavaScript, Kotlin/JS for browser apps, and SwiftUI for native Apple clients. Python UI choices include Reflex and NiceGUI, which combine a Python backend with browser-rendered UI. Anvil is included as a hosted Python full-stack option; its apps are continued in the Anvil editor.
+Frontend and UI choices include React + Vite, React + MUI, Vue + Vite, Angular, SolidJS, Qwik, HTMX, Lit web components, vanilla HTML/CSS/JavaScript, Kotlin/JS, Rust Yew and Leptos for WebAssembly, and SwiftUI for native Apple clients. Rust GPUI creates a native desktop application and runs on the host. Python UI choices include Reflex and NiceGUI, which combine a Python backend with browser-rendered UI. Anvil is included as a hosted Python full-stack option; its apps are continued in the Anvil editor.
 
-For plain services, choose Vanilla Node.js, PHP, Go (`net/http`), Python standard-library HTTP, or Java JDK `HttpServer`. These are framework-free starters with runnable source and README instructions. Existing framework choices include Go Chi/Echo, PHP Laravel, Kotlin Ktor, Swift Vapor, and others.
+For plain services, choose Vanilla Node.js, PHP, Go (`net/http`), Python standard-library HTTP, or Java JDK `HttpServer`. These are framework-free starters with runnable source and README instructions. Existing framework choices include Go Chi/Echo, PHP Laravel, Kotlin Ktor, Swift Vapor, and others. See [native framework layout conventions](docs/framework-layouts.md) for examples across the catalog.
 
 ## Testing tools
 

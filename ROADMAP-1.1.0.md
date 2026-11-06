@@ -1,0 +1,15 @@
+# v1.1.0 plan
+
+## Included in this version scope
+
+- Add a native GPUI desktop starter, plus Yew and Leptos WebAssembly frontend starters.
+- Keep each app inside the selected architecture's service root while generating framework-specific project files and directories for all catalog entries.
+- Show each selected framework's representative file paths in the Blueprint tree instead of showing a generic `src/` directory for every app.
+- Generate app environment defaults for their native runtimes (for example `RAILS_ENV`, `SPRING_PROFILES_ACTIVE`, `MIX_ENV`, or `RUST_LOG`) instead of setting `NODE_ENV` on every service.
+- Add Caddy and Traefik reverse proxy configuration choices alongside Nginx and Apache.
+- Treat hosted and native desktop/mobile apps as host-run apps; GPUI, Anvil, and SwiftUI do not get Docker service templates.
+- Document framework-specific starter layouts in [framework-layouts.md](docs/framework-layouts.md).
+
+## Future roadmap
+
+Existing roadmap items remain active. This version scope does not remove planned work such as richer application scaffolds, generated typed API contracts, service observability, and broader generated-app build verification.

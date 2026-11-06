@@ -2,6 +2,7 @@ import { ProjectSettings, CartApp, SelectedDatabase } from '../../../src/types'
 import { DATABASE_CATALOG } from '../../../src/data/databases'
 import { resolveStructurePaths } from '../../../src/data/structurePresets'
 import { getDatabaseAdminUiOption } from '../../../src/data/databaseAdminUis'
+import { getNativeEnvironmentDefaults } from '../../../src/utils/nativeEnvironment'
 
 export function getDbServiceName(db: SelectedDatabase, idx: number, apps?: CartApp[]): string {
   if (db.customName) {
@@ -303,9 +304,16 @@ export function generateDockerCompose(settings: ProjectSettings): string {
   // Gateway Service
   if (settings.proxy.type !== 'none') {
     yaml += `  gateway:\n`
-    yaml += `    image: ${settings.proxy.type === 'nginx' ? 'nginx:alpine' : 'httpd:alpine'}\n`
+    const gatewayImages: Record<string, string> = {
+      nginx: 'nginx:alpine', apache: 'httpd:alpine', caddy: 'caddy:2-alpine', traefik: 'traefik:v3.3'
+    }
+    yaml += `    image: ${gatewayImages[settings.proxy.type]}\n`
+    if (settings.proxy.type === 'traefik') yaml += `    command: ["--configFile=/etc/traefik/traefik.yml"]\n`
     yaml += `    ports:\n      - "${settings.proxy.httpPort}:${settings.proxy.httpPort}"\n`
-    yaml += `    volumes:\n      - ./${settings.proxy.type}:/etc/${settings.proxy.type}/conf.d:ro\n`
+    if (settings.proxy.type === 'nginx') yaml += `    volumes:\n      - ./nginx:/etc/nginx/conf.d:ro\n`
+    else if (settings.proxy.type === 'apache') yaml += `    volumes:\n      - ./apache/httpd.conf:/usr/local/apache2/conf/httpd.conf:ro\n`
+    else if (settings.proxy.type === 'caddy') yaml += `    volumes:\n      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro\n`
+    else if (settings.proxy.type === 'traefik') yaml += `    volumes:\n      - ./traefik:/etc/traefik:ro\n`
     yaml += `    extra_hosts:\n      - "host.docker.internal:host-gateway"\n`
     yaml += `    networks:\n      - lazystack_net\n    restart: unless-stopped\n`
   }
@@ -316,14 +324,15 @@ export function generateDockerCompose(settings: ProjectSettings): string {
 export function generateDockerDevCompose(settings: ProjectSettings): string {
   const paths = resolveStructurePaths(settings)
   let yaml = `version: '3.8'\n\nservices:\n`
-  settings.apps.filter(a => a.runMode === 'docker' && !['python-anvil', 'swiftui-client'].includes(a.techId)).forEach(app => {
+  settings.apps.filter(a => a.runMode === 'docker' && !['python-anvil', 'swiftui-client', 'rust-gpui'].includes(a.techId)).forEach(app => {
     const appRelPath = paths.getAppRelativePath(app.folderName, app.id, app.role)
     yaml += `  ${app.folderName}:\n`
     yaml += `    volumes:\n      - ../${appRelPath}:/app\n`
-    if (['react-vite', 'vue-vite', 'ts-express', 'ts-fastify', 'ts-nestjs'].includes(app.techId)) {
-      yaml += `      - /app/node_modules\n`
-    }
-    yaml += `    environment:\n      - NODE_ENV=development\n      - CHOKIDAR_USEPOLLING=true\n\n`
+    if (['react-vite', 'vue-vite', 'ts-express', 'ts-fastify', 'ts-nestjs'].includes(app.techId)) yaml += `      - /app/node_modules\n`
+    const envDefaults = getNativeEnvironmentDefaults(app.techId).trim().split('\n')
+    yaml += `    environment:\n${envDefaults.map(value => `      - ${value}`).join('\n')}\n`
+    if (['react-vite', 'vue-vite', 'angular-cli', 'solidjs-vite', 'qwik-city', 'fullstack-sveltekit'].includes(app.techId)) yaml += `      - CHOKIDAR_USEPOLLING=true\n`
+    yaml += `\n`
   })
   return yaml
 }
@@ -627,20 +636,35 @@ CMD ["./server/bin/server", "start"]
     }
   }
 
+  if (techId === 'rust-yew' || techId === 'rust-leptos') {
+    const rustVersion = techId === 'rust-leptos' ? '1.88' : '1.85'
+    return {
+      dockerfile: `FROM rust:${rustVersion}-alpine AS builder
+RUN apk add --no-cache musl-dev
+RUN rustup target add wasm32-unknown-unknown && cargo install --locked trunk
+WORKDIR /app
+COPY . .
+RUN trunk build --release
+FROM nginx:alpine
+COPY --from=builder /app/dist /usr/share/nginx/html
+EXPOSE ${port}
+`,
+      dockerignore: `target\ndist\n.git\n`
+    }
+  }
+
+  if (techId === 'rust-gpui') {
+    return { dockerfile: '', dockerignore: `target\n.git\n` }
+  }
+
   if (techId.startsWith('rust-')) {
     return {
-      dockerfile: `FROM rust:1.80-alpine AS builder
-RUN apk add --no-cache musl-dev
+      dockerfile: `FROM rust:1.85-alpine
 WORKDIR /app
-COPY Cargo.toml ./
 COPY . .
 RUN cargo build --release
-
-FROM alpine:3.20
-WORKDIR /app
-COPY --from=builder /app/target/release/app .
 EXPOSE ${port}
-CMD ["./app"]
+CMD ["cargo", "run", "--release"]
 `,
       dockerignore: `target\n.git\n`
     }
@@ -695,7 +719,7 @@ CMD ["nginx", "-g", "daemon off;"]
 WORKDIR /app
 COPY . .
 EXPOSE ${port}
-CMD ["node", "index.js"]
+CMD ["node", "server.js"]
 `,
       dockerignore: `.git\nnode_modules\n`
     }
@@ -707,7 +731,7 @@ CMD ["node", "index.js"]
 WORKDIR /app
 COPY . .
 EXPOSE ${port}
-CMD ["php", "-S", "0.0.0.0:${port}", "-t", "."]
+CMD ["php", "-S", "0.0.0.0:${port}", "-t", "public"]
 `,
       dockerignore: `.git\n`
     }

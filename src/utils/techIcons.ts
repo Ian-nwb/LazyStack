@@ -80,6 +80,9 @@ const ICON_MAP: Record<string, string> = {
 
 // Framework ID -> icon overrides for specific frameworks
 const FRAMEWORK_ICON_OVERRIDES: Record<string, string> = {
+  'rust-gpui':         `${DEVICON_BASE}/rust/rust-original.svg`,
+  'rust-yew':          `${DEVICON_BASE}/rust/rust-original.svg`,
+  'rust-leptos':       `${DEVICON_BASE}/rust/rust-original.svg`,
   'react-vite':       `${DEVICON_BASE}/react/react-original.svg`,
   'react-mui':        `${DEVICON_BASE}/react/react-original.svg`,
   'vue-vite':         `${DEVICON_BASE}/vuejs/vuejs-original.svg`,

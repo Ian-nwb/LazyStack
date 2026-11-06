@@ -5,6 +5,7 @@ import { DATABASE_CATALOG } from '../data/databases'
 import { resolveStructurePaths } from '../data/structurePresets'
 import { StructureCustomizer } from './StructureCustomizer'
 import { resolveServiceConnectionUrl } from '../utils/serviceConnections'
+import { getNativeProjectLayout } from '../data/nativeProjectLayout'
 import { BlueprintMarkdownExport, ServiceDiagram, NetworkTopologyDiagram } from './BlueprintDiagrams'
 
 interface BlueprintInspectorProps {
@@ -157,9 +158,14 @@ export const BlueprintInspector: React.FC<BlueprintInspectorProps> = ({
 
     if (settings.proxy.type !== 'none') {
       yaml += `  gateway:\n`
-      yaml += `    image: ${settings.proxy.type === 'nginx' ? 'nginx:alpine' : 'httpd:alpine'}\n`
+      const images: Record<string, string> = { nginx: 'nginx:alpine', apache: 'httpd:alpine', caddy: 'caddy:2-alpine', traefik: 'traefik:v3.3' }
+      yaml += `    image: ${images[settings.proxy.type]}\n`
+      if (settings.proxy.type === 'traefik') yaml += `    command: ["--configFile=/etc/traefik/traefik.yml"]\n`
       yaml += `    ports:\n      - "${settings.proxy.httpPort}:${settings.proxy.httpPort}"\n`
-      yaml += `    volumes:\n      - ./${settings.proxy.type}:/etc/${settings.proxy.type}/conf.d:ro\n`
+      if (settings.proxy.type === 'nginx') yaml += `    volumes:\n      - ./nginx:/etc/nginx/conf.d:ro\n`
+      else if (settings.proxy.type === 'apache') yaml += `    volumes:\n      - ./apache/httpd.conf:/usr/local/apache2/conf/httpd.conf:ro\n`
+      else if (settings.proxy.type === 'caddy') yaml += `    volumes:\n      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro\n`
+      else if (settings.proxy.type === 'traefik') yaml += `    volumes:\n      - ./traefik:/etc/traefik:ro\n`
       yaml += `    networks:\n      - lazystack_net\n`
     }
 
@@ -636,11 +642,12 @@ ${settings.apps.map(a => `          - service: ${a.folderName}
                       const assignedDbs = activeDatabases.filter(d => d.assignedAppId === a.id)
                       return (
                         <div key={a.id} className="text-zinc-100">
-                          <div>├── 📁 {a.folderName}/ <span className="text-zinc-500 font-sans text-[11px] ml-2">({a.role} · {a.techId} {a.flavor ? `[${a.flavor}]` : ''} · port {a.port} · {a.runMode})</span></div>
+                          <div>├── 📁 {paths.getAppRelativePath(a.folderName, a.id, a.role)}/ <span className="text-zinc-500 font-sans text-[11px] ml-2">({a.role} · {a.techId} {a.flavor ? `[${a.flavor}]` : ''} · port {a.port} · {a.runMode})</span></div>
                           <div className="pl-4 border-l border-surface-750 text-zinc-400 space-y-0.5">
-                            <div>├── 📁 src/</div>
+                            <div className="text-zinc-500 text-[10px] font-sans">{getNativeProjectLayout(a.techId).summary} layout</div>
+                            {getNativeProjectLayout(a.techId).paths.map((item, index, entries) => <div key={item}>{index === entries.length - 1 ? '└──' : '├──'} {item.endsWith('/') ? '📁' : '📄'} {item}</div>)}
                             {assignedDbs.length > 0 && paths.databaseIsolation === 'service-isolated' && <div className="text-emerald-400">├── 📁 db/ <span className="text-zinc-500 font-sans text-[11px]">(schema, migrations for {assignedDbs.map(d => d.customName || d.type).join(', ')})</span></div>}
-                            <div>├── 📄 Dockerfile</div>
+                            {!['python-anvil', 'swiftui-client', 'rust-gpui'].includes(a.techId) && <div>├── 📄 Dockerfile</div>}
                             <div>└── 📄 .env <span className="text-zinc-500 font-sans text-[11px]">(service config and connections)</span></div>
                           </div>
                         </div>

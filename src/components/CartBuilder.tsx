@@ -126,7 +126,7 @@ export const CartBuilder: React.FC<CartBuilderProps> = ({ apps, setApps, databas
       role: tech.role,
       techId: tech.id,
       port: assignedPort,
-      runMode: 'docker',
+      runMode: tech.id === 'rust-gpui' || tech.id === 'python-anvil' || tech.id === 'swiftui-client' ? 'host' : 'docker',
       routePrefix: tech.role === 'frontend' ? '/' : `/${folderName}`,
       flavor: tech.supportsFlavor ? selectedFlavor : undefined
     }
@@ -429,14 +429,14 @@ export const CartBuilder: React.FC<CartBuilderProps> = ({ apps, setApps, databas
                     <div className="flex-1">
                       <label className="block text-[10px] font-semibold text-zinc-400 uppercase mb-1">Run Mode</label>
                       <div className="flex bg-surface-950 p-0.5 rounded border border-surface-650">
-                        <button
+                        {app.techId !== 'rust-gpui' && app.techId !== 'python-anvil' && app.techId !== 'swiftui-client' && <button
                           onClick={() => handleUpdate(app.id, { runMode: 'docker' })}
                           className={`flex-1 py-0.5 text-[11px] font-medium rounded transition flex items-center justify-center gap-1 ${
                             app.runMode === 'docker' ? 'bg-zinc-200 text-zinc-950 font-bold' : 'text-zinc-500 hover:text-zinc-300'
                           }`}
                         >
                           <Server className="w-2.5 h-2.5" /> Docker
-                        </button>
+                        </button>}
                         <button
                           onClick={() => handleUpdate(app.id, { runMode: 'host' })}
                           className={`flex-1 py-0.5 text-[11px] font-medium rounded transition flex items-center justify-center gap-1 ${

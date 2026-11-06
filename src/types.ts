@@ -179,7 +179,7 @@ export interface FolderStructureConfig {
   customFolders?: string[]  // Additional root-level directories to create
 }
 
-export type ProxyType = 'nginx' | 'apache' | 'none'
+export type ProxyType = 'nginx' | 'apache' | 'caddy' | 'traefik' | 'none'
 
 export interface ProxyConfig {
   type: ProxyType

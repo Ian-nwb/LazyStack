@@ -1,0 +1,14 @@
+export function getNativeEnvironmentDefaults(techId: string): string {
+  if (/^(ts-|fullstack-(nextjs|nuxt|remix|sveltekit|astro)|react-|vue-|angular-|solidjs-|qwik-|tanstack-|solid-start|lit-|vanilla-node|deno-|electron-app|tauri-app)/.test(techId)) return 'NODE_ENV=development\n'
+  if (techId.startsWith('python-') || techId === 'vanilla-python') return 'PYTHONUNBUFFERED=1\n'
+  if (techId === 'php-symfony') return 'APP_ENV=dev\n'
+  if (techId.startsWith('php-') || techId === 'vanilla-php' || techId === 'fullstack-laravel' || techId === 'go-goravel') return 'APP_ENV=local\n'
+  if (techId === 'ruby-rails') return 'RAILS_ENV=development\n'
+  if (techId === 'java-springboot') return 'SPRING_PROFILES_ACTIVE=development\n'
+  if (techId === 'kotlin-ktor') return 'APP_ENV=development\n'
+  if (techId.startsWith('csharp-')) return 'ASPNETCORE_ENVIRONMENT=Development\n'
+  if (techId.startsWith('rust-')) return 'RUST_LOG=info\n'
+  if (techId.startsWith('swift-')) return 'APP_ENV=development\n'
+  if (techId === 'elixir-phoenix') return 'MIX_ENV=dev\n'
+  return 'APP_ENV=development\n'
+}

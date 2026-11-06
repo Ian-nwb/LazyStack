@@ -1,6 +1,6 @@
 {
   "name": "lazystack",
-  "version": "1.0.9",
+  "version": "1.1.0",
   "description": "Polyglot project and monorepo scaffolding CLI",
   "type": "module",
   "bin": {

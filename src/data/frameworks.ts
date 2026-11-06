@@ -102,6 +102,50 @@ export const TECH_CATALOG: TechItem[] = [
       { binary: 'cargo', label: 'Cargo (Rust PM)', installHint: 'Installed with rustup' }
     ]
   },
+  {
+    id: 'rust-gpui',
+    name: 'Rust (GPUI Desktop)',
+    language: 'Rust',
+    category: 'mobile-desktop',
+    role: 'desktop-mobile',
+    defaultPort: 0,
+    description: 'GPU-accelerated native desktop UI framework from the creators of Zed; uses the GPUI Community Edition crates for standalone apps.',
+    badgeColor: 'bg-orange-500/20 text-orange-300 border-orange-500/40',
+    requires: [
+      { binary: 'rustc', label: 'Rust Compiler', installHint: 'https://rustup.rs/' },
+      { binary: 'cargo', label: 'Cargo (Rust PM)', installHint: 'Installed with rustup' }
+    ]
+  },
+  {
+    id: 'rust-yew',
+    name: 'Rust (Yew WebAssembly)',
+    language: 'Rust / WebAssembly',
+    category: 'frontend',
+    role: 'frontend',
+    defaultPort: 8080,
+    description: 'Component-based Rust framework for browser applications compiled to WebAssembly, built and served with Trunk.',
+    badgeColor: 'bg-orange-500/20 text-orange-300 border-orange-500/40',
+    requires: [
+      { binary: 'rustc', label: 'Rust Compiler', installHint: 'https://rustup.rs/' },
+      { binary: 'cargo', label: 'Cargo (Rust PM)', installHint: 'Installed with rustup' },
+      { binary: 'trunk', label: 'Trunk WebAssembly bundler', installHint: 'cargo install --locked trunk' }
+    ]
+  },
+  {
+    id: 'rust-leptos',
+    name: 'Rust (Leptos WebAssembly)',
+    language: 'Rust / WebAssembly',
+    category: 'frontend',
+    role: 'frontend',
+    defaultPort: 8080,
+    description: 'Fine-grained reactive Rust framework for browser UIs, using the client-side rendering profile with Trunk.',
+    badgeColor: 'bg-orange-500/20 text-orange-300 border-orange-500/40',
+    requires: [
+      { binary: 'rustc', label: 'Rust Compiler', installHint: 'https://rustup.rs/' },
+      { binary: 'cargo', label: 'Cargo (Rust PM)', installHint: 'Installed with rustup' },
+      { binary: 'trunk', label: 'Trunk WebAssembly bundler', installHint: 'cargo install --locked trunk' }
+    ]
+  },
 
   // --- THE BASICS / VANILLA RUNTIMES ---
   {

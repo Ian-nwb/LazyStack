@@ -1,5 +1,5 @@
 import React from 'react'
-import { Globe, ArrowRight, Check, Server, Monitor } from 'lucide-react'
+import { Globe, Check, Server, Monitor, ArrowRight } from 'lucide-react'
 import { ProxyConfig, ProxyType, CartApp } from '../types'
 
 interface ProxyConfiguratorProps {
@@ -31,7 +31,7 @@ export const ProxyConfigurator: React.FC<ProxyConfiguratorProps> = ({
             </span>
           </div>
           <p className="text-xs text-zinc-400 mt-0.5">
-            Configure unified reverse proxy entrypoints in <code className="text-zinc-300 font-mono">infra/nginx/</code> or <code className="text-zinc-300 font-mono">infra/apache/</code>.
+            Configure unified reverse proxy entrypoints in the selected gateway's native config directory.
           </p>
         </div>
       </div>
@@ -42,7 +42,7 @@ export const ProxyConfigurator: React.FC<ProxyConfiguratorProps> = ({
           <label className="block text-[11px] font-semibold text-zinc-300 uppercase tracking-wider mb-2">
             Select Gateway Server
           </label>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3">
             {[
               {
                 id: 'nginx',
@@ -55,6 +55,18 @@ export const ProxyConfigurator: React.FC<ProxyConfiguratorProps> = ({
                 name: 'Apache HTTP Server',
                 tag: 'mod_proxy & mod_proxy_wstunnel',
                 desc: 'Generates httpd.conf with ProxyPass, ProxyPassReverse, and mod_proxy_wstunnel enabled.'
+              },
+              {
+                id: 'caddy',
+                name: 'Caddy',
+                tag: 'Caddyfile + automatic HTTPS ready',
+                desc: 'Generates a Caddyfile with path-based reverse proxy routes and forwarded request handling.'
+              },
+              {
+                id: 'traefik',
+                name: 'Traefik',
+                tag: 'File provider routing',
+                desc: 'Generates static entrypoint settings and dynamic router/service definitions in YAML.'
               },
               {
                 id: 'none',
@@ -142,7 +154,7 @@ export const ProxyConfigurator: React.FC<ProxyConfiguratorProps> = ({
                     <div key={app.id} className="p-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
                       <div className="flex items-center gap-3">
                         <span className="font-mono text-zinc-200 font-semibold w-40 truncate">
-                          apps/{app.folderName}
+                          {app.folderName}
                         </span>
                         <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-surface-950 border border-surface-700 text-zinc-400 flex items-center gap-1">
                           {app.runMode === 'docker' ? <Server className="w-2.5 h-2.5 text-zinc-300" /> : <Monitor className="w-2.5 h-2.5 text-zinc-400" />}

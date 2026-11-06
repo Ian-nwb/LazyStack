@@ -3,7 +3,7 @@ import fs from 'fs-extra'
 import { ProjectSettings } from '../../src/types'
 import { validateFolderName, validatePath, validateRelativeProjectPath, joinPaths } from '../../src/utils/pathValidation'
 import { generateDockerCompose, generateDockerDevCompose, getDockerfileForTech, getDbServiceName } from './templates/docker'
-import { generateNginxConfig, generateApacheConfig } from './templates/proxies'
+import { generateNginxConfig, generateApacheConfig, generateCaddyConfig, generateTraefikConfig } from './templates/proxies'
 import { getStarterFilesForTech } from './templates/appTemplates'
 import { createDatabaseCredentials, generateMetaFiles } from './templates/meta'
 import { DATABASE_CATALOG } from '../../src/data/databases'
@@ -11,6 +11,7 @@ import { generateCloudServiceFiles, generateCloudEnvVars } from './templates/clo
 import { resolveStructurePaths } from '../../src/data/structurePresets'
 import { TESTING_TOOLS } from '../../src/data/testingTools'
 import { resolveServiceConnectionUrl } from '../../src/utils/serviceConnections'
+import { getNativeEnvironmentDefaults } from '../../src/utils/nativeEnvironment'
 import { getDatabaseAdminUiOption } from '../../src/data/databaseAdminUis'
 import { TECH_CATALOG } from '../../src/data/frameworks'
 
@@ -51,6 +52,14 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
         targetDir: '',
         filesCreated: 0,
         error: `Invalid app folder name '${app.folderName}': ${appVal.error}`
+      }
+    }
+    if (['rust-gpui', 'python-anvil', 'swiftui-client'].includes(app.techId) && app.runMode === 'docker') {
+      return {
+        success: false,
+        targetDir: '',
+        filesCreated: 0,
+        error: `${app.folderName} uses a host-only ${app.techId} workflow and cannot be added as a Docker service. Set its run mode to Host.`
       }
     }
   }
@@ -266,6 +275,18 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
       await fs.ensureDir(apacheDir)
       await fs.writeFile(path.join(apacheDir, 'httpd.conf'), apacheConf, 'utf8')
       filesCreated++
+    } else if (settings.proxy.type === 'caddy') {
+      const caddyDir = path.join(targetDir, paths.infraDir, 'caddy')
+      await fs.ensureDir(caddyDir)
+      await fs.writeFile(path.join(caddyDir, 'Caddyfile'), generateCaddyConfig(settings), 'utf8')
+      filesCreated++
+    } else if (settings.proxy.type === 'traefik') {
+      const traefikDir = path.join(targetDir, paths.infraDir, 'traefik')
+      const configs = generateTraefikConfig(settings)
+      await fs.ensureDir(traefikDir)
+      await fs.writeFile(path.join(traefikDir, 'traefik.yml'), configs['traefik.yml'], 'utf8')
+      await fs.writeFile(path.join(traefikDir, 'dynamic.yml'), configs['dynamic.yml'], 'utf8')
+      filesCreated += 2
     }
 
     // 6. SQLite setup
@@ -319,8 +340,8 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
       const appDir = path.join(targetDir, relAppPath)
       await fs.ensureDir(appDir)
 
-      // Hosted and native-client templates do not run as container services.
-      if (!['python-anvil', 'swiftui-client'].includes(app.techId)) {
+      // Hosted and native desktop/mobile templates do not run as container services.
+      if (!['python-anvil', 'swiftui-client', 'rust-gpui'].includes(app.techId)) {
         const { dockerfile, dockerignore } = getDockerfileForTech(app.techId, app.port, app.folderName, app.starterProfile)
         await fs.writeFile(path.join(appDir, 'Dockerfile'), dockerfile, 'utf8')
         await fs.writeFile(path.join(appDir, '.dockerignore'), dockerignore, 'utf8')
@@ -343,8 +364,9 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
       }
 
       // App .env with service-level credentials
-      let appEnv = `PORT=${app.port}\nNODE_ENV=development\nAPP_NAME=${app.folderName}\n`
-      let appEnvExample = `PORT=${app.port}\nNODE_ENV=development\nAPP_NAME=${app.folderName}\n`
+      const nativeEnv = getNativeEnvironmentDefaults(app.techId)
+      let appEnv = `PORT=${app.port}\nAPP_NAME=${app.folderName}\n${nativeEnv}`
+      let appEnvExample = `PORT=${app.port}\nAPP_NAME=${app.folderName}\n${nativeEnv}`
       if (app.techId === 'python-fastapi' && app.starterProfile === 'api-service') {
         appEnv += 'API_TOKEN=local-dev-token-change-me\n'
         appEnvExample += 'API_TOKEN=replace_with_random_secret\n'
@@ -385,6 +407,12 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
           if (connectionUrl) {
             appEnv += `${variable}=${connectionUrl}\n`
             appEnvExample += `${variable}=${exampleUrl}\n`
+            if (app.techId === 'fullstack-laravel' && idx === 0 && credentials && ['postgres', 'mysql', 'mariadb'].includes(db.type)) {
+              const driver = db.type === 'postgres' ? 'pgsql' : 'mysql'
+              const laravelDbEnv = `DB_CONNECTION=${driver}\nDB_HOST=${host}\nDB_PORT=${port}\nDB_DATABASE=${credentials.database}\nDB_USERNAME=${credentials.username}\n`
+              appEnv += laravelDbEnv + `DB_PASSWORD=${credentials.password}\n`
+              appEnvExample += laravelDbEnv + 'DB_PASSWORD=replace_me\n'
+            }
           } else {
             const variablePrefix = serviceName.toUpperCase()
             appEnv += `${variablePrefix}_HOST=${host}\n${variablePrefix}_PORT=${port}\n`

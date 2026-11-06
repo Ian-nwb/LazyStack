@@ -1,6 +1,6 @@
 {
   "name": "lazystack",
-  "version": "1.0.9",
+  "version": "1.1.0",
   "description": "Automated Tech Stack & Monorepo Boilerplate Generator",
   "type": "module",
   "main": "dist-electron/main.js",
@@ -42,7 +42,7 @@
     "productName": "LazyStack",
     "icon": "build/icon.png",
     "directories": {
-      "output": "release/1.0.9"
+      "output": "release/1.1.0"
     },
     "files": [
       "dist/**/*",

@@ -139,7 +139,7 @@ function validateBlueprint(settings: ProjectSettings): string[] {
   if (typeof settings.parentDir !== 'string' || !validatePath(settings.parentDir).valid) errors.push('parentDir must be a valid absolute path.')
   if (!Array.isArray(settings.apps) || settings.apps.length === 0) errors.push('apps must contain at least one service.')
   if (!Array.isArray(settings.databases)) errors.push('databases must be an array.')
-  if (!settings.proxy || !['nginx', 'apache', 'none'].includes(settings.proxy.type)) errors.push('proxy.type must be nginx, apache, or none.')
+  if (!settings.proxy || !['nginx', 'apache', 'caddy', 'traefik', 'none'].includes(settings.proxy.type)) errors.push('proxy.type must be nginx, apache, caddy, traefik, or none.')
   const apps = Array.isArray(settings.apps) ? settings.apps : []
   const ids = new Set(apps.map(app => app?.id).filter(Boolean))
   if (ids.size !== apps.length) errors.push('Every service must have a unique, non-empty id.')

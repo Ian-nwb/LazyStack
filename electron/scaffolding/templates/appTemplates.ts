@@ -297,7 +297,7 @@ Deno.serve({ port }, (req) => {
   }
 }
 `
-    files['index.php'] = `<?php
+    files['public/index.php'] = `<?php
 header('Content-Type: application/json');
 echo json_encode([
     'service' => '${folderName}',
@@ -306,7 +306,7 @@ echo json_encode([
     'timestamp' => date('c')
 ]);
 `
-    files['README.md'] = `# ${folderName} (PHP Service)\n\n### Run Locally\n\`\`\`bash\nphp -S 0.0.0.0:${port} index.php\n\`\`\`\n`
+    files['README.md'] = `# ${folderName} (PHP Service)\n\n### Run Locally\n\`\`\`bash\nphp -S 0.0.0.0:${port} -t public\n\`\`\`\n`
     return files
   }
 
@@ -1877,6 +1877,95 @@ Route::get('/health', function () {
     return response()->json(['status' => 'healthy']);
 });
 `
+    files['routes/web.php'] = `<?php
+use Illuminate\\Support\\Facades\\Route;
+
+Route::get('/', function () {
+    return response('<main><h1>${folderName}</h1><p>Laravel application is online.</p></main>');
+});
+`
+    files['app/Providers/AppServiceProvider.php'] = `<?php
+namespace App\\Providers;
+
+use Illuminate\\Support\\ServiceProvider;
+
+class AppServiceProvider extends ServiceProvider
+{
+    public function register(): void {}
+    public function boot(): void {}
+}
+`
+    files['config/app.php'] = `<?php
+return [
+    'name' => env('APP_NAME', '${folderName}'),
+    'env' => env('APP_ENV', 'local'),
+    'debug' => (bool) env('APP_DEBUG', true),
+    'url' => env('APP_URL', 'http://localhost:${port}'),
+    'timezone' => 'UTC',
+    'locale' => env('APP_LOCALE', 'en'),
+    'fallback_locale' => 'en',
+    'key' => env('APP_KEY'),
+    'cipher' => 'AES-256-CBC',
+    'providers' => Illuminate\\Support\\ServiceProvider::defaultProviders()->merge([
+        App\\Providers\\AppServiceProvider::class,
+    ])->toArray(),
+];
+`
+    files['config/database.php'] = `<?php
+return [
+    'default' => env('DB_CONNECTION', 'sqlite'),
+    'connections' => [
+        'sqlite' => [
+            'driver' => 'sqlite',
+            'database' => env('DB_DATABASE', database_path('database.sqlite')),
+            'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
+        ],
+        'mysql' => [
+            'driver' => 'mysql',
+            'host' => env('DB_HOST', '127.0.0.1'),
+            'port' => env('DB_PORT', '3306'),
+            'database' => env('DB_DATABASE', 'laravel'),
+            'username' => env('DB_USERNAME', 'root'),
+            'password' => env('DB_PASSWORD', ''),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+        ],
+        'pgsql' => [
+            'driver' => 'pgsql',
+            'host' => env('DB_HOST', '127.0.0.1'),
+            'port' => env('DB_PORT', '5432'),
+            'database' => env('DB_DATABASE', 'laravel'),
+            'username' => env('DB_USERNAME', 'root'),
+            'password' => env('DB_PASSWORD', ''),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'search_path' => 'public',
+            'sslmode' => 'prefer',
+        ],
+    ],
+];
+`
+    files['database/migrations/0001_01_01_000000_create_users_table.php'] = `<?php
+use Illuminate\\Database\\Migrations\\Migration;
+use Illuminate\\Database\\Schema\\Blueprint;
+use Illuminate\\Support\\Facades\\Schema;
+
+return new class extends Migration {
+    public function up(): void {
+        Schema::create('users', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->string('email')->unique();
+            $table->timestamps();
+        });
+    }
+    public function down(): void { Schema::dropIfExists('users'); }
+};
+`
+    files['resources/views/welcome.blade.php'] = `<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>${folderName}</title></head>
+<body><main><h1>${folderName}</h1><p>Laravel application is online.</p></main></body></html>
+`
     files['bootstrap/app.php'] = `<?php
 
 use Illuminate\\Foundation\\Application;
@@ -1895,6 +1984,10 @@ return Application::configure(basePath: dirname(__DIR__))
     })->create();
 `
     files['routes/console.php'] = `<?php\n`
+    files['bootstrap/cache/.gitignore'] = `*\n!.gitignore\n`
+    for (const storageDir of ['storage/app/private', 'storage/framework/cache/data', 'storage/framework/sessions', 'storage/framework/views', 'storage/logs']) {
+      files[`${storageDir}/.gitignore`] = `*\n!.gitignore\n`
+    }
     files['public/index.php'] = `<?php
 
 use Illuminate\\Http\\Request;
@@ -2018,6 +2111,60 @@ APP_SECRET=change-me-to-a-real-secret
 `
     files['.gitignore'] = `/vendor\n.env.local\n.env.*.local\n/var/\n`
     files['README.md'] = `# ${folderName} (Symfony 7)\n\n### Run in Development\n\`\`\`bash\ncomposer install\nphp -S 0.0.0.0:${port} -t public\n\`\`\`\n`
+    return files
+  }
+
+  if (techId === 'rust-gpui') {
+    files['Cargo.toml'] = `[package]\nname = "${folderName.replace(/[^a-zA-Z0-9_-]/g, '-')}"\nversion = "0.1.0"\nedition = "2021"\n\n[dependencies]\ngpui = { package = "gpui-ce", version = "0.2" }\ngpui_platform = { package = "gpui_ce_platform", version = "0.1" }\n`
+    files['src/main.rs'] = `use gpui::{prelude::*, App, Context, Render, Window, WindowOptions, div};
+
+struct MainView;
+
+impl Render for MainView {
+    fn render(&mut self, _window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
+        div().p_6().child("${folderName} — GPUI is running")
+    }
+}
+
+fn main() {
+    gpui_platform::application().run(|cx: &mut App| {
+        cx.open_window(WindowOptions::default(), |_, cx| cx.new(|_| MainView))
+            .expect("failed to open GPUI window");
+    });
+}
+`
+    files['README.md'] = `# ${folderName} (GPUI)\n\nNative Rust desktop UI using GPUI Community Edition.\n\n\`\`\`sh\ncargo run\n\`\`\`\n`
+    return files
+  }
+
+  if (techId === 'rust-yew' || techId === 'rust-leptos') {
+    const isYew = techId === 'rust-yew'
+    const framework = isYew ? 'Yew' : 'Leptos'
+    files['Cargo.toml'] = isYew
+      ? `[package]\nname = "${folderName.replace(/[^a-zA-Z0-9_-]/g, '-')}"\nversion = "0.1.0"\nedition = "2021"\nrust-version = "1.85"\n\n[dependencies]\nyew = { version = "0.21", features = ["csr"] }\n`
+      : `[package]\nname = "${folderName.replace(/[^a-zA-Z0-9_-]/g, '-')}"\nversion = "0.1.0"\nedition = "2021"\nrust-version = "1.88"\n\n[dependencies]\nleptos = { version = "0.8", features = ["csr"] }\n`
+    files['Trunk.toml'] = `[build]\ntarget = "index.html"\ndist = "dist"\n\n[watch]\nwatch = ["src", "index.html"]\n`
+    files['index.html'] = `<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${folderName}</title><link data-trunk rel="rust"></head><body></body></html>\n`
+    files['src/main.rs'] = isYew
+      ? `use yew::prelude::*;
+
+#[function_component(App)]
+fn app() -> Html {
+    html! { <main><h1>{ "${folderName}" }</h1><p>{ "Yew WebAssembly app is running." }</p></main> }
+}
+
+fn main() { yew::Renderer::<App>::new().render(); }
+`
+      : `use leptos::prelude::*;
+
+#[component]
+fn App() -> impl IntoView {
+    view! { <main><h1>"${folderName}"</h1><p>"Leptos WebAssembly app is running."</p></main> }
+}
+
+fn main() { mount_to_body(App); }
+`
+    files['README.md'] = `# ${folderName} (${framework})\n\nRust-to-WebAssembly frontend using Trunk. Install the wasm target with \`rustup target add wasm32-unknown-unknown\`, then run \`trunk serve --address 0.0.0.0 --port ${port}\`.\n`
     return files
   }
 
