@@ -8,6 +8,7 @@ import { BlueprintInspector } from './components/BlueprintInspector'
 import { EnvironmentAuditor } from './components/EnvironmentAuditor'
 import { ValidationBanner } from './components/ValidationBanner'
 import { ChangePlanModal, ExistingProjectBanner, ExistingProjectInfo } from './components/ExistingProject'
+import { ReadmeReminderModal, isReadmeReminderDismissed } from './components/ReadmeReminder'
 import { InstallProgressPanel, InstallState, initialInstallState, reduceInstallEvent } from './components/InstallProgress'
 import type { InstallProgressEvent } from '../electron/environment/dependencies'
 import type { ScaffoldChanges } from '../electron/scaffolding/writer'
@@ -42,6 +43,12 @@ export const App: React.FC = () => {
   const [importError, setImportError] = useState<string | null>(null)
   const [changePlan, setChangePlan] = useState<ScaffoldChanges | null>(null)
   const [applyingPlan, setApplyingPlan] = useState(false)
+  const [installState, setInstallState] = useState<InstallState | null>(null)
+  // Post-scaffold reminder to read the generated READMEs (setup steps differ per framework).
+  const [readmeReminderOpen, setReadmeReminderOpen] = useState(false)
+  const showReadmeReminder = (result: { success: boolean }) => {
+    if (result.success && !isReadmeReminderDismissed()) setReadmeReminderOpen(true)
+  }
   const [copiedPath, setCopiedPath] = useState(false)
 
   // Docker Compose stack orchestrator state
@@ -208,6 +215,7 @@ export const App: React.FC = () => {
       setChangePlan(null)
       setScaffoldResult(result)
       setScaffoldModalOpen(true)
+      showReadmeReminder(result)
       if (result.success) setExistingProject(project => project && { ...project, source: 'blueprint' })
     } catch (err: any) {
       setChangePlan(null)
@@ -244,7 +252,9 @@ export const App: React.FC = () => {
     setInstallState(null)
 
     try {
-      setScaffoldResult(await callScaffold())
+      const result = await callScaffold()
+      setScaffoldResult(result)
+      showReadmeReminder(result)
     } catch (err: any) {
       setScaffoldResult({
         success: false,
@@ -295,7 +305,7 @@ export const App: React.FC = () => {
 
   const [installingDeps, setInstallingDeps] = useState(false)
   const [depsInstalled, setDepsInstalled] = useState(false)
-  const [installState, setInstallState] = useState<InstallState | null>(null)
+
 
   const handleOpenTerminal = () => {
     if (scaffoldResult?.targetDir && window.electronAPI?.openTerminal) {
@@ -580,6 +590,10 @@ export const App: React.FC = () => {
         onGenerate={handleGenerate}
         generateLabel={existingProject ? 'Review & Apply Changes' : undefined}
       />
+
+      {readmeReminderOpen && scaffoldResult?.success && (
+        <ReadmeReminderModal settings={projectSettings} targetDir={scaffoldResult.targetDir} onClose={() => setReadmeReminderOpen(false)} />
+      )}
 
       {changePlan && (
         <ChangePlanModal plan={changePlan} applying={applyingPlan} onConfirm={handleApplyPlan} onCancel={() => setChangePlan(null)} />

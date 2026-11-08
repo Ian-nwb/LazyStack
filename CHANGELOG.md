@@ -15,8 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - apps deeper than two folders (e.g. `backend/services/<app>`) were skipped;
   - the button did nothing in the browser dev build.
 - Package metadata `author` is now Ian-nwb (https://github.com/Ian-nwb).
+- **Start/Stop Stack** always used `infra/docker-compose.yml`, so projects using the Polyglot layout (`deploy/`) or a custom infrastructure folder could not start. The stack now uses the folder recorded in `lazystack.json` (falling back to `infra/`, `deploy/`, `infrastructure/`, `docker/` or the root), only passes `--env-file .env` when it exists, and reports a clear error when Docker or the Compose file is missing.
 
 ### Changed
+- After scaffolding (or applying changes to an existing project), a reminder lists the project and per-app READMEs with Open buttons, the tools each app needs, and any manual first-run step (for example `flutter create .` for Flutter, the `dx` CLI for Dioxus, or Linux system packages for Bevy). It can be turned off with "Don't show this again".
 - Installing packages now shows live progress: a spinner and step counter on the button, plus a panel with the current step, elapsed time, a progress bar and streaming output. When it finishes, the panel lists every step as installed, skipped (tool not installed, with the command to run) or failed (with its output).
 - Node workspaces are installed once from the root; Rust uses `cargo fetch`, Go uses `go mod tidy`, and Maven, Deno and Elixir (Hex) projects are covered.
 

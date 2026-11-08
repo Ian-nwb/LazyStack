@@ -242,15 +242,10 @@ export default defineConfig({
           req.on('end', async () => {
             try {
               const { targetPath } = JSON.parse(body || '{}')
-              const { exec } = await import('child_process')
-              exec('docker compose --env-file .env -f infra/docker-compose.yml up -d', { cwd: targetPath }, (error, stdout, stderr) => {
-                res.setHeader('Content-Type', 'application/json')
-                if (error) {
-                  res.end(JSON.stringify({ success: false, error: error.message, output: stderr }))
-                } else {
-                  res.end(JSON.stringify({ success: true, output: stdout }))
-                }
-              })
+              const { runStack } = await import('./electron/environment/stack')
+              const result = await runStack(targetPath, 'up')
+              res.setHeader('Content-Type', 'application/json')
+              res.end(JSON.stringify(result))
             } catch (err: any) {
               res.statusCode = 500
               res.setHeader('Content-Type', 'application/json')
@@ -265,15 +260,10 @@ export default defineConfig({
           req.on('end', async () => {
             try {
               const { targetPath } = JSON.parse(body || '{}')
-              const { exec } = await import('child_process')
-              exec('docker compose --env-file .env -f infra/docker-compose.yml down', { cwd: targetPath }, (error, stdout, stderr) => {
-                res.setHeader('Content-Type', 'application/json')
-                if (error) {
-                  res.end(JSON.stringify({ success: false, error: error.message, output: stderr }))
-                } else {
-                  res.end(JSON.stringify({ success: true, output: stdout }))
-                }
-              })
+              const { runStack } = await import('./electron/environment/stack')
+              const result = await runStack(targetPath, 'down')
+              res.setHeader('Content-Type', 'application/json')
+              res.end(JSON.stringify(result))
             } catch (err: any) {
               res.statusCode = 500
               res.setHeader('Content-Type', 'application/json')

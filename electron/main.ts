@@ -8,6 +8,7 @@ import detectPort from 'detect-port'
 import { scaffoldProject, ScaffoldOptions } from './scaffolding/generator'
 import { importProject } from './project/importer'
 import { installDependencies } from './environment/dependencies'
+import { runStack } from './environment/stack'
 import { auditEnvironment } from './environment/auditor'
 import { installBinary, addDirectoryToPath } from './environment/installer'
 import { ProjectSettings } from '../src/types'
@@ -254,29 +255,9 @@ app.whenReady().then(() => {
     })
   })
 
-  ipcMain.handle('start-stack', async (_event, targetPath: string) => {
-    return new Promise((resolve) => {
-      exec('docker compose --env-file .env -f infra/docker-compose.yml up -d', { cwd: targetPath }, (error, stdout, stderr) => {
-        if (error) {
-          resolve({ success: false, error: error.message, output: stderr })
-        } else {
-          resolve({ success: true, output: stdout })
-        }
-      })
-    })
-  })
-
-  ipcMain.handle('stop-stack', async (_event, targetPath: string) => {
-    return new Promise((resolve) => {
-      exec('docker compose --env-file .env -f infra/docker-compose.yml down', { cwd: targetPath }, (error, stdout, stderr) => {
-        if (error) {
-          resolve({ success: false, error: error.message, output: stderr })
-        } else {
-          resolve({ success: true, output: stdout })
-        }
-      })
-    })
-  })
+  // Docker Compose stack (uses the project's own infra folder, e.g. infra/ or deploy/)
+  ipcMain.handle('start-stack', async (_event, targetPath: string) => runStack(targetPath, 'up'))
+  ipcMain.handle('stop-stack', async (_event, targetPath: string) => runStack(targetPath, 'down'))
 
   // Environment & Installer IPC
   ipcMain.handle('audit-environment', async () => {
