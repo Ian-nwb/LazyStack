@@ -445,14 +445,16 @@ CMD ["java", "-jar", "app.jar"]
 
   if (techId === 'ocaml-dream') {
     return {
-      dockerfile: `FROM ocaml/opam:debian-ocaml-5.1 AS builder
+      dockerfile: `FROM ocaml/opam:debian-12-ocaml-5.1 AS builder
+RUN sudo apt-get update && sudo apt-get install -y --no-install-recommends pkg-config libev-dev libssl-dev libgmp-dev && sudo rm -rf /var/lib/apt/lists/*
 WORKDIR /home/opam/src
-COPY dune-project dune *.opam ./
-RUN opam install . --deps-only
-COPY . .
+COPY --chown=opam dune-project dune *.opam ./
+RUN opam install . --deps-only -y
+COPY --chown=opam . .
 RUN eval $(opam env) && dune build
 
 FROM debian:bookworm-slim
+RUN apt-get update && apt-get install -y --no-install-recommends libev4 libssl3 libgmp10 ca-certificates && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY --from=builder /home/opam/src/_build/default/bin/server.exe /app/server
 EXPOSE ${port}
@@ -479,9 +481,9 @@ CMD ["julia", "--project", "app.jl"]
 
   if (techId === 'lua-lapis') {
     return {
-      dockerfile: `FROM openresty/openresty:alpine
+      dockerfile: `FROM openresty/openresty:alpine-fat
 WORKDIR /app
-RUN apk add --no-cache luarocks && luarocks install lapis
+RUN apk add --no-cache git gcc musl-dev openssl-dev && luarocks install lapis
 COPY . .
 EXPOSE ${port}
 CMD ["lapis", "server", "production"]

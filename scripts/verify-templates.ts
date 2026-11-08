@@ -44,7 +44,7 @@ for (const tech of TECH_CATALOG) {
     for (const line of dockerfile.split('\n')) {
       const match = line.match(/^COPY\s+(?!--from)(.+)$/)
       if (!match) continue
-      const sources = match[1].trim().split(/\s+/).slice(0, -1)
+      const sources = match[1].trim().split(/\s+/).filter(part => !part.startsWith('--')).slice(0, -1)
       for (const source of sources) {
         if (source === '.' || source.endsWith('*')) continue // whole context or optional lockfile
         const pattern = globToRegExp(source.replace(/^\.\//, '').replace(/\/$/, ''))
