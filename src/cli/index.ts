@@ -204,7 +204,10 @@ function validateBlueprint(settings: ProjectSettings): string[] {
     if (!db || !DATABASE_CATALOG.some(item => item.id === db.type)) errors.push(`Unknown database type '${db?.type}'.`)
     else if (db.enabled) {
       const label = db.customName || db.type
-      if (!Number.isInteger(db.port) || db.port < 1 || db.port > 65535) errors.push(`Invalid database port for '${label}'.`)
+      const def = DATABASE_CATALOG.find(item => item.id === db.type)
+      // Managed cloud services and embedded SQLite have no local port.
+      const needsPort = !def?.isCloud && db.type !== 'sqlite'
+      if (needsPort && (!Number.isInteger(db.port) || db.port < 1 || db.port > 65535)) errors.push(`Invalid database port for '${label}'.`)
       else if (ports.has(db.port)) errors.push(`Port ${db.port} is shared by '${ports.get(db.port)}' and '${label}'.`)
       else ports.set(db.port, label)
       if (db.adminUi && (!Number.isInteger(db.adminUiPort) || (db.adminUiPort || 0) < 1 || (db.adminUiPort || 0) > 65535)) errors.push(`Invalid admin UI port for '${label}'.`)

@@ -8,7 +8,7 @@ import { BlueprintInspector } from './components/BlueprintInspector'
 import { EnvironmentAuditor } from './components/EnvironmentAuditor'
 import { ValidationBanner } from './components/ValidationBanner'
 import { ChangePlanModal, ExistingProjectBanner, ExistingProjectInfo } from './components/ExistingProject'
-import { ReadmeReminderModal, isReadmeReminderDismissed } from './components/ReadmeReminder'
+import { ReadmeReminderModal, shouldShowReadmeReminder } from './components/ReadmeReminder'
 import { InstallProgressPanel, InstallState, initialInstallState, reduceInstallEvent } from './components/InstallProgress'
 import type { InstallProgressEvent } from '../electron/environment/dependencies'
 import type { ScaffoldChanges } from '../electron/scaffolding/writer'
@@ -47,7 +47,7 @@ export const App: React.FC = () => {
   // Post-scaffold reminder to read the generated READMEs (setup steps differ per framework).
   const [readmeReminderOpen, setReadmeReminderOpen] = useState(false)
   const showReadmeReminder = (result: { success: boolean }) => {
-    if (result.success && !isReadmeReminderDismissed()) setReadmeReminderOpen(true)
+    if (result.success && shouldShowReadmeReminder(projectSettings)) setReadmeReminderOpen(true)
   }
   const [copiedPath, setCopiedPath] = useState(false)
 

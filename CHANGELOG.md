@@ -15,10 +15,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - apps deeper than two folders (e.g. `backend/services/<app>`) were skipped;
   - the button did nothing in the browser dev build.
 - Package metadata `author` is now Ian-nwb (https://github.com/Ian-nwb).
+- `lazystack validate`/`scaffold` rejected blueprints with cloud databases (Supabase, Firebase, Neon, ...) because they have no local port.
+- The dev orchestrator started Tauri with `npm run tauri dev`, a script the starter does not define; it now runs `npm run dev`.
 - **Start/Stop Stack** always used `infra/docker-compose.yml`, so projects using the Polyglot layout (`deploy/`) or a custom infrastructure folder could not start. The stack now uses the folder recorded in `lazystack.json` (falling back to `infra/`, `deploy/`, `infrastructure/`, `docker/` or the root), only passes `--env-file .env` when it exists, and reports a clear error when Docker or the Compose file is missing.
 
 ### Changed
-- After scaffolding (or applying changes to an existing project), a reminder lists the project and per-app READMEs with Open buttons, the tools each app needs, and any manual first-run step (for example `flutter create .` for Flutter, the `dx` CLI for Dioxus, or Linux system packages for Bevy). It can be turned off with "Don't show this again".
+- After scaffolding (or applying changes to an existing project), a popup reminds you to read the READMEs. When the stack includes something that needs a step LazyStack can't do for you, the popup switches to a **manual setup** view that lists each one with numbered steps and docs links, and it always shows for those stacks. This covers 25 frameworks plus every cloud database:
+  - **SDKs, CLIs and accounts:** Flutter platform folders, Google Apps Script (clasp login and script id), Anvil, Expo, Ionic native shells, Dioxus, Yew/Leptos (Trunk), SwiftUI.
+  - **System libraries and toolchains:** Tauri, GPUI, Bevy, Slint, OCaml/Dream, Drogon, libmicrohttpd, NASM, Haskell, Nim, R, Lapis.
+  - **Secrets and schema:** Laravel `APP_KEY`, Symfony `APP_SECRET`, the FastAPI API-service profile, SQL migrations.
+  - **Cloud databases:** provider credentials.
+  The same steps are written to a "Manual setup required" section in the generated root README.
 - Installing packages now shows live progress: a spinner and step counter on the button, plus a panel with the current step, elapsed time, a progress bar and streaming output. When it finishes, the panel lists every step as installed, skipped (tool not installed, with the command to run) or failed (with its output).
 - Node workspaces are installed once from the root; Rust uses `cargo fetch`, Go uses `go mod tidy`, and Maven, Deno and Elixir (Hex) projects are covered.
 

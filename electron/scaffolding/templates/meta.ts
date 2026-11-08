@@ -5,6 +5,7 @@ import { getDbServiceName } from './docker'
 import { TESTING_TOOLS } from '../../../src/data/testingTools'
 import { getDatabaseAdminUiOption } from '../../../src/data/databaseAdminUis'
 import { TECH_CATALOG, isHostOnlyTech } from '../../../src/data/frameworks'
+import { getAppManualSetup, getDatabaseManualSetup } from '../../../src/data/manualSetup'
 import crypto from 'crypto'
 
 export interface GeneratedDatabaseCredential {
@@ -218,7 +219,7 @@ mongo_data/
 
     // 14. Mobile, Desktop & Shell
     if (app.techId === 'dart-flutter') return `flutter run -d web-server --web-port=${app.port}`
-    if (app.techId === 'tauri-app') return 'npm run tauri dev'
+    if (app.techId === 'tauri-app') return 'npm run dev'
     if (app.techId === 'electron-app') return 'npm start'
     if (app.techId === 'react-native-expo') return 'npx expo start'
     if (app.techId === 'bash-worker') return 'bash worker.sh'
@@ -1339,11 +1340,20 @@ ${containerApps.map(a => `          - path: ${a.routePrefix || '/'}
   }
 
   // 9. README.md
+  const manualSetupItems = [
+    ...settings.apps.map(app => ({ title: `${app.folderName} (${TECH_CATALOG.find(tech => tech.id === app.techId)?.name || app.techId})`, where: paths.getAppRelativePath(app.folderName, app.id, app.role), setup: getAppManualSetup(app) })),
+    ...activeDbs.map(db => ({ title: `${db.customName || db.type} (cloud database)`, where: '.env', setup: getDatabaseManualSetup(db) }))
+  ].filter(item => item.setup)
+  const manualSetupSection = manualSetupItems.length
+    ? `\n## ⚠️ Manual setup required\n\nSome parts of this stack need a step LazyStack cannot do for you. Complete these before the first run.\n\n${manualSetupItems.map(item => `### ${item.title}\n\n_Location: \`${item.where}\`. ${item.setup!.reason}_\n\n${item.setup!.steps.map((step, index) => `${index + 1}. ${step}`).join('\n')}${item.setup!.docs ? `\n\nDocs: ${item.setup!.docs}` : ''}`).join('\n\n')}\n`
+    : ''
+
   files['README.md'] = `# ${settings.projectName}
 
 Project scaffolded with **LazyStack**. Unified workspace: **${useUnifiedWorkspace ? 'On' : 'Off'}**.
 
 ${useUnifiedWorkspace ? 'JavaScript/TypeScript apps and shared packages are connected through root workspace files. Other languages keep their native project files and tools.' : 'Apps use their language-native project files and tools; no root npm/pnpm workspace is required.'}
+${manualSetupSection}
 
 ---
 
