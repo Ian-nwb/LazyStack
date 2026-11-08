@@ -5,6 +5,21 @@ All notable changes to LazyStack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.2] - Unreleased
+
+### Fixed
+- **Install Packages** did nothing useful in many setups:
+  - package managers installed through nvm, volta, rustup, Go or .NET were not found when the app was launched from the desktop (missing user `PATH` entries);
+  - every failure was swallowed and the button reported success;
+  - commands with more than 1 MB of output were killed;
+  - apps deeper than two folders (e.g. `backend/services/<app>`) were skipped;
+  - the button did nothing in the browser dev build.
+- Package metadata `author` is now Ian-nwb (https://github.com/Ian-nwb).
+
+### Changed
+- Installing packages now shows live progress: a spinner and step counter on the button, plus a panel with the current step, elapsed time, a progress bar and streaming output. When it finishes, the panel lists every step as installed, skipped (tool not installed, with the command to run) or failed (with its output).
+- Node workspaces are installed once from the root; Rust uses `cargo fetch`, Go uses `go mod tidy`, and Maven, Deno and Elixir (Hex) projects are covered.
+
 ## [1.1.1] - 2026-11-08
 
 ### Added

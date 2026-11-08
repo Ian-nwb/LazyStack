@@ -165,6 +165,23 @@ export default defineConfig({
           })
         })
 
+        // Streams install progress as newline-delimited JSON events (browser dev mode).
+        server.middlewares.use('/api/install-deps', async (req, res) => {
+          let body = ''
+          req.on('data', chunk => { body += chunk })
+          req.on('end', async () => {
+            res.setHeader('Content-Type', 'application/x-ndjson')
+            try {
+              const { targetPath } = JSON.parse(body || '{}')
+              const { installDependencies } = await import('./electron/environment/dependencies')
+              await installDependencies(targetPath, progress => res.write(JSON.stringify(progress) + '\n'))
+            } catch (err: any) {
+              res.write(JSON.stringify({ type: 'done', result: { success: false, steps: [], output: '', error: err.message } }) + '\n')
+            }
+            res.end()
+          })
+        })
+
         server.middlewares.use('/api/import', async (req, res) => {
           let body = ''
           req.on('data', chunk => { body += chunk })

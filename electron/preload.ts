@@ -4,6 +4,7 @@ import { BinaryAudit } from './environment/auditor'
 import { InstallResult } from './environment/installer'
 import type { ScaffoldOptions, ScaffoldResult } from './scaffolding/generator'
 import type { ImportResult } from './project/importer'
+import type { InstallProgressEvent, InstallResultSummary } from './environment/dependencies'
 
 export interface IElectronAPI {
   getDefaultPath: () => Promise<string>
@@ -34,7 +35,9 @@ export interface IElectronAPI {
   openFolder: (targetPath: string) => Promise<void>
   openVSCode: (targetPath: string) => Promise<void>
   openTerminal: (targetPath: string) => Promise<{ success: boolean, error?: string }>
-  installDependencies: (targetPath: string) => Promise<{ success: boolean, output?: string, error?: string }>
+  installDependencies: (targetPath: string) => Promise<InstallResultSummary>
+  /** Subscribes to install progress; returns an unsubscribe function. */
+  onInstallProgress: (listener: (event: InstallProgressEvent) => void) => () => void
   startStack: (targetPath: string) => Promise<{ success: boolean, output?: string, error?: string }>
   stopStack: (targetPath: string) => Promise<{ success: boolean, output?: string, error?: string }>
   auditEnvironment: () => Promise<BinaryAudit[]>
@@ -54,6 +57,11 @@ const api: IElectronAPI = {
   openVSCode: (targetPath: string) => ipcRenderer.invoke('open-vscode', targetPath),
   openTerminal: (targetPath: string) => ipcRenderer.invoke('open-terminal', targetPath),
   installDependencies: (targetPath: string) => ipcRenderer.invoke('install-dependencies', targetPath),
+  onInstallProgress: (listener) => {
+    const handler = (_event: Electron.IpcRendererEvent, progress: InstallProgressEvent) => listener(progress)
+    ipcRenderer.on('install-progress', handler)
+    return () => ipcRenderer.removeListener('install-progress', handler)
+  },
   startStack: (targetPath: string) => ipcRenderer.invoke('start-stack', targetPath),
   stopStack: (targetPath: string) => ipcRenderer.invoke('stop-stack', targetPath),
   auditEnvironment: () => ipcRenderer.invoke('audit-environment'),

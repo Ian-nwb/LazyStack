@@ -8,6 +8,8 @@ import { BlueprintInspector } from './components/BlueprintInspector'
 import { EnvironmentAuditor } from './components/EnvironmentAuditor'
 import { ValidationBanner } from './components/ValidationBanner'
 import { ChangePlanModal, ExistingProjectBanner, ExistingProjectInfo } from './components/ExistingProject'
+import { InstallProgressPanel, InstallState, initialInstallState, reduceInstallEvent } from './components/InstallProgress'
+import type { InstallProgressEvent } from '../electron/environment/dependencies'
 import type { ScaffoldChanges } from '../electron/scaffolding/writer'
 import type { ImportResult } from '../electron/project/importer'
 import { ProjectSettings, CartApp, SelectedDatabase, ProxyConfig, FolderStructureConfig } from './types'
@@ -238,6 +240,8 @@ export const App: React.FC = () => {
     setScaffoldModalOpen(true)
     setIsScaffolding(true)
     setScaffoldResult(null)
+    setDepsInstalled(false)
+    setInstallState(null)
 
     try {
       setScaffoldResult(await callScaffold())
@@ -291,6 +295,7 @@ export const App: React.FC = () => {
 
   const [installingDeps, setInstallingDeps] = useState(false)
   const [depsInstalled, setDepsInstalled] = useState(false)
+  const [installState, setInstallState] = useState<InstallState | null>(null)
 
   const handleOpenTerminal = () => {
     if (scaffoldResult?.targetDir && window.electronAPI?.openTerminal) {
@@ -301,15 +306,45 @@ export const App: React.FC = () => {
   const handleInstallDependencies = async () => {
     if (!scaffoldResult?.targetDir || installingDeps) return
     setInstallingDeps(true)
+    setDepsInstalled(false)
+    setInstallState(initialInstallState())
+    const apply = (event: InstallProgressEvent) => setInstallState(state => reduceInstallEvent(state || initialInstallState(), event))
     try {
       if (window.electronAPI?.installDependencies) {
-        const res = await window.electronAPI.installDependencies(scaffoldResult.targetDir)
-        if (res.success) {
-          setDepsInstalled(true)
+        const unsubscribe = window.electronAPI.onInstallProgress?.(apply)
+        try {
+          const result = await window.electronAPI.installDependencies(scaffoldResult.targetDir)
+          apply({ type: 'done', result })
+          setDepsInstalled(result.success && result.steps.every(step => step.status === 'ok'))
+        } finally {
+          unsubscribe?.()
+        }
+      } else {
+        // Browser dev mode: the Vite middleware streams newline-delimited JSON progress events.
+        const response = await fetch('/api/install-deps', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ targetPath: scaffoldResult.targetDir })
+        })
+        const reader = response.body!.getReader()
+        const decoder = new TextDecoder()
+        let buffer = ''
+        for (;;) {
+          const { done, value } = await reader.read()
+          if (done) break
+          buffer += decoder.decode(value, { stream: true })
+          const lines = buffer.split('\n')
+          buffer = lines.pop() || ''
+          for (const line of lines) {
+            if (!line.trim()) continue
+            const event = JSON.parse(line) as InstallProgressEvent
+            apply(event)
+            if (event.type === 'done') setDepsInstalled(event.result.success && event.result.steps.every(step => step.status === 'ok'))
+          }
         }
       }
-    } catch (e) {
-      console.error('Failed to install dependencies:', e)
+    } catch (e: any) {
+      apply({ type: 'done', result: { success: false, steps: [], output: '', error: e.message || 'Package installation failed' } })
     } finally {
       setInstallingDeps(false)
     }
@@ -697,7 +732,8 @@ export const App: React.FC = () => {
                     >
                       {installingDeps ? (
                         <>
-                          <Loader2 className="w-3.5 h-3.5 animate-spin text-cyan-400" /> Installing...
+                          <Loader2 className="w-3.5 h-3.5 animate-spin text-cyan-400" />
+                          {installState?.current ? `Installing ${installState.current.index + 1}/${installState.current.total}…` : 'Installing…'}
                         </>
                       ) : depsInstalled ? (
                         <>
@@ -717,6 +753,7 @@ export const App: React.FC = () => {
                       {copiedPath ? 'Copied' : 'Copy Path'}
                     </button>
                   </div>
+                  {installState && <InstallProgressPanel state={installState} onDismiss={() => setInstallState(null)} />}
 
                   <button
                     onClick={() => setScaffoldModalOpen(false)}
