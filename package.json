@@ -33,8 +33,8 @@
     "drogon"
   ],
   "author": {
-    "name": "LazyStack Team",
-    "email": "team@lazystack.dev"
+    "name": "Ian-nwb",
+    "url": "https://github.com/Ian-nwb"
   },
   "homepage": "https://github.com/Ian-nwb/LazyStack#readme",
   "license": "MIT",
@@ -55,7 +55,7 @@
         "AppImage"
       ],
       "category": "Development",
-      "maintainer": "LazyStack Team <team@lazystack.dev>"
+      "maintainer": "Ian-nwb (https://github.com/Ian-nwb)"
     },
     "win": {
       "target": [

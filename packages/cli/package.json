@@ -39,6 +39,10 @@
     "directory": "packages/cli"
   },
   "license": "MIT",
+  "author": {
+    "name": "Ian-nwb",
+    "url": "https://github.com/Ian-nwb"
+  },
   "publishConfig": {
     "access": "public"
   }
