@@ -6,6 +6,7 @@ import { resolveStructurePaths } from '../data/structurePresets'
 import { StructureCustomizer } from './StructureCustomizer'
 import { resolveServiceConnectionUrl } from '../utils/serviceConnections'
 import { getNativeProjectLayout } from '../data/nativeProjectLayout'
+import { isHostOnlyTech } from '../data/frameworks'
 import { BlueprintMarkdownExport, ServiceDiagram, NetworkTopologyDiagram } from './BlueprintDiagrams'
 
 interface BlueprintInspectorProps {
@@ -69,7 +70,7 @@ export const BlueprintInspector: React.FC<BlueprintInspectorProps> = ({
 
   // Generate dynamic Docker Compose preview
   const generateComposePreview = () => {
-    let yaml = `version: '3.8'\n\nnetworks:\n  lazystack_net:\n    driver: bridge\n\nvolumes:\n`
+    let yaml = `networks:\n  lazystack_net:\n    driver: bridge\n\nvolumes:\n`
 
     // Volumes
     activeDatabases.forEach((d, idx) => {
@@ -644,10 +645,10 @@ ${settings.apps.map(a => `          - service: ${a.folderName}
                         <div key={a.id} className="text-zinc-100">
                           <div>├── 📁 {paths.getAppRelativePath(a.folderName, a.id, a.role)}/ <span className="text-zinc-500 font-sans text-[11px] ml-2">({a.role} · {a.techId} {a.flavor ? `[${a.flavor}]` : ''} · port {a.port} · {a.runMode})</span></div>
                           <div className="pl-4 border-l border-surface-750 text-zinc-400 space-y-0.5">
-                            <div className="text-zinc-500 text-[10px] font-sans">{getNativeProjectLayout(a.techId).summary} layout</div>
-                            {getNativeProjectLayout(a.techId).paths.map((item, index, entries) => <div key={item}>{index === entries.length - 1 ? '└──' : '├──'} {item.endsWith('/') ? '📁' : '📄'} {item}</div>)}
+                            <div className="text-zinc-500 text-[10px] font-sans">{getNativeProjectLayout(a.techId, a.folderName, a.port, a.flavor).summary} layout</div>
+                            {getNativeProjectLayout(a.techId, a.folderName, a.port, a.flavor).paths.map((item, index, entries) => <div key={item}>{index === entries.length - 1 ? '└──' : '├──'} {item.endsWith('/') ? '📁' : '📄'} {item}</div>)}
                             {assignedDbs.length > 0 && paths.databaseIsolation === 'service-isolated' && <div className="text-emerald-400">├── 📁 db/ <span className="text-zinc-500 font-sans text-[11px]">(schema, migrations for {assignedDbs.map(d => d.customName || d.type).join(', ')})</span></div>}
-                            {!['python-anvil', 'swiftui-client', 'rust-gpui'].includes(a.techId) && <div>├── 📄 Dockerfile</div>}
+                            {!isHostOnlyTech(a.techId) && <div>├── 📄 Dockerfile</div>}
                             <div>└── 📄 .env <span className="text-zinc-500 font-sans text-[11px]">(service config and connections)</span></div>
                           </div>
                         </div>

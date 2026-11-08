@@ -2,6 +2,8 @@ import { contextBridge, ipcRenderer } from 'electron'
 import { ProjectSettings } from '../src/types'
 import { BinaryAudit } from './environment/auditor'
 import { InstallResult } from './environment/installer'
+import type { ScaffoldOptions, ScaffoldResult } from './scaffolding/generator'
+import type { ImportResult } from './project/importer'
 
 export interface IElectronAPI {
   getDefaultPath: () => Promise<string>
@@ -27,12 +29,8 @@ export interface IElectronAPI {
     freeMemoryGB: number
     totalMemoryGB: number
   }>
-  scaffoldProject: (settings: ProjectSettings) => Promise<{
-    success: boolean
-    targetDir: string
-    filesCreated: number
-    error?: string
-  }>
+  scaffoldProject: (settings: ProjectSettings, options?: ScaffoldOptions) => Promise<ScaffoldResult>
+  importProject: (projectDir: string) => Promise<ImportResult>
   openFolder: (targetPath: string) => Promise<void>
   openVSCode: (targetPath: string) => Promise<void>
   openTerminal: (targetPath: string) => Promise<{ success: boolean, error?: string }>
@@ -50,7 +48,8 @@ const api: IElectronAPI = {
   checkDirectory: (targetPath: string) => ipcRenderer.invoke('check-directory', targetPath),
   checkPortAvailable: (port: number) => ipcRenderer.invoke('check-port-available', port),
   getSystemInfo: () => ipcRenderer.invoke('get-system-info'),
-  scaffoldProject: (settings: ProjectSettings) => ipcRenderer.invoke('scaffold-project', settings),
+  scaffoldProject: (settings: ProjectSettings, options?: ScaffoldOptions) => ipcRenderer.invoke('scaffold-project', settings, options),
+  importProject: (projectDir: string) => ipcRenderer.invoke('import-project', projectDir),
   openFolder: (targetPath: string) => ipcRenderer.invoke('open-folder', targetPath),
   openVSCode: (targetPath: string) => ipcRenderer.invoke('open-vscode', targetPath),
   openTerminal: (targetPath: string) => ipcRenderer.invoke('open-terminal', targetPath),

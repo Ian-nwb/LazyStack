@@ -1,6 +1,18 @@
 import { LanguageFlavor } from '../../../src/types'
+import { applyNativeScaffold } from './native'
 
 export function getStarterFilesForTech(
+  techId: string,
+  folderName: string,
+  port: number,
+  flavor?: LanguageFlavor,
+  starterProfile: 'minimal' | 'api-service' = 'minimal'
+): Record<string, string> {
+  const isTS = (flavor || 'typescript') === 'typescript'
+  return applyNativeScaffold(techId, folderName, port, isTS, starterProfile, () => getLegacyStarterFiles(techId, folderName, port, flavor, starterProfile))
+}
+
+function getLegacyStarterFiles(
   techId: string,
   folderName: string,
   port: number,
@@ -3176,56 +3188,7 @@ Place numbered migration files in the \`migrations/\` directory.
   // ═══════════════════════════════════════════════════════
   // Fallback: Generic Node TS/JS (only for truly generic Node projects)
   // ═══════════════════════════════════════════════════════
-  if (isTS) {
-    files['package.json'] = `{
-  "name": "${folderName}",
-  "version": "1.0.0",
-  "type": "module",
-  "scripts": {
-    "build": "tsc",
-    "start": "node dist/index.js",
-    "dev": "tsx watch src/index.ts"
-  },
-  "devDependencies": {
-    "@types/node": "^22.0.0",
-    "tsx": "^4.19.0",
-    "typescript": "^5.6.0"
-  }
-}
-`
-    files['tsconfig.json'] = `{
-  "compilerOptions": {
-    "target": "ESNext",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true
-  },
-  "include": ["src/**/*"]
-}
-`
-    files['src/index.ts'] = `import http from 'http';
-
-const port = process.env.PORT || ${port};
-const server = http.createServer((req, res) => {
-  res.writeHead(200, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify({
-    service: '${folderName}',
-    dialect: 'TypeScript',
-    status: 'online',
-    port,
-    timestamp: new Date().toISOString()
-  }));
-});
-
-server.listen(port, () => {
-  console.log(\`[LazyStack] ${folderName} (TypeScript) running on http://0.0.0.0:\${port}\`);
-});
-`
-  } else if (techId === 'swift-vapor') {
+  if (techId === 'swift-vapor') {
     files['Package.swift'] = `// swift-tools-version:5.10
 import PackageDescription
 
@@ -3715,6 +3678,55 @@ async fn main() -> Result<(), std::io::Error> {
         .run(app)
         .await
 }
+`
+  } else if (isTS) {
+    files['package.json'] = `{
+  "name": "${folderName}",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}
+`
+    files['tsconfig.json'] = `{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*"]
+}
+`
+    files['src/index.ts'] = `import http from 'http';
+
+const port = process.env.PORT || ${port};
+const server = http.createServer((req, res) => {
+  res.writeHead(200, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({
+    service: '${folderName}',
+    dialect: 'TypeScript',
+    status: 'online',
+    port,
+    timestamp: new Date().toISOString()
+  }));
+});
+
+server.listen(port, () => {
+  console.log(\`[LazyStack] ${folderName} (TypeScript) running on http://0.0.0.0:\${port}\`);
+});
 `
   } else {
     // Pure JavaScript

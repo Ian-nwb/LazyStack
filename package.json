@@ -1,6 +1,6 @@
 {
   "name": "lazystack",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Automated Tech Stack & Monorepo Boilerplate Generator",
   "type": "module",
   "main": "dist-electron/main.js",
@@ -14,6 +14,7 @@
     "preview": "vite preview",
     "precli": "npm run build:cli",
     "cli": "node ./bin/lazystack.js",
+    "verify:templates": "esbuild scripts/verify-templates.ts --bundle --platform=node --format=esm --packages=external --outfile=dist-scripts/verify-templates.mjs --log-level=warning && node dist-scripts/verify-templates.mjs",
     "start": "electron .",
     "pack": "npm run build && electron-builder --dir",
     "dist": "npm run build && electron-builder",
@@ -35,14 +36,14 @@
     "name": "LazyStack Team",
     "email": "team@lazystack.dev"
   },
-  "homepage": "https://github.com/lazystack/lazystack",
+  "homepage": "https://github.com/Ian-nwb/LazyStack#readme",
   "license": "MIT",
   "build": {
     "appId": "com.lazystack.app",
     "productName": "LazyStack",
     "icon": "build/icon.png",
     "directories": {
-      "output": "release/1.1.0"
+      "output": "release/1.1.1"
     },
     "files": [
       "dist/**/*",

@@ -3,6 +3,8 @@ import { DATABASE_CATALOG } from '../../../src/data/databases'
 import { resolveStructurePaths } from '../../../src/data/structurePresets'
 import { getDatabaseAdminUiOption } from '../../../src/data/databaseAdminUis'
 import { getNativeEnvironmentDefaults } from '../../../src/utils/nativeEnvironment'
+import { isHostOnlyTech } from '../../../src/data/frameworks'
+import { createContext } from './native/context'
 
 export function getDbServiceName(db: SelectedDatabase, idx: number, apps?: CartApp[]): string {
   if (db.customName) {
@@ -28,11 +30,10 @@ export function generateDockerCompose(settings: ProjectSettings): string {
     // Cloud services without imageTag don't get Docker containers
     return !def?.isCloud || def?.imageTag
   })
-  const hostOnlyTechIds = new Set(['python-anvil', 'swiftui-client'])
-  const dockerApps = settings.apps.filter(a => a.runMode === 'docker' && !hostOnlyTechIds.has(a.techId))
+  const dockerApps = settings.apps.filter(a => a.runMode === 'docker' && !isHostOnlyTech(a.techId))
   const hasNamedVolumes = activeDbs.some(db => db.type !== 'sqlite')
 
-  let yaml = `version: '3.8'\n\nnetworks:\n  lazystack_net:\n    driver: bridge\n\n${hasNamedVolumes ? 'volumes:\n' : ''}`
+  let yaml = `networks:\n  lazystack_net:\n    driver: bridge\n\n${hasNamedVolumes ? 'volumes:\n' : ''}`
 
   activeDbs.forEach((db, idx) => {
     if (db.type !== 'sqlite') {
@@ -318,13 +319,14 @@ export function generateDockerCompose(settings: ProjectSettings): string {
     yaml += `    networks:\n      - lazystack_net\n    restart: unless-stopped\n`
   }
 
-  return yaml
+  // Compose requires `services` to be a mapping even when every app runs on the host.
+  return yaml.endsWith('services:\n') ? yaml.replace(/services:\n$/, 'services: {}\n') : yaml
 }
 
 export function generateDockerDevCompose(settings: ProjectSettings): string {
   const paths = resolveStructurePaths(settings)
-  let yaml = `version: '3.8'\n\nservices:\n`
-  settings.apps.filter(a => a.runMode === 'docker' && !['python-anvil', 'swiftui-client', 'rust-gpui'].includes(a.techId)).forEach(app => {
+  let yaml = `services:\n`
+  settings.apps.filter(a => a.runMode === 'docker' && !isHostOnlyTech(a.techId)).forEach(app => {
     const appRelPath = paths.getAppRelativePath(app.folderName, app.id, app.role)
     yaml += `  ${app.folderName}:\n`
     yaml += `    volumes:\n      - ../${appRelPath}:/app\n`
@@ -334,7 +336,8 @@ export function generateDockerDevCompose(settings: ProjectSettings): string {
     if (['react-vite', 'vue-vite', 'angular-cli', 'solidjs-vite', 'qwik-city', 'fullstack-sveltekit'].includes(app.techId)) yaml += `      - CHOKIDAR_USEPOLLING=true\n`
     yaml += `\n`
   })
-  return yaml
+  // Compose requires `services` to be a mapping even when every app runs on the host.
+  return yaml.endsWith('services:\n') ? yaml.replace(/services:\n$/, 'services: {}\n') : yaml
 }
 
 export function getDockerfileForTech(techId: string, port: number, folderName = 'app', starterProfile?: string): { dockerfile: string, dockerignore: string } {
@@ -383,9 +386,10 @@ CMD ["./drogon_service"]
     return {
       dockerfile: `FROM swift:5.10-jammy AS builder
 WORKDIR /app
-COPY Package.* ./
-COPY Sources ./Sources
-RUN swift build -c release
+COPY Package.swift ./
+RUN swift package resolve
+COPY . .
+RUN swift build -c release --product App
 
 FROM swift:5.10-jammy-slim
 WORKDIR /app
@@ -400,19 +404,20 @@ CMD ["./App", "serve", "--hostname", "0.0.0.0", "--port", "${port}"]
 
   if (techId === 'scala-play') {
     return {
-      dockerfile: `FROM sbtscala/scala-sbt:eclipse-temurin-17-alpine AS builder
+      dockerfile: `FROM sbtscala/scala-sbt:eclipse-temurin-21.0.5_11_1.10.7_2.13.15 AS builder
 WORKDIR /app
 COPY build.sbt .
 COPY project ./project
-COPY app ./app
-COPY conf ./conf
+RUN sbt update
+COPY . .
 RUN sbt stage
 
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:21-jre
 WORKDIR /app
 COPY --from=builder /app/target/universal/stage ./
 EXPOSE ${port}
-CMD ["./bin/server", "-Dhttp.port=${port}"]
+ENV PORT=${port}
+CMD ["./bin/${folderName}", "-Dhttp.port=${port}", "-Dpidfile.path=/dev/null"]
 `,
       dockerignore: `target\n.git\n`
     }
@@ -422,8 +427,9 @@ CMD ["./bin/server", "-Dhttp.port=${port}"]
     return {
       dockerfile: `FROM clojure:temurin-17-tools-deps-alpine AS builder
 WORKDIR /app
-COPY deps.edn .
-COPY src ./src
+COPY deps.edn build.clj ./
+RUN clj -P -T:build
+COPY . .
 RUN clj -T:build uber
 
 FROM eclipse-temurin:17-jre-alpine
@@ -465,7 +471,7 @@ RUN julia -e 'using Pkg; Pkg.instantiate()'
 COPY . .
 EXPOSE ${port}
 ENV PORT=${port}
-CMD ["julia", "--project", "-e", "using Genie; Genie.up(${port}, \"0.0.0.0\", async=false)"]
+CMD ["julia", "--project", "app.jl"]
 `,
       dockerignore: `.git\n`
     }
@@ -502,13 +508,14 @@ CMD ["R", "-e", "pr <- plumber::plumb('plumber.R'); pr$run(host='0.0.0.0', port=
       dockerfile: `FROM erlang:26-alpine AS builder
 WORKDIR /app
 COPY rebar.config .
-COPY src ./src
-RUN rebar3 release
+RUN rebar3 get-deps
+COPY . .
+RUN rebar3 as prod release
 
 FROM alpine:3.20
-RUN apk add --no-cache openssl ncurses-libs
+RUN apk add --no-cache openssl ncurses-libs libstdc++
 WORKDIR /app
-COPY --from=builder /app/_build/default/rel ./rel
+COPY --from=builder /app/_build/prod/rel ./rel
 EXPOSE ${port}
 CMD ["./rel/server/bin/server", "foreground"]
 `,
@@ -579,9 +586,9 @@ ${starterProfile === 'api-service' ? `CMD ["sh", "-c", "alembic upgrade head && 
     return {
       dockerfile: `FROM golang:1.23-alpine AS builder
 WORKDIR /app
-COPY go.mod ./
+COPY go.mod go.sum* ./
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -o server .
+RUN go mod tidy && CGO_ENABLED=0 GOOS=linux go build -o server .
 
 FROM alpine:3.20
 WORKDIR /app
@@ -658,13 +665,20 @@ EXPOSE ${port}
   }
 
   if (techId.startsWith('rust-')) {
+    const crate = createContext(techId, folderName, port, true, 'minimal').snake
     return {
-      dockerfile: `FROM rust:1.85-alpine
+      dockerfile: `FROM rust:1-alpine AS builder
+RUN apk add --no-cache musl-dev
 WORKDIR /app
 COPY . .
 RUN cargo build --release
+
+FROM alpine:3.20
+WORKDIR /app
+COPY --from=builder /app/target/release/${crate} /app/server
 EXPOSE ${port}
-CMD ["cargo", "run", "--release"]
+ENV PORT=${port}
+CMD ["./server"]
 `,
       dockerignore: `target\n.git\n`
     }
@@ -694,9 +708,10 @@ CMD ["./server"]
       dockerfile: `FROM denoland/deno:alpine-2.0.0
 WORKDIR /app
 COPY . .
-RUN deno cache main.ts || deno cache server.ts || true
+RUN deno cache main.ts
 EXPOSE ${port}
-CMD ["run", "--allow-net", "--allow-read", "--allow-env", "main.ts"]
+ENV PORT=${port}
+CMD ${techId === 'deno-fresh' ? '["run", "-A", "main.ts"]' : '["run", "--allow-net", "--allow-env", "main.ts"]'}
 `,
       dockerignore: `.git\n`
     }
@@ -738,7 +753,7 @@ CMD ["php", "-S", "0.0.0.0:${port}", "-t", "public"]
   }
 
   if (techId === 'vanilla-go') {
-    return { dockerfile: `FROM golang:1.23-alpine AS build\nWORKDIR /src\nCOPY . .\nRUN CGO_ENABLED=0 go build -o /server .\nFROM scratch\nCOPY --from=build /server /server\nEXPOSE ${port}\nENV PORT=${port}\nENTRYPOINT ["/server"]\n`, dockerignore: `.git\n` }
+    return { dockerfile: `FROM golang:1.23-alpine AS build\nWORKDIR /src\nCOPY . .\nRUN go mod tidy && CGO_ENABLED=0 go build -o /server .\nFROM scratch\nCOPY --from=build /server /server\nEXPOSE ${port}\nENV PORT=${port}\nENTRYPOINT ["/server"]\n`, dockerignore: `.git\n` }
   }
 
   if (techId === 'vanilla-python') {
@@ -761,19 +776,39 @@ CMD ["php", "-S", "0.0.0.0:${port}", "-t", "public"]
     return { dockerfile: `FROM gradle:8-jdk21-alpine AS build\nWORKDIR /app\nCOPY . .\nRUN gradle jsBrowserDistribution --no-daemon\nFROM nginx:alpine\nCOPY --from=build /app/build/dist/js/productionExecutable/ /usr/share/nginx/html/\nEXPOSE ${port}\n`, dockerignore: `.gradle\nbuild\n.git\n` }
   }
 
+  if (techId === 'csharp-blazor') {
+    return {
+      dockerfile: `FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+WORKDIR /src
+COPY *.csproj ./
+RUN dotnet restore
+COPY . .
+RUN dotnet publish -c Release -o /out
+
+FROM nginx:alpine
+COPY --from=build /out/wwwroot /usr/share/nginx/html
+RUN printf 'server {\\n  listen ${port};\\n  root /usr/share/nginx/html;\\n  location / { try_files $uri $uri/ /index.html; }\\n}\\n' > /etc/nginx/conf.d/default.conf
+EXPOSE ${port}
+`,
+      dockerignore: `bin\nobj\n.git\n`
+    }
+  }
+
   if (techId.startsWith('csharp-')) {
     return {
       dockerfile: `FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
+COPY *.csproj ./
+RUN dotnet restore
 COPY . .
-RUN dotnet build -c Release
+RUN dotnet publish -c Release -o /out
 
 FROM mcr.microsoft.com/dotnet/aspnet:9.0
 WORKDIR /app
-COPY --from=build /src .
-ENV ASPNETCORE_URLS=http://0.0.0.0:${port}
+COPY --from=build /out .
+ENV PORT=${port}
 EXPOSE ${port}
-CMD ["dotnet", "run"]
+CMD ["dotnet", "app.dll"]
 `,
       dockerignore: `bin\nobj\n.git\n`
     }
@@ -835,13 +870,13 @@ CMD ["./server"]
 RUN apk add --no-cache zig
 WORKDIR /app
 COPY . .
-RUN zig build-exe main.zig -O ReleaseSafe || true
+RUN zig build -Doptimize=ReleaseSafe
 
 FROM alpine:3.20
 WORKDIR /app
-COPY --from=builder /app/main .
+COPY --from=builder /app/zig-out/bin/${folderName} ./server
 EXPOSE ${port}
-CMD ["./main"]
+CMD ["./server"]
 `,
       dockerignore: `zig-cache\nzig-out\n.git\n`
     }
@@ -895,6 +930,21 @@ EXPOSE ${port}
 CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=${port}"]
 `,
       dockerignore: `vendor\n.git\n`
+    }
+  }
+
+  if (techId === 'ts-elysia') {
+    return {
+      dockerfile: `FROM oven/bun:1-alpine
+WORKDIR /app
+COPY package.json bun.lock* ./
+RUN bun install
+COPY . .
+EXPOSE ${port}
+ENV PORT=${port}
+CMD ["bun", "run", "start"]
+`,
+      dockerignore
     }
   }
 

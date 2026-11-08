@@ -1,5 +1,13 @@
 # LazyStack CLI changelog
 
+## 1.1.1
+
+- Add `import`, `add` and `apply` for existing projects (with `--dry-run`). Existing app folders are never modified; regenerated infrastructure is backed up to `.lazystack/backup/`.
+- Add Dioxus, Slint, Bevy, JavaFX and Java Swing to the catalog.
+- Starters for every framework now follow the framework's own initializer layout, with tests, `.gitignore` and README.
+- `scaffold --config` accepts the `lazystack.json` embedded in generated projects.
+- Many starter, Dockerfile and Compose fixes; see the repository CHANGELOG for details.
+
 ## 1.0.5
 
 First standalone npm package release for the LazyStack command-line scaffolder.

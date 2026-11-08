@@ -1,6 +1,6 @@
 # LazyStack
 
-Current development version: **1.1.0**. The v1.1.0 scope adds Rust GPUI, Yew, and Leptos starters, native framework layout previews, and Caddy/Traefik reverse proxy generation. See [the v1.1.0 plan](ROADMAP-1.1.0.md).
+Current version: **1.1.1**. v1.1.1 adds Dioxus, Slint, Bevy, JavaFX and Java Swing starters, framework-native project folders for every framework, and **Open Existing Project** for viewing and extending projects you already have. See [the v1.1.1 plan](ROADMAP-1.1.1.md) and the [changelog](CHANGELOG.md).
 
 LazyStack is a desktop stack builder and command-line scaffolder for composing application stacks. Choose languages, frameworks, databases, service connections, testing tools, and an architecture layout; LazyStack generates a project structure and supporting configuration.
 
@@ -18,8 +18,9 @@ macOS package not yet available (sponsor me a Macbook for app signature)
 ## Features
 
 - **Mix application roles:** Generate frontend clients, backend services, full-stack apps, workers, and desktop/mobile clients together.
-- **Broad technology catalog:** Use established frameworks or start with plain language/runtime templates. Current options include React, Vue, Angular, Solid, Qwik, HTMX, Lit, Kotlin/JS, SwiftUI, Reflex, NiceGUI, Anvil, Python, PHP, Go, Java, Node.js, Kotlin/Ktor, Swift/Vapor, Rust, AssemblyScript, Google Apps Script, React Native (Expo), Inferno.js, and many more.
-- **Framework-native project structure:** Each app starts inside its selected architecture root, then uses its own ecosystem conventions. Laravel gets `app/`, `bootstrap/`, `config/`, `database/`, `public/`, `resources/`, and `routes/`; Django gets `manage.py` and a settings package; Spring Boot gets Maven source/resource paths; Go and Rust get their native module manifests and source files. Blueprint previews show these paths instead of assuming every app has `src/`.
+- **Broad technology catalog:** Use established frameworks or start with plain language/runtime templates. Current options include React, Vue, Angular, Solid, Qwik, HTMX, Lit, Kotlin/JS, SwiftUI, Reflex, NiceGUI, Anvil, Python, PHP, Go, Java, JavaFX, Java Swing, Node.js, Kotlin/Ktor, Swift/Vapor, Rust (Axum, Actix, Poem, Dioxus, Slint, Bevy, GPUI, Yew, Leptos), AssemblyScript, Google Apps Script, React Native (Expo), Inferno.js, and many more.
+- **Framework-native project structure:** Each app starts inside its selected architecture root, then gets the folders its framework's own initializer would create (`ng new`, `nest new`, `django-admin startproject`, `mix phx.new`, `dx new`, `javafx-archetype-fxml`, start.spring.io, and so on), including tests, `.gitignore`, and a README with run commands. Django gets a project package plus a `core` app; Spring Boot gets `web/` controllers and JUnit tests; Go gets `internal/handlers` and `internal/config`; Rust services get `routes.rs` and `config.rs`. Blueprint previews are derived from the exact files that will be written.
+- **Open existing projects:** Use **Open Existing Project** (or `lazystack import`) on a folder you already have. LazyStack restores its `lazystack.json`, or detects frameworks from manifests, databases from Compose files, and the reverse proxy from its config. It then shows the stack in the Blueprint diagrams. Add apps, databases or a proxy, review a change preview, and apply: existing app folders are never modified, `.env` files only gain missing keys, and regenerated infrastructure files are backed up to `.lazystack/backup/` first.
 - **Architecture layouts:** Choose a preset or customize root directories, additional folders, and per-app paths.
 - **Polyglot layout:** Route browser clients to `frontend/clients/`, API services to `backend/services/`, workers to `backend/workers/`, and deployment files to `deploy/`.
 - **Service connections:** Configure API URLs, environment variable names, health checks, and startup dependencies between services.
@@ -120,6 +121,16 @@ npm run cli -- doctor --config lazystack.json
 npm run cli -- dev --dir ./my-api
 npm run cli -- list
 npm run cli -- presets
+```
+
+Work with a project that already exists:
+
+```bash
+npm run cli -- import --dir ./my-project                      # detect apps, databases and proxy
+npm run cli -- add --dir ./my-project --tech rust-dioxus --name dashboard --dry-run
+npm run cli -- add --dir ./my-project --tech rust-dioxus --name dashboard
+npm run cli -- import --dir ./my-project --out edited.json    # edit, then:
+npm run cli -- apply --dir ./my-project --config edited.json
 ```
 
 Export a blueprint, then scaffold it:

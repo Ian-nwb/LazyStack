@@ -13,16 +13,36 @@ import { TESTING_TOOLS } from '../../src/data/testingTools'
 import { resolveServiceConnectionUrl } from '../../src/utils/serviceConnections'
 import { getNativeEnvironmentDefaults } from '../../src/utils/nativeEnvironment'
 import { getDatabaseAdminUiOption } from '../../src/data/databaseAdminUis'
-import { TECH_CATALOG } from '../../src/data/frameworks'
+import { TECH_CATALOG, isHostOnlyTech } from '../../src/data/frameworks'
+import { createScaffoldWriter, ScaffoldChanges, ScaffoldMode } from './writer'
 
 export interface ScaffoldResult {
   success: boolean
   targetDir: string
   filesCreated: number
   error?: string
+  /** Per-file outcome; always reported, and the only output of a dry run. */
+  changes?: ScaffoldChanges
 }
 
-export async function scaffoldProject(settings: ProjectSettings): Promise<ScaffoldResult> {
+/** Version of the embedded `lazystack.json` blueprint format. */
+export const BLUEPRINT_VERSION = 1
+
+export interface ScaffoldOptions {
+  /** `create` (default) writes a new project; `augment` adds to an existing one without overwriting app code. */
+  mode?: ScaffoldMode
+  /** Report the planned changes without touching the disk. */
+  dryRun?: boolean
+}
+
+export async function scaffoldProject(inputSettings: ProjectSettings, options: ScaffoldOptions = {}): Promise<ScaffoldResult> {
+  // Desktop, mobile and hosted apps always run on the host. Older blueprints may still
+  // say `docker` for them (e.g. Electron, Tauri, Flutter), so normalize instead of failing.
+  const settings: ProjectSettings = {
+    ...inputSettings,
+    apps: inputSettings.apps.map(app => isHostOnlyTech(app.techId) && app.runMode !== 'host' ? { ...app, runMode: 'host' } : app)
+  }
+
   // Pre-flight checks on inputs
   const nameVal = validateFolderName(settings.projectName, 'project')
   if (!nameVal.valid) {
@@ -52,14 +72,6 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
         targetDir: '',
         filesCreated: 0,
         error: `Invalid app folder name '${app.folderName}': ${appVal.error}`
-      }
-    }
-    if (['rust-gpui', 'python-anvil', 'swiftui-client'].includes(app.techId) && app.runMode === 'docker') {
-      return {
-        success: false,
-        targetDir: '',
-        filesCreated: 0,
-        error: `${app.folderName} uses a host-only ${app.techId} workflow and cannot be added as a Docker service. Set its run mode to Host.`
       }
     }
   }
@@ -197,9 +209,31 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
     : [paths.appsDir]
   let filesCreated = 0
 
+  const mode: ScaffoldMode = options.mode || 'create'
+  const infraRoot = paths.infraDir.replace(/^\/+|\/+$/g, '')
+  // In augment mode, apps whose directory already exists are the user's code: never scaffold into them.
+  const existingAppDirs = new Set(mode === 'augment'
+    ? (await Promise.all(settings.apps.map(async app => {
+        const rel = paths.getAppRelativePath(app.folderName, app.id, app.role)
+        return (await fs.pathExists(path.join(targetDir, rel))) ? rel : null
+      }))).filter((rel): rel is string => Boolean(rel))
+    : [])
+  const protectedDirs = [...existingAppDirs].filter(rel => rel !== '.' && rel !== '')
+  const out = createScaffoldWriter(targetDir, {
+    mode,
+    dryRun: Boolean(options.dryRun),
+    protectedDirs,
+    // Generated infrastructure that must reflect the updated stack; originals are backed up first.
+    regenerable: rel => rel === 'lazystack.json'
+      || rel === `${infraRoot}/docker-compose.yml`
+      || rel === `${infraRoot}/docker-compose.dev.yml`
+      || /^(nginx|apache|caddy|traefik)\//.test(rel.slice(infraRoot.length + 1)) && rel.startsWith(`${infraRoot}/`)
+      || rel === `${paths.scriptsDir.replace(/^\/+|\/+$/g, '')}/dev-orchestrator.mjs`
+  })
+
   try {
     // 1. Ensure target directory exists
-    await fs.ensureDir(targetDir)
+    await out.ensureDir(targetDir)
 
     // 2. Scaffold configured directory contract
     const presetExtraDirs: Record<string, string[]> = {
@@ -230,7 +264,7 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
     ]
 
     for (const dir of directories) {
-      await fs.ensureDir(path.join(targetDir, dir))
+      await out.ensureDir(path.join(targetDir, dir))
     }
 
     // 3. Write Root Meta files
@@ -238,14 +272,14 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
     const metaFiles = generateMetaFiles(settings, databaseCredentials)
     for (const [relPath, content] of Object.entries(metaFiles)) {
       const fullPath = path.join(targetDir, relPath)
-      await fs.ensureDir(path.dirname(fullPath))
-      await fs.writeFile(fullPath, content, 'utf8')
+      await out.ensureDir(path.dirname(fullPath))
+      await out.write(fullPath, content, 'utf8')
       filesCreated++
 
       // Ensure execution permission for shell scripts
       if (relPath.endsWith('.sh')) {
         try {
-          await fs.chmod(fullPath, 0o755)
+          await out.chmod(fullPath, 0o755)
         } catch {
           // Ignore on Windows
         }
@@ -254,38 +288,38 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
 
     // 4. Write Docker Compose files
     const composeContent = generateDockerCompose(settings)
-    await fs.writeFile(path.join(targetDir, paths.infraDir, 'docker-compose.yml'), composeContent, 'utf8')
+    await out.write(path.join(targetDir, paths.infraDir, 'docker-compose.yml'), composeContent, 'utf8')
     filesCreated++
 
     const devComposeContent = generateDockerDevCompose(settings)
-    await fs.writeFile(path.join(targetDir, paths.infraDir, 'docker-compose.dev.yml'), devComposeContent, 'utf8')
+    await out.write(path.join(targetDir, paths.infraDir, 'docker-compose.dev.yml'), devComposeContent, 'utf8')
     filesCreated++
 
     // 5. Write Proxy Configurations
     if (settings.proxy.type === 'nginx') {
       const nginxConfigs = generateNginxConfig(settings)
       const nginxDir = path.join(targetDir, paths.infraDir, 'nginx')
-      await fs.ensureDir(nginxDir)
-      await fs.writeFile(path.join(nginxDir, 'nginx.conf'), nginxConfigs['nginx.conf'], 'utf8')
-      await fs.writeFile(path.join(nginxDir, 'default.conf'), nginxConfigs['default.conf'], 'utf8')
+      await out.ensureDir(nginxDir)
+      await out.write(path.join(nginxDir, 'nginx.conf'), nginxConfigs['nginx.conf'], 'utf8')
+      await out.write(path.join(nginxDir, 'default.conf'), nginxConfigs['default.conf'], 'utf8')
       filesCreated += 2
     } else if (settings.proxy.type === 'apache') {
       const apacheConf = generateApacheConfig(settings)
       const apacheDir = path.join(targetDir, paths.infraDir, 'apache')
-      await fs.ensureDir(apacheDir)
-      await fs.writeFile(path.join(apacheDir, 'httpd.conf'), apacheConf, 'utf8')
+      await out.ensureDir(apacheDir)
+      await out.write(path.join(apacheDir, 'httpd.conf'), apacheConf, 'utf8')
       filesCreated++
     } else if (settings.proxy.type === 'caddy') {
       const caddyDir = path.join(targetDir, paths.infraDir, 'caddy')
-      await fs.ensureDir(caddyDir)
-      await fs.writeFile(path.join(caddyDir, 'Caddyfile'), generateCaddyConfig(settings), 'utf8')
+      await out.ensureDir(caddyDir)
+      await out.write(path.join(caddyDir, 'Caddyfile'), generateCaddyConfig(settings), 'utf8')
       filesCreated++
     } else if (settings.proxy.type === 'traefik') {
       const traefikDir = path.join(targetDir, paths.infraDir, 'traefik')
       const configs = generateTraefikConfig(settings)
-      await fs.ensureDir(traefikDir)
-      await fs.writeFile(path.join(traefikDir, 'traefik.yml'), configs['traefik.yml'], 'utf8')
-      await fs.writeFile(path.join(traefikDir, 'dynamic.yml'), configs['dynamic.yml'], 'utf8')
+      await out.ensureDir(traefikDir)
+      await out.write(path.join(traefikDir, 'traefik.yml'), configs['traefik.yml'], 'utf8')
+      await out.write(path.join(traefikDir, 'dynamic.yml'), configs['dynamic.yml'], 'utf8')
       filesCreated += 2
     }
 
@@ -293,8 +327,8 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
     const hasSqlite = settings.databases.some(d => d.enabled && d.type === 'sqlite')
     if (hasSqlite) {
       const sqliteDir = path.join(targetDir, paths.infraDir, 'sqlite')
-      await fs.ensureDir(sqliteDir)
-      await fs.writeFile(path.join(sqliteDir, 'README.md'), '# SQLite Shared Volume\nStores persistent database files (e.g. data.db) mounted across Docker containers and local apps.\n', 'utf8')
+      await out.ensureDir(sqliteDir)
+      await out.write(path.join(sqliteDir, 'README.md'), '# SQLite Shared Volume\nStores persistent database files (e.g. data.db) mounted across Docker containers and local apps.\n', 'utf8')
       filesCreated++
     }
 
@@ -307,8 +341,8 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
           ? `${paths.packagesDir}/${relPath.slice('packages/'.length)}`
           : relPath
         const fullPath = path.join(targetDir, targetRelPath)
-        await fs.ensureDir(path.dirname(fullPath))
-        await fs.writeFile(fullPath, content, 'utf8')
+        await out.ensureDir(path.dirname(fullPath))
+        await out.write(fullPath, content, 'utf8')
         filesCreated++
       }
     }
@@ -322,14 +356,14 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
       if (await fs.pathExists(envPath)) {
         await fs.appendFile(envPath, cloudEnv.env, 'utf8')
       } else {
-        await fs.writeFile(envPath, cloudEnv.env, 'utf8')
+        await out.write(envPath, cloudEnv.env, 'utf8')
         filesCreated++
       }
       // Create/append .env.example
       if (await fs.pathExists(envExamplePath)) {
         await fs.appendFile(envExamplePath, cloudEnv.envExample, 'utf8')
       } else {
-        await fs.writeFile(envExamplePath, cloudEnv.envExample, 'utf8')
+        await out.write(envExamplePath, cloudEnv.envExample, 'utf8')
         filesCreated++
       }
     }
@@ -338,13 +372,14 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
     for (const app of settings.apps) {
       const relAppPath = paths.getAppRelativePath(app.folderName, app.id, app.role)
       const appDir = path.join(targetDir, relAppPath)
-      await fs.ensureDir(appDir)
+      if (existingAppDirs.has(relAppPath)) continue
+      await out.ensureDir(appDir)
 
       // Hosted and native desktop/mobile templates do not run as container services.
-      if (!['python-anvil', 'swiftui-client', 'rust-gpui'].includes(app.techId)) {
+      if (!isHostOnlyTech(app.techId)) {
         const { dockerfile, dockerignore } = getDockerfileForTech(app.techId, app.port, app.folderName, app.starterProfile)
-        await fs.writeFile(path.join(appDir, 'Dockerfile'), dockerfile, 'utf8')
-        await fs.writeFile(path.join(appDir, '.dockerignore'), dockerignore, 'utf8')
+        await out.write(path.join(appDir, 'Dockerfile'), dockerfile, 'utf8')
+        await out.write(path.join(appDir, '.dockerignore'), dockerignore, 'utf8')
         filesCreated += 2
       }
 
@@ -354,12 +389,12 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
       // Service-isolated database folder (migrations & schema)
       if (assignedDbs.length > 0 && paths.databaseIsolation === 'service-isolated') {
         const dbDir = path.join(appDir, 'db')
-        await fs.ensureDir(path.join(dbDir, 'migrations'))
-        await fs.ensureDir(path.join(dbDir, 'seeds'))
+        await out.ensureDir(path.join(dbDir, 'migrations'))
+        await out.ensureDir(path.join(dbDir, 'seeds'))
         const schemaSql = `-- Database Schema for ${app.folderName}\n-- Dedicated Service Databases: ${assignedDbs.map(d => d.customName || d.type).join(', ')}\n\nCREATE TABLE IF NOT EXISTS service_health (\n  id SERIAL PRIMARY KEY,\n  service_name VARCHAR(100) DEFAULT '${app.folderName}',\n  status VARCHAR(20) DEFAULT 'healthy',\n  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n);\n`
-        await fs.writeFile(path.join(dbDir, 'schema.sql'), schemaSql, 'utf8')
+        await out.write(path.join(dbDir, 'schema.sql'), schemaSql, 'utf8')
         const readmeDb = `# Database for ${app.folderName}\n\nThis folder holds local schema migrations and seed scripts for the ${app.folderName} microservice.\n\nAssigned instances:\n${assignedDbs.map(d => `- **${d.customName || d.type}** (Port :${d.port})`).join('\n')}\n`
-        await fs.writeFile(path.join(dbDir, 'README.md'), readmeDb, 'utf8')
+        await out.write(path.join(dbDir, 'README.md'), readmeDb, 'utf8')
         filesCreated += 2
       }
 
@@ -429,16 +464,16 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
       const appCloudVars = generateCloudEnvVars(settings.databases.filter(db => db.assignedAppId === app.id || db.assignedAppId === 'global' || !db.assignedAppId))
       appEnv += appCloudVars.env
       appEnvExample += appCloudVars.envExample
-      await fs.writeFile(path.join(appDir, '.env'), appEnv, 'utf8')
-      await fs.writeFile(path.join(appDir, '.env.example'), appEnvExample, 'utf8')
+      await out.write(path.join(appDir, '.env'), appEnv, 'utf8')
+      await out.write(path.join(appDir, '.env.example'), appEnvExample, 'utf8')
       filesCreated += 2
 
       // Starter code files
       const starterFiles = getStarterFilesForTech(app.techId, app.folderName, app.port, app.flavor, app.starterProfile)
       for (const [fileName, fileContent] of Object.entries(starterFiles)) {
         const filePath = path.join(appDir, fileName)
-        await fs.ensureDir(path.dirname(filePath))
-        await fs.writeFile(filePath, fileContent, 'utf8')
+        await out.ensureDir(path.dirname(filePath))
+        await out.write(filePath, fileContent, 'utf8')
         filesCreated++
       }
 
@@ -470,13 +505,13 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
               packageJson.scripts['api:generate'] = 'openapi-typescript api-contract.yaml --output src/api/schema.d.ts'
               packageJson.scripts.predev = 'npm run api:generate'
               packageJson.scripts.prebuild = 'npm run api:generate'
-              await fs.ensureDir(path.join(appDir, 'src/api'))
-              await fs.writeFile(path.join(appDir, 'src/api/client.ts'), `import createClient from 'openapi-fetch'\nimport type { paths } from './schema'\n\nexport const createApiClient = (baseUrl: string, bearerToken?: string) =>\n  createClient<paths>({\n    baseUrl,\n    headers: bearerToken ? { Authorization: 'Bearer ' + bearerToken } : {}\n  })\n`, 'utf8')
+              await out.ensureDir(path.join(appDir, 'src/api'))
+              await out.write(path.join(appDir, 'src/api/client.ts'), `import createClient from 'openapi-fetch'\nimport type { paths } from './schema'\n\nexport const createApiClient = (baseUrl: string, bearerToken?: string) =>\n  createClient<paths>({\n    baseUrl,\n    headers: bearerToken ? { Authorization: 'Bearer ' + bearerToken } : {}\n  })\n`, 'utf8')
               filesCreated++
             }
           }
           for (const packageName of customToolPackages) packageJson.devDependencies[packageName] = 'latest'
-          await fs.writeJson(appPackagePath, packageJson, { spaces: 2 })
+          await out.writeJson(appPackagePath, packageJson, { spaces: 2 })
         } catch {
           // Some non-Node services include JSON files that are not npm manifests; leave them untouched.
         }
@@ -511,20 +546,20 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
           }
         } : null
         const spec = openApi ? JSON.stringify(openApi, null, 2) : `openapi: 3.1.0\ninfo:\n  title: ${title}\n  version: 1.0.0\n  description: ${description}\nservers:\n  - url: http://localhost:${app.port}\npaths:\n  /:\n    get:\n      summary: Service root\n      responses:\n        '200':\n          description: Service is responding\n`
-        await fs.writeFile(path.join(appDir, 'openapi.yaml'), spec + '\n', 'utf8')
+        await out.write(path.join(appDir, 'openapi.yaml'), spec + '\n', 'utf8')
         filesCreated++
       }
 
       if (selectedToolIds.includes('playwright')) {
-        await fs.ensureDir(path.join(appDir, 'tests/e2e'))
-        await fs.writeFile(path.join(appDir, 'playwright.config.ts'), `import { defineConfig } from '@playwright/test'\n\nexport default defineConfig({\n  testDir: './tests/e2e',\n  use: { baseURL: process.env.BASE_URL || 'http://127.0.0.1:${app.port}' },\n  reporter: 'list'\n})\n`, 'utf8')
-        await fs.writeFile(path.join(appDir, 'tests/e2e/home.spec.ts'), `import { test, expect } from '@playwright/test'\n\ntest('service responds', async ({ page }) => {\n  await page.goto('/')\n  await expect(page.locator('body')).toBeVisible()\n})\n`, 'utf8')
+        await out.ensureDir(path.join(appDir, 'tests/e2e'))
+        await out.write(path.join(appDir, 'playwright.config.ts'), `import { defineConfig } from '@playwright/test'\n\nexport default defineConfig({\n  testDir: './tests/e2e',\n  use: { baseURL: process.env.BASE_URL || 'http://127.0.0.1:${app.port}' },\n  reporter: 'list'\n})\n`, 'utf8')
+        await out.write(path.join(appDir, 'tests/e2e/home.spec.ts'), `import { test, expect } from '@playwright/test'\n\ntest('service responds', async ({ page }) => {\n  await page.goto('/')\n  await expect(page.locator('body')).toBeVisible()\n})\n`, 'utf8')
         filesCreated += 2
       }
 
       if (selectedToolIds.includes('newman')) {
-        await fs.ensureDir(path.join(appDir, 'tests'))
-        await fs.writeFile(path.join(appDir, 'tests/api.collection.json'), JSON.stringify({
+        await out.ensureDir(path.join(appDir, 'tests'))
+        await out.write(path.join(appDir, 'tests/api.collection.json'), JSON.stringify({
           info: { name: `${app.folderName} API checks`, schema: 'https://schema.getpostman.com/json/collection/v2.1.0/collection.json' },
           item: [{ name: 'Root responds', request: { method: 'GET', url: `http://127.0.0.1:${app.port}/` }, event: [{ listen: 'test', script: { type: 'text/javascript', exec: ["pm.test('responds successfully', function () { pm.expect(pm.response.code).to.be.below(500) })"] } }] }]
         }, null, 2) + '\n', 'utf8')
@@ -532,17 +567,17 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
       }
 
       if (selectedToolIds.includes('bruno')) {
-        await fs.ensureDir(path.join(appDir, 'tests/bruno'))
-        await fs.writeFile(path.join(appDir, 'tests/bruno/health.bru'), `meta {\n  name: Health check\n  type: http\n  seq: 1\n}\n\nget {\n  url: http://127.0.0.1:${app.port}/health\n}\n\nassert {\n  res.status: < 500\n}\n`, 'utf8')
+        await out.ensureDir(path.join(appDir, 'tests/bruno'))
+        await out.write(path.join(appDir, 'tests/bruno/health.bru'), `meta {\n  name: Health check\n  type: http\n  seq: 1\n}\n\nget {\n  url: http://127.0.0.1:${app.port}/health\n}\n\nassert {\n  res.status: < 500\n}\n`, 'utf8')
         filesCreated++
       }
 
       if (selectedToolIds.includes('storybook')) {
-        await fs.ensureDir(path.join(appDir, '.storybook'))
-        await fs.writeFile(path.join(appDir, '.storybook/main.ts'), `import type { StorybookConfig } from '@storybook/react-vite'\n\nconst config: StorybookConfig = {\n  stories: ['../src/**/*.mdx', '../src/**/*.stories.@(js|jsx|mjs|ts|tsx)'],\n  framework: { name: '@storybook/react-vite', options: {} }\n}\n\nexport default config\n`, 'utf8')
-        await fs.writeFile(path.join(appDir, '.storybook/preview.ts'), `import type { Preview } from '@storybook/react-vite'\n\nconst preview: Preview = { parameters: { controls: { matchers: { color: /(background|color)$/i, date: /Date$/ } } } }\nexport default preview\n`, 'utf8')
-        await fs.ensureDir(path.join(appDir, 'src/stories'))
-        await fs.writeFile(path.join(appDir, 'src/stories/Button.stories.tsx'), `import type { Meta, StoryObj } from '@storybook/react'\n\nconst meta: Meta = { title: 'Getting Started/Button', tags: ['autodocs'] }\nexport default meta\ntype Story = StoryObj\n\nexport const Example: Story = {\n  render: () => <button type="button">A component story</button>\n}\n`, 'utf8')
+        await out.ensureDir(path.join(appDir, '.storybook'))
+        await out.write(path.join(appDir, '.storybook/main.ts'), `import type { StorybookConfig } from '@storybook/react-vite'\n\nconst config: StorybookConfig = {\n  stories: ['../src/**/*.mdx', '../src/**/*.stories.@(js|jsx|mjs|ts|tsx)'],\n  framework: { name: '@storybook/react-vite', options: {} }\n}\n\nexport default config\n`, 'utf8')
+        await out.write(path.join(appDir, '.storybook/preview.ts'), `import type { Preview } from '@storybook/react-vite'\n\nconst preview: Preview = { parameters: { controls: { matchers: { color: /(background|color)$/i, date: /Date$/ } } } }\nexport default preview\n`, 'utf8')
+        await out.ensureDir(path.join(appDir, 'src/stories'))
+        await out.write(path.join(appDir, 'src/stories/Button.stories.tsx'), `import type { Meta, StoryObj } from '@storybook/react'\n\nconst meta: Meta = { title: 'Getting Started/Button', tags: ['autodocs'] }\nexport default meta\ntype Story = StoryObj\n\nexport const Example: Story = {\n  render: () => <button type="button">A component story</button>\n}\n`, 'utf8')
         filesCreated += 3
       }
 
@@ -552,8 +587,8 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
           ...selectedTools.map(tool => `- **${tool.name}** (${tool.category}): ${tool.description}${tool.installPackages?.length ? ` Packages: \`${tool.installPackages.join('`, `')}\`.` : ''}${tool.id === 'openapi-client' ? ' Edit the copied api-contract.yaml when the API changes, then run `npm run api:generate`; npm also regenerates client types before dev and build.' : tool.scriptCommand ? ` Run with \`${tool.scriptCommand}\`.` : ''}`),
           ...customTools.map(tool => `- **${tool.name}**${tool.packageName ? ` (${tool.packageName})` : ''}: configure this tool's install and run command for your stack.`)
         ]
-        await fs.ensureDir(path.join(appDir, 'tests'))
-        await fs.writeFile(path.join(appDir, 'tests/TOOLING.md'), `# Testing tools for ${app.folderName}\n\n${setupNotes.join('\n')}\n`, 'utf8')
+        await out.ensureDir(path.join(appDir, 'tests'))
+        await out.write(path.join(appDir, 'tests/TOOLING.md'), `# Testing tools for ${app.folderName}\n\n${setupNotes.join('\n')}\n`, 'utf8')
         filesCreated++
       }
     }
@@ -564,7 +599,7 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
       if (!source) continue
       const sourcePath = path.join(targetDir, paths.getAppRelativePath(source.folderName, source.id, source.role), 'openapi.yaml')
       const consumerPath = path.join(targetDir, paths.getAppRelativePath(consumer.folderName, consumer.id, consumer.role), 'api-contract.yaml')
-      await fs.copyFile(sourcePath, consumerPath)
+      await out.copyFile(sourcePath, consumerPath)
       filesCreated++
     }
 
@@ -624,23 +659,32 @@ export async function scaffoldProject(settings: ProjectSettings): Promise<Scaffo
       ...(settings.apps.length + enabledDbs.length === 0 ? ['  empty[No services selected]'] : [])
     ].join('\n')
     const archDoc = `# System Architecture: ${settings.projectName}\n\n- **Architecture style:** ${settings.structureConfig?.preset || 'monorepo'}\n- **Database pattern:** ${paths.databaseIsolation}\n- **Services:** ${settings.apps.length}\n- **Databases:** ${enabledDbs.length}\n- **Unified workspace:** ${settings.useUnifiedWorkspace === false ? 'off' : 'on'}\n\n## Service diagram\n\nShows service-to-service protocols and database dependencies.\n\n\`\`\`mermaid\n${serviceDiagram}\n\`\`\`\n\n## Network topology\n\nShows host-published endpoints, Docker bridge membership, host-run apps, and managed external services.\n\n\`\`\`mermaid\n${topologyLines}\n\`\`\`\n`
-    await fs.writeFile(path.join(targetDir, paths.docsDir, 'architecture.md'), archDoc, 'utf8')
+    await out.write(path.join(targetDir, paths.docsDir, 'architecture.md'), archDoc, 'utf8')
     filesCreated++
 
-    // 9. Initialize Git repository
-    try {
-      const { exec } = await import('child_process')
-      await new Promise<void>((resolve) => {
-        exec('git init', { cwd: targetDir }, () => resolve())
-      })
-    } catch {
-      // Ignore if git CLI is not installed on host
+    // 9. Embedded blueprint: lets LazyStack reopen, visualize and extend this project later.
+    //    Machine-specific locations are omitted; secrets live only in .env.
+    const { parentDir: _parentDir, targetDir: _targetDir, ...portableSettings } = settings
+    await out.write(path.join(targetDir, 'lazystack.json'), JSON.stringify({ $lazystack: BLUEPRINT_VERSION, ...portableSettings }, null, 2) + '\n')
+    filesCreated++
+
+    // 10. Initialize Git repository for brand-new projects
+    if (mode === 'create' && !options.dryRun && !(await fs.pathExists(path.join(targetDir, '.git')))) {
+      try {
+        const { exec } = await import('child_process')
+        await new Promise<void>((resolve) => {
+          exec('git init', { cwd: targetDir }, () => resolve())
+        })
+      } catch {
+        // Ignore if git CLI is not installed on host
+      }
     }
 
     return {
       success: true,
       targetDir,
-      filesCreated
+      filesCreated: options.dryRun || mode === 'augment' ? out.changes.created.length + out.changes.updated.length + out.changes.merged.length : filesCreated,
+      changes: out.changes
     }
   } catch (error: any) {
     let errorMsg = error.message || 'Scaffolding failed'

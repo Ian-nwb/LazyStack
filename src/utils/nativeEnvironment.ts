@@ -5,6 +5,7 @@ export function getNativeEnvironmentDefaults(techId: string): string {
   if (techId.startsWith('php-') || techId === 'vanilla-php' || techId === 'fullstack-laravel' || techId === 'go-goravel') return 'APP_ENV=local\n'
   if (techId === 'ruby-rails') return 'RAILS_ENV=development\n'
   if (techId === 'java-springboot') return 'SPRING_PROFILES_ACTIVE=development\n'
+  if (techId === 'java-javafx' || techId === 'java-swing') return 'JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF-8\n'
   if (techId === 'kotlin-ktor') return 'APP_ENV=development\n'
   if (techId.startsWith('csharp-')) return 'ASPNETCORE_ENVIRONMENT=Development\n'
   if (techId.startsWith('rust-')) return 'RUST_LOG=info\n'

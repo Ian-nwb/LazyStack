@@ -1,13 +1,14 @@
 import React from 'react'
-import { Layers, Terminal, Cpu, HardDrive, Trash2, Sun, Moon } from 'lucide-react'
+import { Layers, Terminal, Cpu, HardDrive, Trash2, Sun, Moon, FolderOpen } from 'lucide-react'
 
 interface HeaderProps {
   onClearAll: () => void
+  onOpenExisting?: () => void
   theme: 'dark' | 'light'
   onToggleTheme: () => void
 }
 
-export const Header: React.FC<HeaderProps> = ({ onClearAll, theme, onToggleTheme }) => {
+export const Header: React.FC<HeaderProps> = ({ onClearAll, onOpenExisting, theme, onToggleTheme }) => {
   return (
     <header className="h-14 px-6 border-b border-surface-700 bg-surface-900 flex items-center justify-between shrink-0">
       <div className="flex items-center space-x-3">
@@ -20,6 +21,17 @@ export const Header: React.FC<HeaderProps> = ({ onClearAll, theme, onToggleTheme
       </div>
 
       <div className="flex items-center space-x-3">
+        {onOpenExisting && (
+          <button
+            onClick={onOpenExisting}
+            title="Open an existing project folder to view its diagram and add to it"
+            className="px-3 py-1.5 rounded-lg bg-surface-800 hover:bg-surface-750 text-zinc-300 hover:text-white transition font-medium text-xs flex items-center gap-1.5 cursor-pointer border border-surface-700"
+          >
+            <FolderOpen className="w-3 h-3" />
+            Open Existing Project
+          </button>
+        )}
+
         {/* Clear All */}
         <button 
           onClick={onClearAll}

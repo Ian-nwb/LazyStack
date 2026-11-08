@@ -3,6 +3,8 @@ import fs from 'fs-extra'
 import { spawnSync } from 'child_process'
 import { createInterface } from 'readline/promises'
 import { scaffoldProject } from '../../electron/scaffolding/generator'
+import type { ScaffoldChanges } from '../../electron/scaffolding/writer'
+import { importProject } from '../../electron/project/importer'
 import { TECH_CATALOG } from '../data/frameworks'
 import { DATABASE_CATALOG } from '../data/databases'
 import { STACK_PRESETS, StackPreset } from '../data/presets'
@@ -33,6 +35,9 @@ COMMANDS:
   doctor     Check local prerequisites for a blueprint
   validate   Check a blueprint without generating files
   plan       Preview the services and layout in a blueprint
+  import     Inspect an existing project folder and export its blueprint
+  add        Add a framework app to an existing project (never overwrites your code)
+  apply      Apply an edited blueprint to an existing project
   version    Show current version
   help       Show this help message
 
@@ -58,6 +63,23 @@ OPTIONS FOR 'scaffold':
   --dry-run             Preview the blueprint without writing files
   --force               Allow updating files in an existing target directory
 
+OPTIONS FOR 'import':
+  --dir, -d <dir>       Existing project folder (default: current working directory)
+  --out, -o <file>      Write the detected blueprint to a file
+  --json                Print the full import result as JSON
+
+OPTIONS FOR 'add':
+  --dir, -d <dir>       Existing project folder (default: current working directory)
+  --tech, -t <id>       Framework ID to add (see 'lazystack list')
+  --name, -n <folder>   App folder name (default: derived from the framework)
+  --port <number>       App port (default: framework default)
+  --dry-run             Show the planned changes without writing
+
+OPTIONS FOR 'apply':
+  --dir, -d <dir>       Existing project folder (default: current working directory)
+  --config, -c <file>   Edited blueprint to apply (default: <dir>/lazystack.json)
+  --dry-run             Show the planned changes without writing
+
 OPTIONS FOR 'search':
   <query>               Search by name, language, description, or ID
   --json                Print matches as JSON
@@ -81,6 +103,10 @@ EXAMPLES:
 
   # List all available technologies and experimental status
   lazystack list
+
+  # Inspect an existing project, then add a Dioxus frontend to it
+  lazystack import --dir ./my-project
+  lazystack add --dir ./my-project --tech rust-dioxus --name dashboard --dry-run
 `)
 }
 
@@ -190,6 +216,21 @@ function validateBlueprint(settings: ProjectSettings): string[] {
     if (typeof folder !== 'string' || !validateRelativeProjectPath(folder).valid) errors.push(`Invalid custom folder path '${folder}'.`)
   }
   return [...new Set(errors)]
+}
+
+function printChanges(changes: ScaffoldChanges, dryRun: boolean) {
+  const section = (title: string, items: string[]) => {
+    if (!items.length) return
+    console.log(`\n${title} (${items.length}):`)
+    for (const item of items) console.log(`  ${item}`)
+  }
+  console.log(dryRun ? '\nPlanned changes (dry run, nothing written):' : '\nApplied changes:')
+  section('New files', changes.created)
+  section('Regenerated (original backed up)', changes.updated)
+  section('Environment keys appended', changes.merged)
+  if (changes.skipped.length) console.log(`\nLeft untouched: ${changes.skipped.length} existing file(s)`)
+  if (changes.backupDir) console.log(`\nBackups: ${changes.backupDir}`)
+  if (!changes.created.length && !changes.updated.length && !changes.merged.length) console.log('\nNothing to change.')
 }
 
 function parseConfigArg(args: string[]): string | undefined {
@@ -484,6 +525,7 @@ export async function runCli(args: string[] = process.argv.slice(2)) {
         if (outDir !== process.cwd()) {
           settings.parentDir = path.resolve(process.cwd(), outDir)
         }
+        if (!settings.parentDir) settings.parentDir = path.resolve(process.cwd(), outDir)
         // Always recompute targetDir from parentDir and projectName
         settings.targetDir = path.join(settings.parentDir, settings.projectName)
       } catch (err: any) {
@@ -538,6 +580,97 @@ export async function runCli(args: string[] = process.argv.slice(2)) {
       console.error(`\nScaffolding failed: ${result.error}`)
       process.exit(1)
     }
+    return
+  }
+
+  if (command === 'import' || command === 'add' || command === 'apply') {
+    const flag = (...names: string[]) => {
+      const index = args.findIndex(arg => names.includes(arg))
+      return index >= 0 ? args[index + 1] : undefined
+    }
+    const projectDir = path.resolve(process.cwd(), flag('--dir', '-d') || '.')
+    const imported = await importProject(projectDir)
+    if (!imported.success || !imported.settings) {
+      console.error(`Error: ${imported.error || 'could not read project'}`)
+      process.exit(1)
+    }
+
+    if (command === 'import') {
+      if (args.includes('--json')) {
+        console.log(JSON.stringify(imported, null, 2))
+      } else {
+        console.log(`\nProject: ${imported.settings.projectName} (${projectDir})`)
+        console.log(`Source:  ${imported.source === 'blueprint' ? 'lazystack.json' : 'detected from project files'}`)
+        console.log(`\nApps (${imported.settings.apps.length}):`)
+        for (const app of imported.settings.apps) {
+          const evidence = imported.detected?.find(item => item.techId === app.techId)
+          console.log(`  - ${app.folderName.padEnd(20)} ${app.techId.padEnd(22)} port ${String(app.port).padEnd(6)} ${app.runMode}${evidence ? `  [${evidence.confidence}: ${evidence.evidence}]` : ''}`)
+        }
+        console.log(`\nDatabases: ${imported.settings.databases.map(db => `${db.customName || db.type} (${db.type}:${db.port})`).join(', ') || 'none'}`)
+        console.log(`Proxy:     ${imported.settings.proxy.type}`)
+        for (const warning of imported.warnings || []) console.log(`\n! ${warning}`)
+        if (imported.unrecognized?.length) console.log(`! Unrecognized: ${imported.unrecognized.join(', ')}`)
+      }
+      const out = flag('--out', '-o')
+      if (out) {
+        await fs.writeFile(path.resolve(process.cwd(), out), JSON.stringify(imported.settings, null, 2) + '\n')
+        console.log(`\nBlueprint written to ${out}. Edit it, then run: lazystack apply --dir ${path.relative(process.cwd(), projectDir) || '.'} --config ${out}`)
+      }
+      return
+    }
+
+    let settings = imported.settings
+    if (command === 'add') {
+      const techId = flag('--tech', '-t')
+      const tech = TECH_CATALOG.find(item => item.id === techId)
+      if (!tech) {
+        console.error(`Error: unknown --tech '${techId ?? ''}'. Run 'lazystack list' or 'lazystack search <name>'.`)
+        process.exit(1)
+      }
+      const folderName = flag('--name', '-n') || tech.id.replace(/^(ts|fullstack|vanilla)-/, '')
+      if (settings.apps.some(app => app.folderName === folderName)) {
+        console.error(`Error: an app named '${folderName}' already exists. Choose another --name.`)
+        process.exit(1)
+      }
+      const usedPorts = new Set([...settings.apps.map(app => app.port), ...settings.databases.map(db => db.port)])
+      let port = Number(flag('--port')) || tech.defaultPort
+      while (port > 0 && usedPorts.has(port)) port++
+      settings = {
+        ...settings,
+        apps: [...settings.apps, {
+          id: `app_${Date.now()}`,
+          folderName,
+          role: tech.role,
+          techId: tech.id,
+          port,
+          runMode: tech.hostOnly ? 'host' : 'docker',
+          routePrefix: tech.role === 'frontend' ? '/' : `/${folderName}`,
+          flavor: tech.supportsFlavor ? 'typescript' : undefined
+        }]
+      }
+    } else {
+      const configPath = path.resolve(process.cwd(), flag('--config', '-c') || path.join(projectDir, 'lazystack.json'))
+      try {
+        const { $lazystack: _version, ...blueprint } = JSON.parse(await fs.readFile(configPath, 'utf8'))
+        settings = { ...blueprint, projectName: path.basename(projectDir), parentDir: path.dirname(projectDir), targetDir: projectDir }
+      } catch (error) {
+        console.error(`Error reading blueprint ${configPath}: ${(error as Error).message}`)
+        process.exit(1)
+      }
+    }
+
+    const errors = validateBlueprint(settings)
+    if (errors.length) {
+      console.error(`Blueprint invalid:\n${errors.map(error => `  - ${error}`).join('\n')}`)
+      process.exit(1)
+    }
+    const dryRun = args.includes('--dry-run')
+    const result = await scaffoldProject(settings, { mode: 'augment', dryRun })
+    if (!result.success || !result.changes) {
+      console.error(`Error: ${result.error || 'update failed'}`)
+      process.exit(1)
+    }
+    printChanges(result.changes, dryRun)
     return
   }
 

@@ -7,6 +7,9 @@ import { ProxyConfigurator } from './components/ProxyConfigurator'
 import { BlueprintInspector } from './components/BlueprintInspector'
 import { EnvironmentAuditor } from './components/EnvironmentAuditor'
 import { ValidationBanner } from './components/ValidationBanner'
+import { ChangePlanModal, ExistingProjectBanner, ExistingProjectInfo } from './components/ExistingProject'
+import type { ScaffoldChanges } from '../electron/scaffolding/writer'
+import type { ImportResult } from '../electron/project/importer'
 import { ProjectSettings, CartApp, SelectedDatabase, ProxyConfig, FolderStructureConfig } from './types'
 import { Layers, Database, Globe, Eye, FolderOpen, ExternalLink, Copy, Check, CheckCircle2, AlertCircle, Loader2, Wrench, Terminal, Package, Play, Square } from 'lucide-react'
 import { StackPreset } from './data/presets'
@@ -29,7 +32,14 @@ export const App: React.FC = () => {
     targetDir: string
     filesCreated: number
     error?: string
+    changes?: ScaffoldChanges
   } | null>(null)
+
+  // Existing project (opened from disk) state
+  const [existingProject, setExistingProject] = useState<ExistingProjectInfo | null>(null)
+  const [importError, setImportError] = useState<string | null>(null)
+  const [changePlan, setChangePlan] = useState<ScaffoldChanges | null>(null)
+  const [applyingPlan, setApplyingPlan] = useState(false)
   const [copiedPath, setCopiedPath] = useState(false)
 
   // Docker Compose stack orchestrator state
@@ -140,25 +150,97 @@ export const App: React.FC = () => {
     useUnifiedWorkspace
   }
 
+  const callScaffold = async (options?: { mode: 'create' | 'augment'; dryRun?: boolean }) => {
+    if (window.electronAPI?.scaffoldProject) return window.electronAPI.scaffoldProject(projectSettings, options)
+    const res = await fetch('/api/scaffold', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(options ? { settings: projectSettings, options } : projectSettings)
+    })
+    return res.json()
+  }
+
+  // Open an existing folder: restore its lazystack.json or detect its stack, then show the diagram.
+  const handleOpenExisting = async () => {
+    setImportError(null)
+    try {
+      const dir = window.electronAPI?.selectDirectory
+        ? await window.electronAPI.selectDirectory(parentDir || undefined)
+        : window.prompt('Path of the existing project folder')
+      if (!dir) return
+      const result: ImportResult = window.electronAPI?.importProject
+        ? await window.electronAPI.importProject(dir)
+        : await (await fetch('/api/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projectDir: dir }) })).json()
+      if (!result.success || !result.settings) {
+        setImportError(result.error || 'The folder could not be imported.')
+        return
+      }
+      const imported = result.settings
+      setProjectName(imported.projectName)
+      setParentDir(imported.parentDir)
+      setApps(imported.apps)
+      setDatabases(imported.databases)
+      setProxy(imported.proxy)
+      if (imported.structureConfig) setStructureConfig(imported.structureConfig)
+      setUseUnifiedWorkspace(imported.useUnifiedWorkspace !== false)
+      setExistingProject({ dir: imported.targetDir, source: result.source || 'detected', detected: result.detected || [], unrecognized: result.unrecognized || [], warnings: result.warnings || [] })
+      setActiveTab('inspector')
+    } catch (err: any) {
+      setImportError(err.message)
+    }
+  }
+
+  const handleCloseExisting = () => {
+    setExistingProject(null)
+    setChangePlan(null)
+    setApps([])
+    setDatabases([])
+    setProjectName('')
+    setStructureConfig(getDefaultStructureConfig())
+  }
+
+  const handleApplyPlan = async () => {
+    setApplyingPlan(true)
+    try {
+      const result = await callScaffold({ mode: 'augment' })
+      setChangePlan(null)
+      setScaffoldResult(result)
+      setScaffoldModalOpen(true)
+      if (result.success) setExistingProject(project => project && { ...project, source: 'blueprint' })
+    } catch (err: any) {
+      setChangePlan(null)
+      setScaffoldResult({ success: false, targetDir: projectSettings.targetDir, filesCreated: 0, error: err.message })
+      setScaffoldModalOpen(true)
+    } finally {
+      setApplyingPlan(false)
+    }
+  }
+
   // Trigger real scaffolding engine
   const handleGenerate = async () => {
+    if (existingProject) {
+      // Existing project: compute a dry-run plan first and let the user review it.
+      try {
+        const preview = await callScaffold({ mode: 'augment', dryRun: true })
+        if (!preview.success || !preview.changes) {
+          setScaffoldResult(preview)
+          setScaffoldModalOpen(true)
+          return
+        }
+        setChangePlan(preview.changes)
+      } catch (err: any) {
+        setScaffoldResult({ success: false, targetDir: projectSettings.targetDir, filesCreated: 0, error: err.message })
+        setScaffoldModalOpen(true)
+      }
+      return
+    }
+
     setScaffoldModalOpen(true)
     setIsScaffolding(true)
     setScaffoldResult(null)
 
     try {
-      if (window.electronAPI?.scaffoldProject) {
-        const result = await window.electronAPI.scaffoldProject(projectSettings)
-        setScaffoldResult(result)
-      } else {
-        const res = await fetch('/api/scaffold', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(projectSettings)
-        })
-        const result = await res.json()
-        setScaffoldResult(result)
-      }
+      setScaffoldResult(await callScaffold())
     } catch (err: any) {
       setScaffoldResult({
         success: false,
@@ -305,7 +387,7 @@ export const App: React.FC = () => {
   return (
     <div className="h-screen w-screen flex flex-col bg-surface-950 text-zinc-100 overflow-hidden font-sans">
       {/* Top Header */}
-      <Header onClearAll={handleClearAll} theme={theme} onToggleTheme={handleToggleTheme} />
+      <Header onClearAll={handleClearAll} onOpenExisting={handleOpenExisting} theme={theme} onToggleTheme={handleToggleTheme} />
 
       {/* Project Configuration Bar */}
       <ProjectConfigBar
@@ -316,6 +398,14 @@ export const App: React.FC = () => {
         useUnifiedWorkspace={useUnifiedWorkspace}
         setUseUnifiedWorkspace={setUseUnifiedWorkspace}
       />
+
+      {existingProject && <ExistingProjectBanner info={existingProject} onClose={handleCloseExisting} />}
+      {importError && (
+        <div className="px-6 py-2 border-b border-red-800 bg-red-950/60 text-red-200 text-xs flex items-center justify-between">
+          <span>Could not open project: {importError}</span>
+          <button onClick={() => setImportError(null)} className="text-red-300 hover:text-white cursor-pointer">✕</button>
+        </div>
+      )}
 
       {/* Navigation Sub-header / Tabs */}
       <div className="h-11 px-6 border-b border-surface-700 bg-surface-900 flex items-center justify-between shrink-0">
@@ -453,7 +543,12 @@ export const App: React.FC = () => {
       <ValidationBanner
         settings={projectSettings}
         onGenerate={handleGenerate}
+        generateLabel={existingProject ? 'Review & Apply Changes' : undefined}
       />
+
+      {changePlan && (
+        <ChangePlanModal plan={changePlan} applying={applyingPlan} onConfirm={handleApplyPlan} onCancel={() => setChangePlan(null)} />
+      )}
 
       {/* Real Scaffolding Progress & Results Modal */}
       {scaffoldModalOpen && (
@@ -490,9 +585,11 @@ export const App: React.FC = () => {
                     <CheckCircle2 className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-white uppercase tracking-wider">Monorepo Generated</h3>
+                    <h3 className="text-sm font-bold text-white uppercase tracking-wider">{existingProject ? 'Changes Applied' : 'Monorepo Generated'}</h3>
                     <p className="text-xs text-zinc-400">
-                      Scaffolded {scaffoldResult.filesCreated} files adhering strictly to the directory contract.
+                      {existingProject && scaffoldResult.changes
+                        ? `${scaffoldResult.changes.created.length} new, ${scaffoldResult.changes.updated.length} regenerated, ${scaffoldResult.changes.merged.length} merged${scaffoldResult.changes.backupDir ? ` · originals in ${scaffoldResult.changes.backupDir}` : ''}.`
+                        : `Scaffolded ${scaffoldResult.filesCreated} files adhering strictly to the directory contract.`}
                     </p>
                   </div>
                 </div>

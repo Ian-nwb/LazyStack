@@ -149,11 +149,31 @@ export default defineConfig({
           req.on('data', chunk => { body += chunk })
           req.on('end', async () => {
             try {
-              const settings = JSON.parse(body || '{}')
+              const payload = JSON.parse(body || '{}')
+              // Accepts either raw ProjectSettings or { settings, options } (augment / dry-run).
+              const settings = payload.settings && payload.options !== undefined ? payload.settings : payload
+              const options = payload.settings && payload.options !== undefined ? payload.options : undefined
               const { scaffoldProject } = await import('./electron/scaffolding/generator')
-              const result = await scaffoldProject(settings)
+              const result = await scaffoldProject(settings, options)
               res.setHeader('Content-Type', 'application/json')
               res.end(JSON.stringify(result))
+            } catch (err: any) {
+              res.statusCode = 500
+              res.setHeader('Content-Type', 'application/json')
+              res.end(JSON.stringify({ success: false, error: err.message }))
+            }
+          })
+        })
+
+        server.middlewares.use('/api/import', async (req, res) => {
+          let body = ''
+          req.on('data', chunk => { body += chunk })
+          req.on('end', async () => {
+            try {
+              const { projectDir } = JSON.parse(body || '{}')
+              const { importProject } = await import('./electron/project/importer')
+              res.setHeader('Content-Type', 'application/json')
+              res.end(JSON.stringify(await importProject(projectDir)))
             } catch (err: any) {
               res.statusCode = 500
               res.setHeader('Content-Type', 'application/json')

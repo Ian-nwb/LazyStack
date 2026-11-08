@@ -1,0 +1,85 @@
+# v1.1.1 plan
+
+Status: **implemented and released as v1.1.1** (see [CHANGELOG](CHANGELOG.md)). Notes on what changed versus this plan:
+
+- Dioxus is host-run (`dx serve`) rather than a Docker service; container builds would need the `dx` CLI in the image.
+- New frameworks were added through a native-starter layer (`electron/scaffolding/templates/native/`) instead of growing `appTemplates.ts`.
+- The verifier is `scripts/verify-templates.ts` (`npm run verify:templates`).
+- Package `author`/`maintainer` fields were left as-is; only `homepage` was corrected.
+
+## 1. New frameworks
+
+| ID | Name | Language | Role | Run mode | Starter layout (mirrors official init) |
+| --- | --- | --- | --- | --- | --- |
+| `rust-dioxus` | Dioxus | Rust | frontend / desktop | Docker (web) or host (desktop) | `Cargo.toml`, `Dioxus.toml`, `src/main.rs`, `src/components/`, `assets/main.css` (`dx new` layout, served by `dx serve`) |
+| `rust-slint` | Slint | Rust | desktop | host only | `Cargo.toml`, `build.rs`, `ui/app-window.slint`, `src/main.rs` (official `slint-rust-template` layout) |
+| `rust-bevy` | Bevy | Rust | desktop (game) | host only | `Cargo.toml` (dev opt-level profile), `src/main.rs`, `src/plugins/`, `assets/` |
+| `java-javafx` | JavaFX | Java | desktop | host only | Maven `pom.xml` with `javafx-maven-plugin`, `src/main/java/<pkg>/App.java`, `module-info.java`, `src/main/resources/<pkg>/primary.fxml`, `styles.css` (`javafx-archetype-fxml` layout) |
+| `java-swing` | Java Swing | Java | desktop | host only | Maven `pom.xml` (exec plugin), `src/main/java/<pkg>/App.java`, `src/main/java/<pkg>/ui/MainFrame.java` |
+
+All five are wired into: catalog (`frameworks.ts` with `requires` binaries), starter templates, dev-orchestrator launch command (`dx serve`, `cargo run`, `mvn javafx:run`, `mvn exec:java`), `nativeProjectLayout.ts`, `nativeEnvironment.ts`, `techIcons.ts`, `docs/framework-layouts.md`, and README.
+
+**Refactor:** the host-only list (`rust-gpui`, `python-anvil`, `swiftui-client`) is hard-coded in 5 places (generator ×2, docker.ts, CartBuilder ×2, BlueprintInspector). Replace it with a `hostOnly: true` flag on `TechItem`, so new desktop frameworks need one edit.
+
+## 2. Framework-native project folders for every framework
+
+Each starter should look like the output of the framework's own initializer (`cargo new`, `npm create vite`, `django-admin startproject`, `rails new --minimal`, `dotnet new`, `mix phx.new --no-ecto`, `sbt new playframework/play-scala-seed.g8`, etc.). Starters are hand-written templates, so scaffolding stays offline and deterministic. Every starter gets:
+
+- the native manifest and lockfile-ready config
+- the framework's conventional source folders, with at least one route/component/controller/module plus a health endpoint for services
+- a native test folder with one passing test (`tests/`, `src/test/java`, `spec/`, `test/`, …)
+- a `.gitignore` for that ecosystem
+- `README.md` with run/test/build commands
+
+Work is grouped by ecosystem: JS/TS frontends → JS/TS backends and full-stack → Python → Go → Rust → JVM → .NET → PHP/Ruby/Elixir → long-tail languages.
+
+### Bug found during the audit (highest priority)
+
+14 catalog entries have **no template at all**. They fall through to a generic Node `package.json` + `src/index.ts` stub, while their Dockerfiles expect a native project, so `docker compose build` fails:
+
+`scala-play`, `swift-vapor`, `rust-poem`, `clojure-ring`, `crystal-kemal`, `erlang-cowboy`, `julia-genie`, `lua-lapis`, `nim-happyx`, `ocaml-dream`, `r-plumber`, `tanstack-start`, `solid-start`, `lit-element`
+
+The Blueprint preview (`nativeProjectLayout.ts`) also shows files for them that are never written (e.g. `build.sbt`, `Package.swift`). Each gets a real native starter that matches its Dockerfile.
+
+### Guardrail
+
+Add `scripts/verify-templates.mjs` (run in CI). For every catalog ID it asserts that:
+- the generated files are not the generic fallback
+- every path listed in `getNativeProjectLayout` exists in the output
+- host-only techs produce no Dockerfile
+
+This catches future drift between catalog, preview and templates.
+
+## 3. New feature: open an existing project
+
+**"Open existing project"** in the desktop app and `lazystack import --dir <path>` in the CLI.
+
+1. **Blueprint embedding:** new scaffolds write `lazystack.json` (the `ProjectSettings`, with secrets excluded) to the project root. Opening such a project restores the exact cart.
+2. **Detection for non-LazyStack folders:** detectors scan up to a few levels deep and build a `ProjectSettings`:
+   - apps from manifests: `package.json` deps (react, vue, next, express, …), `Cargo.toml` (axum, dioxus, bevy, …), `pom.xml`/`build.gradle*` (spring-boot, javafx, ktor), `go.mod` (gin, fiber, …), `requirements.txt`/`pyproject.toml`, `composer.json`, `Gemfile`, `mix.exs`, `*.csproj`
+   - databases and ports from `docker-compose*.yml`
+   - proxy from `nginx.conf`/`Caddyfile`/`traefik.yml`
+
+   Each detection carries a confidence score; unknown folders appear as "unrecognized" so nothing is silently dropped.
+3. **View:** the detected project loads into the existing Blueprint diagram and inspector, which shows the real file tree rather than the predicted one.
+4. **Modify (additive, non-destructive):** the user can add apps, databases, proxy or testing tools, then **Apply** shows a preview of the file changes:
+   - **new** files are written
+   - **regenerated** infra files (`docker-compose.yml`, proxy config, `.env.example`, `lazystack.json`) are backed up to `.lazystack/backup/<timestamp>/` first
+   - **existing app source is never overwritten**
+
+   CLI equivalent: `lazystack add --dir <path> --tech <id>` plus `lazystack import --dir <path> --out lazystack.json`.
+
+Implementation: `scaffoldProject` gains a `mode: 'create' | 'augment'` option. A new `electron/project/importer.ts` is exposed through IPC, the Vite `/api/import` middleware and the CLI.
+
+## 4. Other bug fixes found in the scan
+
+- `CHANGELOG.md` is missing the 1.1.0 entry. Backfill it and add 1.1.1.
+- `package.json` `homepage`, `author` and `maintainer` point to `github.com/lazystack/lazystack`. Align them with `github.com/Ian-nwb/LazyStack`.
+- More bugs found during implementation will be listed here and in the changelog.
+
+## 5. Release 1.1.1
+
+- Bump `package.json`, `packages/cli/package.json`, the electron-builder output dir, `README.md`, `showcase/index.html`, `CHANGELOG.md` and `package-lock.json`.
+- Run `npx tsc --noEmit` and `npm run build`, plus the template verifier.
+- Scaffold-and-build the new Rust/Java desktop starters locally where toolchains exist.
+- Commit and tag `v1.1.1` without any AI co-author or attribution lines. Pushing, publishing to npm and the GitHub release happen only after your confirmation.

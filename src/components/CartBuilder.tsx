@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Plus, Trash2, Copy, ArrowUp, ArrowDown, Search, Server, Monitor, Check, AlertTriangle, RefreshCw, Code2, Download, CheckCircle2, ShieldAlert, Sparkles } from 'lucide-react'
 import { CartApp, TechItem, AppRole, SelectedDatabase, LanguageFlavor, FolderStructureConfig } from '../types'
-import { TECH_CATALOG } from '../data/frameworks'
+import { TECH_CATALOG, isHostOnlyTech } from '../data/frameworks'
 import { STACK_PRESETS, StackPreset } from '../data/presets'
 import { validateFolderName } from '../utils/pathValidation'
 import { getTechIconUrl } from '../utils/techIcons'
@@ -126,7 +126,7 @@ export const CartBuilder: React.FC<CartBuilderProps> = ({ apps, setApps, databas
       role: tech.role,
       techId: tech.id,
       port: assignedPort,
-      runMode: tech.id === 'rust-gpui' || tech.id === 'python-anvil' || tech.id === 'swiftui-client' ? 'host' : 'docker',
+      runMode: tech.hostOnly ? 'host' : 'docker',
       routePrefix: tech.role === 'frontend' ? '/' : `/${folderName}`,
       flavor: tech.supportsFlavor ? selectedFlavor : undefined
     }
@@ -429,7 +429,7 @@ export const CartBuilder: React.FC<CartBuilderProps> = ({ apps, setApps, databas
                     <div className="flex-1">
                       <label className="block text-[10px] font-semibold text-zinc-400 uppercase mb-1">Run Mode</label>
                       <div className="flex bg-surface-950 p-0.5 rounded border border-surface-650">
-                        {app.techId !== 'rust-gpui' && app.techId !== 'python-anvil' && app.techId !== 'swiftui-client' && <button
+                        {!isHostOnlyTech(app.techId) && <button
                           onClick={() => handleUpdate(app.id, { runMode: 'docker' })}
                           className={`flex-1 py-0.5 text-[11px] font-medium rounded transition flex items-center justify-center gap-1 ${
                             app.runMode === 'docker' ? 'bg-zinc-200 text-zinc-950 font-bold' : 'text-zinc-500 hover:text-zinc-300'

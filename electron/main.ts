@@ -5,7 +5,8 @@ import { fileURLToPath } from 'url'
 import { exec } from 'child_process'
 import fs from 'fs-extra'
 import detectPort from 'detect-port'
-import { scaffoldProject } from './scaffolding/generator'
+import { scaffoldProject, ScaffoldOptions } from './scaffolding/generator'
+import { importProject } from './project/importer'
 import { auditEnvironment } from './environment/auditor'
 import { installBinary, addDirectoryToPath } from './environment/installer'
 import { ProjectSettings } from '../src/types'
@@ -207,8 +208,13 @@ app.whenReady().then(() => {
   })
 
   // Scaffolding IPC
-  ipcMain.handle('scaffold-project', async (_event, settings: ProjectSettings) => {
-    return await scaffoldProject(settings)
+  ipcMain.handle('scaffold-project', async (_event, settings: ProjectSettings, options?: ScaffoldOptions) => {
+    return await scaffoldProject(settings, options)
+  })
+
+  // Existing-project import (reads lazystack.json or detects the stack from manifests)
+  ipcMain.handle('import-project', async (_event, projectDir: string) => {
+    return await importProject(projectDir)
   })
 
   // Post-generation Actions

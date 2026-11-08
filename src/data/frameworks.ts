@@ -104,6 +104,7 @@ export const TECH_CATALOG: TechItem[] = [
   },
   {
     id: 'rust-gpui',
+    hostOnly: true,
     name: 'Rust (GPUI Desktop)',
     language: 'Rust',
     category: 'mobile-desktop',
@@ -114,6 +115,49 @@ export const TECH_CATALOG: TechItem[] = [
     requires: [
       { binary: 'rustc', label: 'Rust Compiler', installHint: 'https://rustup.rs/' },
       { binary: 'cargo', label: 'Cargo (Rust PM)', installHint: 'Installed with rustup' }
+    ]
+  },
+  {
+    id: 'rust-dioxus',
+    name: 'Rust (Dioxus)',
+    language: 'Rust',
+    category: 'frontend',
+    role: 'frontend',
+    defaultPort: 8080,
+    hostOnly: true,
+    description: 'Cross-platform Rust UI (web, desktop and mobile from one codebase) with signals, RSX and a built-in router; served by the dx CLI.',
+    badgeColor: 'bg-orange-500/20 text-orange-300 border-orange-500/40',
+    requires: [
+      { binary: 'cargo', label: 'Cargo (Rust PM)', installHint: 'https://rustup.rs/' },
+      { binary: 'dx', label: 'Dioxus CLI', installHint: 'cargo install dioxus-cli' }
+    ]
+  },
+  {
+    id: 'rust-slint',
+    name: 'Rust (Slint Desktop)',
+    language: 'Rust',
+    category: 'mobile-desktop',
+    role: 'desktop-mobile',
+    defaultPort: 0,
+    hostOnly: true,
+    description: 'Declarative native GUI toolkit: .slint markup compiled at build time with Rust business logic, for desktop and embedded.',
+    badgeColor: 'bg-orange-500/20 text-orange-300 border-orange-500/40',
+    requires: [
+      { binary: 'cargo', label: 'Cargo (Rust PM)', installHint: 'https://rustup.rs/' }
+    ]
+  },
+  {
+    id: 'rust-bevy',
+    name: 'Rust (Bevy Game Engine)',
+    language: 'Rust',
+    category: 'mobile-desktop',
+    role: 'desktop-mobile',
+    defaultPort: 0,
+    hostOnly: true,
+    description: 'Data-driven ECS game engine; the starter wires a camera and a controllable player through Bevy plugins.',
+    badgeColor: 'bg-orange-500/20 text-orange-300 border-orange-500/40',
+    requires: [
+      { binary: 'cargo', label: 'Cargo (Rust PM)', installHint: 'https://rustup.rs/' }
     ]
   },
   {
@@ -699,6 +743,7 @@ export const TECH_CATALOG: TechItem[] = [
   },
   {
     id: 'swiftui-client',
+    hostOnly: true,
     name: 'SwiftUI Apple Client',
     language: 'Swift',
     category: 'mobile-desktop',
@@ -712,6 +757,7 @@ export const TECH_CATALOG: TechItem[] = [
   // --- MOBILE & DESKTOP (TAURI, FLUTTER, ELECTRON) ---
   {
     id: 'tauri-app',
+    hostOnly: true,
     name: 'Tauri Desktop App (Rust + Web)',
     language: 'Rust / Web',
     category: 'mobile-desktop',
@@ -727,6 +773,7 @@ export const TECH_CATALOG: TechItem[] = [
   },
   {
     id: 'dart-flutter',
+    hostOnly: true,
     name: 'Dart (Flutter Web & Multiplatform)',
     language: 'Dart',
     category: 'mobile-desktop',
@@ -756,6 +803,7 @@ export const TECH_CATALOG: TechItem[] = [
   },
   {
     id: 'electron-app',
+    hostOnly: true,
     name: 'Electron Desktop Client',
     language: 'JS / TS',
     category: 'mobile-desktop',
@@ -794,6 +842,36 @@ export const TECH_CATALOG: TechItem[] = [
     role: 'backend',
     defaultPort: 8080,
     description: 'Enterprise Java application stack with Maven or Gradle.',
+    badgeColor: 'bg-red-500/20 text-red-300 border-red-500/40',
+    requires: [
+      { binary: 'java', label: 'Java JDK 17+', installHint: 'apt install openjdk-17-jdk / brew install openjdk@17' },
+      { binary: 'mvn', label: 'Maven (Java PM)', installHint: 'apt install maven / brew install maven' }
+    ]
+  },
+  {
+    id: 'java-javafx',
+    name: 'Java (JavaFX Desktop)',
+    language: 'Java',
+    category: 'mobile-desktop',
+    role: 'desktop-mobile',
+    defaultPort: 0,
+    hostOnly: true,
+    description: 'Modular JavaFX desktop app with FXML views, controllers and CSS, run through the javafx-maven-plugin.',
+    badgeColor: 'bg-red-500/20 text-red-300 border-red-500/40',
+    requires: [
+      { binary: 'java', label: 'Java JDK 17+', installHint: 'apt install openjdk-17-jdk / brew install openjdk@17' },
+      { binary: 'mvn', label: 'Maven (Java PM)', installHint: 'apt install maven / brew install maven' }
+    ]
+  },
+  {
+    id: 'java-swing',
+    name: 'Java (Swing Desktop)',
+    language: 'Java',
+    category: 'mobile-desktop',
+    role: 'desktop-mobile',
+    defaultPort: 0,
+    hostOnly: true,
+    description: 'Classic JDK Swing desktop app with a Maven layout, separating UI frames from testable model code.',
     badgeColor: 'bg-red-500/20 text-red-300 border-red-500/40',
     requires: [
       { binary: 'java', label: 'Java JDK 17+', installHint: 'apt install openjdk-17-jdk / brew install openjdk@17' },
@@ -871,6 +949,7 @@ export const TECH_CATALOG: TechItem[] = [
   },
   {
     id: 'google-apps-script',
+    hostOnly: true,
     name: 'Google Apps Script',
     language: 'JavaScript / TypeScript',
     category: 'scripting',
@@ -964,6 +1043,7 @@ export const TECH_CATALOG: TechItem[] = [
   },
   {
     id: 'python-anvil',
+    hostOnly: true,
     name: 'Anvil (Hosted Python Full-Stack)',
     language: 'Python',
     category: 'fullstack',
@@ -1120,3 +1200,8 @@ export const TECH_CATALOG: TechItem[] = [
     ]
   }
 ]
+
+/** True for desktop/mobile/hosted apps that LazyStack never runs as a Docker service. */
+export function isHostOnlyTech(techId: string): boolean {
+  return TECH_CATALOG.find(tech => tech.id === techId)?.hostOnly === true
+}

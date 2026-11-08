@@ -6,9 +6,11 @@ import { validateFolderName, validatePath } from '../utils/pathValidation'
 interface ValidationBannerProps {
   settings: ProjectSettings
   onGenerate: () => void
+  /** Overrides the action label (e.g. when applying changes to an existing project). */
+  generateLabel?: string
 }
 
-export const ValidationBanner: React.FC<ValidationBannerProps> = ({ settings, onGenerate }) => {
+export const ValidationBanner: React.FC<ValidationBannerProps> = ({ settings, onGenerate, generateLabel }) => {
   const errors: string[] = []
   const warnings: string[] = []
 
@@ -106,7 +108,7 @@ export const ValidationBanner: React.FC<ValidationBannerProps> = ({ settings, on
           }`}
         >
           <span className="text-sm select-none shrink-0" role="img" aria-label="rocket">🚀</span>
-          <span>Scaffold Monorepo</span>
+          <span>{generateLabel || 'Scaffold Monorepo'}</span>
         </button>
       </div>
     </div>

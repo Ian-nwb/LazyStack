@@ -29,6 +29,9 @@ jobs:
       - name: Typecheck TypeScript codebase
         run: npx tsc --noEmit
 
+      - name: Verify framework templates against catalog and Dockerfiles
+        run: npm run verify:templates
+
   cli_package_smoke:
     name: npm CLI Package Smoke Check
     needs: build_and_typecheck
@@ -59,6 +62,22 @@ jobs:
           "$CLI" validate --config "$RUNNER_TEMP/lazystack.json"
           "$CLI" plan --config "$RUNNER_TEMP/lazystack.json"
           "$CLI" search playwright --json
+
+      - name: Exercise existing-project import and add
+        run: |
+          CLI="$RUNNER_TEMP/cli-smoke/node_modules/.bin/lazystack"
+          "$CLI" scaffold --preset fastapi-react --name existing --out "$RUNNER_TEMP/existing-parent"
+          PROJECT="$RUNNER_TEMP/existing-parent/existing"
+          test -f "$PROJECT/lazystack.json"
+          (cd "$PROJECT/apps" && find . -type f -exec sha256sum {} + | sort) > "$RUNNER_TEMP/apps-before.txt"
+          "$CLI" import --dir "$PROJECT"
+          "$CLI" add --dir "$PROJECT" --tech rust-dioxus --name dashboard --dry-run
+          test ! -e "$PROJECT/apps/dashboard"
+          "$CLI" add --dir "$PROJECT" --tech go-echo --name billing
+          test -f "$PROJECT/apps/billing/go.mod"
+          grep -q billing "$PROJECT/lazystack.json"
+          (cd "$PROJECT/apps" && find . -path ./billing -prune -o -type f -exec sha256sum {} + | sort) > "$RUNNER_TEMP/apps-after.txt"
+          diff "$RUNNER_TEMP/apps-before.txt" "$RUNNER_TEMP/apps-after.txt"
 
   scaffold_boot_matrix:
     name: Scaffold & Boot (${{ matrix.preset }})
@@ -268,6 +287,10 @@ jobs:
             tech_id: kotlin-ktor
           - language: php
             tech_id: vanilla-php
+          - language: java-swing
+            tech_id: java-swing
+          - language: java-javafx
+            tech_id: java-javafx
 
     steps:
       - name: Check out repository
@@ -283,7 +306,7 @@ jobs:
         run: npm ci && npm run build:cli
 
       - name: Set up Java 17
-        if: matrix.tech_id == 'java-springboot' || matrix.tech_id == 'kotlin-ktor'
+        if: matrix.tech_id == 'java-springboot' || matrix.tech_id == 'kotlin-ktor' || matrix.tech_id == 'java-swing' || matrix.tech_id == 'java-javafx'
         uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -318,6 +341,7 @@ jobs:
           if [ "${{ matrix.tech_id }}" = 'java-springboot' ]; then test -f "$TARGET_DIR/apps/service/pom.xml"; fi
           if [ "${{ matrix.tech_id }}" = 'kotlin-ktor' ]; then test -f "$TARGET_DIR/apps/service/build.gradle.kts"; fi
           if [ "${{ matrix.tech_id }}" = 'vanilla-php' ]; then test -f "$TARGET_DIR/apps/service/composer.json"; fi
+          if [ "${{ matrix.tech_id }}" = 'java-swing' ] || [ "${{ matrix.tech_id }}" = 'java-javafx' ]; then test -f "$TARGET_DIR/apps/service/pom.xml"; test ! -e "$TARGET_DIR/apps/service/Dockerfile"; fi
 
       - name: Build and test generated Spring Boot project
         if: matrix.tech_id == 'java-springboot'
@@ -329,4 +353,12 @@ jobs:
 
       - name: Syntax-check generated PHP project
         if: matrix.tech_id == 'vanilla-php'
-        run: php -l ./native-output/native-${{ matrix.language }}/apps/service/index.php
+        run: php -l ./native-output/native-${{ matrix.language }}/apps/service/public/index.php
+
+      - name: Build and test generated Swing project
+        if: matrix.tech_id == 'java-swing'
+        run: mvn --batch-mode --no-transfer-progress -f ./native-output/native-${{ matrix.language }}/apps/service/pom.xml test package
+
+      - name: Compile generated JavaFX project
+        if: matrix.tech_id == 'java-javafx'
+        run: mvn --batch-mode --no-transfer-progress -f ./native-output/native-${{ matrix.language }}/apps/service/pom.xml compile

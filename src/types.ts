@@ -37,6 +37,8 @@ export interface TechItem {
   experimental?: boolean
   /** Pre-requisite runtimes / package managers that must be installed on host */
   requires?: TechRequirement[]
+  /** Desktop/mobile/hosted apps that run on the host only and never get a Docker service */
+  hostOnly?: boolean
 }
 
 export interface CartApp {
