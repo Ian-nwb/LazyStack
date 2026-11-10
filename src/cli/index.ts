@@ -3,6 +3,9 @@ import fs from 'fs-extra'
 import { spawnSync } from 'child_process'
 import { createInterface } from 'readline/promises'
 import { scaffoldProject } from '../../electron/scaffolding/generator'
+import { planScaffold } from '../../electron/scaffolding/plan'
+import { createDatabaseCredentials } from '../../electron/scaffolding/templates/meta'
+import { buildPlanTree, renderPlanTreeText } from '../utils/planTree'
 import type { ScaffoldChanges } from '../../electron/scaffolding/writer'
 import { importProject } from '../../electron/project/importer'
 import { TECH_CATALOG } from '../data/frameworks'
@@ -394,7 +397,6 @@ export async function runCli(args: string[] = process.argv.slice(2)) {
     if (errors.length) { console.error(`Cannot inspect invalid blueprint:\n${errors.map(error => `  - ${error}`).join('\n')}`); process.exit(1) }
     if (command === 'plan') {
       const s = settings!
-      const appsRoot = s.structureConfig?.appsDir || 'apps'
       console.log(`\nGeneration plan: ${s.projectName}\n`)
       console.log(`Services (${s.apps.length}):`)
       for (const app of s.apps) {
@@ -403,7 +405,9 @@ export async function runCli(args: string[] = process.argv.slice(2)) {
         for (const conn of app.connections || []) console.log(`    depends on ${s.apps.find(target => target.id === conn.targetAppId)?.folderName || conn.targetAppId} via ${conn.protocol}`)
       }
       console.log(`\nDatabases: ${(s.databases || []).filter(db => db.enabled).map(db => `${db.customName || db.type} (:${db.port})`).join(', ') || 'none'}`)
-      console.log(`Layout: ${appsRoot}/, ${s.structureConfig?.infraDir || 'infra'}/, ${s.structureConfig?.docsDir || 'docs'}/, ${s.structureConfig?.scriptsDir || 'scripts'}/`)
+      console.log(`\nProject layout (${s.structureConfig?.preset || 'monorepo'}):\n`)
+      console.log(renderPlanTreeText(buildPlanTree(planScaffold(s, createDatabaseCredentials(s)), s, { appDetail: 'summary' })))
+      console.log()
       console.log(`Workspace: ${s.useUnifiedWorkspace === false ? 'native tooling only' : 'unified JavaScript/TypeScript workspace enabled'}`)
       console.log(`Proxy: ${s.proxy.type}`)
       console.log(`\nNo files were created. Run 'lazystack scaffold --config ${file}' to generate this project.`)

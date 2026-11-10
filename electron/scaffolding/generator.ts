@@ -1,4 +1,5 @@
 import path from 'path'
+import crypto from 'crypto'
 import fs from 'fs-extra'
 import { ProjectSettings } from '../../src/types'
 import { validateFolderName, validatePath, validateRelativeProjectPath, joinPaths } from '../../src/utils/pathValidation'
@@ -225,7 +226,7 @@ export async function scaffoldProject(inputSettings: ProjectSettings, options: S
 
     // 2. Plan every directory and file, then replay the plan through the writer so create,
     //    augment and dry-run modes all share one source of truth.
-    const plan = planScaffold(settings, createDatabaseCredentials(settings), { existingAppDirs })
+    const plan = planScaffold(settings, createDatabaseCredentials(settings, () => crypto.randomBytes(16).toString('hex')), { existingAppDirs })
     for (const dir of plan.dirs) await out.ensureDir(path.join(targetDir, dir))
     for (const [relPath, file] of Object.entries(plan.files)) {
       const fullPath = path.join(targetDir, relPath)

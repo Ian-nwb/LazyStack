@@ -5,8 +5,7 @@ import { DATABASE_CATALOG } from '../data/databases'
 import { resolveStructurePaths } from '../data/structurePresets'
 import { StructureCustomizer } from './StructureCustomizer'
 import { resolveServiceConnectionUrl } from '../utils/serviceConnections'
-import { getNativeProjectLayout } from '../data/nativeProjectLayout'
-import { isHostOnlyTech } from '../data/frameworks'
+import { PlanTree } from './PlanTree'
 import { BlueprintMarkdownExport, ServiceDiagram, NetworkTopologyDiagram } from './BlueprintDiagrams'
 
 interface BlueprintInspectorProps {
@@ -621,98 +620,7 @@ ${settings.apps.map(a => `          - service: ${a.folderName}
           />
         )}
 
-        {activeTab === 'tree' && (
-          <div className="bg-surface-900 border border-surface-700 rounded-xl p-5 text-zinc-300 leading-relaxed max-w-3xl">
-            <div className="text-white font-bold mb-2">📁 {projectName}/</div>
-            <div className="pl-4 border-l border-surface-700 space-y-1">
-              <div>├── 📁 .github/workflows/ <span className="text-zinc-500 font-sans text-[11px]">(CI/CD automation)</span></div>
-              <div className="pl-4 border-l border-surface-700 space-y-0.5 text-zinc-400">
-                <div>├── 📄 ci.yml <span className="text-zinc-500 font-sans text-[11px]">(Docker Compose syntax validation)</span></div>
-                <div>└── 📄 deploy.yml <span className="text-zinc-500 font-sans text-[11px]">(automated matrix build & GHCR container push)</span></div>
-              </div>
-              <div>├── 📁 .vscode/ <span className="text-zinc-500 font-sans text-[11px]">(recommended extensions)</span></div>
-
-              {/* Role-aware app directory roots */}
-              {settings.apps.length === 0 ? (
-                <div>├── 📁 {paths.appsDir}/ <span className="text-zinc-500 font-sans text-[11px]">(applications)</span></div>
-              ) : [...new Set(settings.apps.map(app => paths.getAppRelativePath(app.folderName, app.id, app.role).split('/').slice(0, -1).join('/') || paths.appsDir))].map(root => (
-                <React.Fragment key={root}>
-                  <div>├── 📁 {root}/</div>
-                  <div className="pl-4 border-l border-surface-700 space-y-1.5">
-                    {settings.apps.filter(app => (paths.getAppRelativePath(app.folderName, app.id, app.role).split('/').slice(0, -1).join('/') || paths.appsDir) === root).map(a => {
-                      const assignedDbs = activeDatabases.filter(d => d.assignedAppId === a.id)
-                      return (
-                        <div key={a.id} className="text-zinc-100">
-                          <div>├── 📁 {paths.getAppRelativePath(a.folderName, a.id, a.role)}/ <span className="text-zinc-500 font-sans text-[11px] ml-2">({a.role} · {a.techId} {a.flavor ? `[${a.flavor}]` : ''} · port {a.port} · {a.runMode})</span></div>
-                          <div className="pl-4 border-l border-surface-750 text-zinc-400 space-y-0.5">
-                            <div className="text-zinc-500 text-[10px] font-sans">{getNativeProjectLayout(a.techId, a.folderName, a.port, a.flavor).summary} layout</div>
-                            {getNativeProjectLayout(a.techId, a.folderName, a.port, a.flavor).paths.map((item, index, entries) => <div key={item}>{index === entries.length - 1 ? '└──' : '├──'} {item.endsWith('/') ? '📁' : '📄'} {item}</div>)}
-                            {assignedDbs.length > 0 && paths.databaseIsolation === 'service-isolated' && <div className="text-emerald-400">├── 📁 db/ <span className="text-zinc-500 font-sans text-[11px]">(schema, migrations for {assignedDbs.map(d => d.customName || d.type).join(', ')})</span></div>}
-                            {!isHostOnlyTech(a.techId) && <div>├── 📄 Dockerfile</div>}
-                            <div>└── 📄 .env <span className="text-zinc-500 font-sans text-[11px]">(service config and connections)</span></div>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </React.Fragment>
-              ))}
-
-              {/* Shared Packages / Core */}
-              {settings.useUnifiedWorkspace !== false && <>
-                <div>├── 📁 {paths.packagesDir}/ <span className="text-zinc-500 font-sans text-[11px]">(shared packages & contracts)</span></div>
-                <div className="pl-4 border-l border-surface-700 space-y-1">
-                  <div>├── 📁 types/ <span className="text-zinc-500 font-sans text-[11px]">(shared TypeScript DTOs)</span></div>
-                  <div>├── 📁 shared/ <span className="text-zinc-500 font-sans text-[11px]">(shared utils)</span></div>
-                  {activeDatabases.some(d => {
-                  const def = DATABASE_CATALOG.find(c => c.id === d.type)
-                  return def?.isCloud
-                  }) && (
-                  <div>
-                    <div>├── 📁 cloud/ <span className="text-zinc-500 font-sans text-[11px]">(SDK clients for Cloud / BaaS)</span></div>
-                    <div className="pl-4 border-l border-surface-750 space-y-0.5">
-                      {activeDatabases.filter(d => {
-                        const def = DATABASE_CATALOG.find(c => c.id === d.type)
-                        return def?.isCloud
-                      }).map(d => (
-                        <div key={d.id || d.type} className="text-zinc-400">
-                          ├── 📄 {d.type}.ts
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  )}
-                </div>
-              </>}
-
-              {/* Infra / Deploy */}
-              <div>├── 📁 {paths.infraDir}/ <span className="text-zinc-500 font-sans text-[11px]">(orchestration & cloud export)</span></div>
-              <div className="pl-4 border-l border-surface-700 space-y-1">
-                <div>├── 📁 terraform/ <span className="text-zinc-500 font-sans text-[11px]">(AWS ECS/Fargate, GCP Cloud Run, DigitalOcean)</span></div>
-                <div>├── 📁 k8s/ <span className="text-zinc-500 font-sans text-[11px]">(Deployment, Service, ConfigMap, Secret, Ingress)</span></div>
-                <div>├── 📁 helm/ <span className="text-zinc-500 font-sans text-[11px]">(Chart.yaml & values.yaml)</span></div>
-                {settings.proxy.type !== 'none' && (
-                  <div>├── 📁 {settings.proxy.type}/ <span className="text-zinc-500 font-sans text-[11px]">(reverse proxy gateway configs)</span></div>
-                )}
-                {activeDatabases.some(d => d.type === 'sqlite') && (
-                  <div>├── 📁 sqlite/ <span className="text-zinc-500 font-sans text-[11px]">(shared database volume)</span></div>
-                )}
-                <div>├── 📄 docker-compose.yml</div>
-                <div>└── 📄 docker-compose.dev.yml</div>
-              </div>
-
-              <div>├── 📁 {paths.docsDir}/ <span className="text-zinc-500 font-sans text-[11px]">(architecture & port diagrams)</span></div>
-              <div>├── 📁 {paths.scriptsDir}/ <span className="text-zinc-500 font-sans text-[11px]">(unified dev orchestrator, dev.sh, dev.ps1)</span></div>
-              {settings.structureConfig?.customFolders?.map(folder => (
-                <div key={folder}>├── 📁 {folder}/ <span className="text-zinc-500 font-sans text-[11px]">(custom root folder)</span></div>
-              ))}
-              <div>├── 📁 tests/ <span className="text-zinc-500 font-sans text-[11px]">(integration test harness)</span></div>
-              <div>├── 📄 .env</div>
-              <div>├── 📄 .gitignore</div>
-              <div>└── 📄 README.md</div>
-            </div>
-          </div>
-        )}
+        {activeTab === 'tree' && <PlanTree settings={settings} />}
 
         {activeTab === 'compose' && (
           <pre className="bg-surface-900 border border-surface-700 rounded-xl p-5 text-zinc-200 overflow-x-auto selection:bg-zinc-700 selection:text-white">

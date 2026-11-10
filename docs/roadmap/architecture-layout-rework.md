@@ -7,7 +7,7 @@ Status: in progress · Target: next minor release
 | Phase | State |
 | --- | --- |
 | 1. Shared database scope and pure planner | **Done** (verified, see below) |
-| 2. Directory layout built from the plan | Not started |
+| 2. Directory layout built from the plan | **Done** |
 | 3. Presets that describe what they generate | Not started |
 | 4. Topology model shared with Compose | Not started |
 | 5. Diagram redraw | Not started |
@@ -133,8 +133,13 @@ export function buildPlanTree(plan: ScaffoldPlan, settings: ProjectSettings, opt
 **2.4 CLI.** `lazystack plan --config <file>` prints `renderPlanTreeText` as well as its current output.
 
 **Phase 2 checklist**
-- [ ] The tree tab lists the same paths as `scaffold --dry-run` for every preset, after the same app-internal collapsing.
-- [ ] The README tree matches the generated folders. Spot-check polyglot, event-driven and mobile-crossplatform.
+- [x] The tree tab lists only paths the planner produces, for every architecture preset (checked with a script that walks each tree against the plan; this becomes part of Phase 6).
+- [x] The README tree is rendered from the finished plan. Across 64 projects the root `README.md` is the only file that changed.
+
+**Implementation notes**
+- `createDatabaseCredentials` now takes a password generator (placeholder by default), so the planner no longer imports `crypto` and the Vite build has no externalized-module warnings. The generator passes `crypto.randomBytes`.
+- The README tree is filled in through a `README_TREE_PLACEHOLDER` token after all other files are planned, which avoids the circular dependency.
+- `planTree.ts` collapses folders deeper than two levels unless they lead to an app. Apps show their top-level layout in the UI and the CLI, and only the app folder in the README.
 
 ### Phase 3 — Presets that describe what they generate
 

@@ -6,7 +6,9 @@ import { TESTING_TOOLS } from '../../../src/data/testingTools'
 import { getDatabaseAdminUiOption } from '../../../src/data/databaseAdminUis'
 import { TECH_CATALOG, isHostOnlyTech } from '../../../src/data/frameworks'
 import { getAppManualSetup, getDatabaseManualSetup } from '../../../src/data/manualSetup'
-import crypto from 'crypto'
+
+/** Replaced by the planner with the real directory tree once every path is known. */
+export const README_TREE_PLACEHOLDER = '{{LAZYSTACK_PROJECT_TREE}}'
 
 export interface GeneratedDatabaseCredential {
   username: string
@@ -14,20 +16,23 @@ export interface GeneratedDatabaseCredential {
   database: string
 }
 
-export function createDatabaseCredentials(settings: ProjectSettings): Record<string, GeneratedDatabaseCredential> {
+/** Placeholder password for previews; the generator passes a cryptographically random one. */
+export const PREVIEW_PASSWORD = () => 'replace_me'
+
+export function createDatabaseCredentials(settings: ProjectSettings, generatePassword: () => string = PREVIEW_PASSWORD): Record<string, GeneratedDatabaseCredential> {
   const credentials: Record<string, GeneratedDatabaseCredential> = {}
   settings.databases.filter(db => db.enabled && ['postgres', 'mysql', 'mariadb', 'mongodb', 'rabbitmq'].includes(db.type)).forEach(db => {
     const serviceName = getDbServiceName(db, settings.databases.indexOf(db), settings.apps)
     credentials[serviceName] = {
       username: db.username?.trim() || 'lazystack_user',
-      password: crypto.randomBytes(16).toString('hex'),
+      password: generatePassword(),
       database: db.databaseName?.trim() || `lazystack_${db.type}`
     }
   })
   return credentials
 }
 
-export function generateMetaFiles(settings: ProjectSettings, credentials = createDatabaseCredentials(settings)): Record<string, string> {
+export function generateMetaFiles(settings: ProjectSettings, credentials: Record<string, GeneratedDatabaseCredential>): Record<string, string> {
   const files: Record<string, string> = {}
   const activeDbs = settings.databases.filter(d => d.enabled)
   const paths = resolveStructurePaths(settings)
@@ -1367,22 +1372,7 @@ ${manualSetupSection}
 This project follows the enforced LazyStack directory contract:
 
 \`\`\`text
-${settings.projectName}/
-├── .github/workflows/     # Automated CI/CD
-├── .vscode/               # Workspace editor settings
-${appWorkspaceRoots.map(root => `${root}/\n${settings.apps.filter(app => (paths.getAppRelativePath(app.folderName, app.id, app.role).split('/').slice(0, -1).join('/') || paths.appsDir) === root).map(app => `└── ${app.folderName}/       # ${app.role}: ${app.techId} (port ${app.port}, ${app.runMode})`).join('\n')}`).join('\n') || `${paths.appsDir}/                  # Application services`}
-├── ${paths.docsDir}/                  # Architecture & API documentation
-├── ${paths.infraDir}/                 # Docker Compose, Proxy, Terraform, Kubernetes
-│   ├── docker-compose.yml # Production orchestration
-│   ├── docker-compose.dev.yml # Dev override
-│   ├── terraform/         # Terraform/OpenTofu modules (AWS ECS/Fargate, GCP, DO)
-│   ├── k8s/               # Kubernetes Deployment, Service, ConfigMap, Secret, Ingress
-│   └── helm/              # Helm chart for Kubernetes deployments
-├── ${paths.scriptsDir}/               # Unified dev orchestrator, dev.sh & dev.ps1 launchers
-├── tests/                 # Integration test suite
-├── .env                   # Environment secrets (git-ignored)
-├── .env.example           # Example environment template
-└── README.md
+${README_TREE_PLACEHOLDER}
 \`\`\`
 
 ---

@@ -2,7 +2,8 @@ import { ProjectSettings } from '../../src/types'
 import { generateDockerCompose, generateDockerDevCompose, getDockerfileForTech, getDbServiceName } from './templates/docker'
 import { generateNginxConfig, generateApacheConfig, generateCaddyConfig, generateTraefikConfig } from './templates/proxies'
 import { getStarterFilesForTech } from './templates/appTemplates'
-import { generateMetaFiles, GeneratedDatabaseCredential } from './templates/meta'
+import { generateMetaFiles, GeneratedDatabaseCredential, README_TREE_PLACEHOLDER } from './templates/meta'
+import { buildPlanTree, renderPlanTreeText } from '../../src/utils/planTree'
 import { DATABASE_CATALOG } from '../../src/data/databases'
 import { generateCloudServiceFiles, generateCloudEnvVars } from './templates/cloudServices'
 import { resolveStructurePaths } from '../../src/data/structurePresets'
@@ -470,6 +471,13 @@ export function planScaffold(settings: ProjectSettings, databaseCredentials: Rec
   //    Machine-specific locations are omitted; secrets live only in .env.
   const { parentDir: _parentDir, targetDir: _targetDir, ...portableSettings } = settings
   out.write(path.join(targetDir, 'lazystack.json'), JSON.stringify({ $lazystack: BLUEPRINT_VERSION, ...portableSettings }, null, 2) + '\n')
+
+  // The README's directory tree is rendered from the finished plan, so it cannot drift from the files written.
+  const readme = files['README.md']
+  if (readme?.content.includes(README_TREE_PLACEHOLDER)) {
+    const tree = renderPlanTreeText(buildPlanTree({ dirs: [...dirs], files }, settings, { appDetail: 'none' }))
+    readme.content = readme.content.replace(README_TREE_PLACEHOLDER, () => tree)
+  }
 
   return { dirs: [...dirs], files, diskCopies }
 }
