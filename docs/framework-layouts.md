@@ -5,7 +5,7 @@ LazyStack has two separate layout decisions:
 1. The selected architecture places each app at a service root such as `frontend/clients/<name>/`, `backend/services/<name>/`, `apps/<name>/`, or a custom app path.
 2. The selected framework's starter files are written inside that root using that ecosystem's expected entrypoints and directories.
 
-The architecture root does not turn every service into a JavaScript package. A Go app remains a Go module, a PHP app remains a Composer project, and so on. The Blueprint tree shows representative native paths for each selected app.
+The architecture root does not turn every service into a JavaScript package. A Go app remains a Go module, a PHP app remains a Composer project, and so on. The Blueprint tree, the README's directory tree and the `lazystack plan` output are all computed from the files the generator will write, so they cannot show a folder that is not created. Each architecture only promises root-level folders; the layout inside an app is always the framework's own.
 
 ## Examples by ecosystem
 

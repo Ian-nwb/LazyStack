@@ -5,6 +5,25 @@ All notable changes to LazyStack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **Architecture layouts and diagrams are computed from the generator.** The Blueprint tree, the README's directory tree and `lazystack plan` list exactly the files LazyStack will write. The architecture picker shows where each app role is placed and a live "Resulting layout" for your cart; Custom mode can edit the folder for each role.
+- **Service diagram and Network topology were redrawn.** The service diagram shows gateway routes, call depth, connection variables and per-service data scope. The network topology separates the host machine, the named Docker network (`<project>_lazystack_net`) and managed external services, and shows each container as `service:port` with the port it is published on, including traffic through `host.docker.internal`.
+- Generated `docs/architecture.md` now contains the same two diagrams (Mermaid) plus published ports, services and databases, and the Blueprint "Export Markdown" button produces the same document.
+- Presets with extra root folders (for example Hexagonal `core/` and `adapters/`) create each folder with a short `README.md`, so git keeps them.
+- `npm run verify:layout` (run in CI) checks that preset descriptions only name folders the generator creates, that the planned files equal the dry-run changes, and that the topology matches the generated Compose file.
+
+### Changed
+- Preset descriptions only promise root-level folders; the layout inside each app is always the framework's own. Microservices, Hexagonal and Clean Architecture now differ in their root folders (`shared/contracts/`, `core/` plus `adapters/`, `domain/` plus `usecases/`).
+- **Serverless & Cloud-Native** places frontend and full-stack apps in `web/` (they previously went into `functions/`).
+- The **Hybrid** database isolation mode now does what it says: data stores are scoped per service, while caches and message brokers (Redis, Valkey, RabbitMQ, Kafka) stay shared. It is used by Modular Monolith.
+
+### Fixed
+- The Swagger UI and a database admin UI could be published on the same host port (8088), so `docker compose up` failed. Admin UI ports are now reserved first.
+- A disabled or managed-cloud database listed before an unnamed one made Compose name the container differently from the hostname in the apps' `.env` (for example `redis` versus `redis_2`). Compose and the apps now use the same name.
+- In **Open Existing Project**, a dry run of an update appended cloud-service variables to the real `.env` and did not list the change. Those variables are now merged by the writer and reported.
+
 ## [1.1.3] - 2026-11-10
 
 ### Fixed

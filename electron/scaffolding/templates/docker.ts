@@ -1,5 +1,4 @@
-import { ProjectSettings, CartApp, SelectedDatabase } from '../../../src/types'
-import { DATABASE_CATALOG } from '../../../src/data/databases'
+import { ProjectSettings } from '../../../src/types'
 import { resolveStructurePaths } from '../../../src/data/structurePresets'
 import { getDatabaseAdminUiOption } from '../../../src/data/databaseAdminUis'
 import { getNativeEnvironmentDefaults } from '../../../src/utils/nativeEnvironment'

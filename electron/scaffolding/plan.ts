@@ -12,7 +12,7 @@ import { TESTING_TOOLS } from '../../src/data/testingTools'
 import { resolveServiceConnectionUrl } from '../../src/utils/serviceConnections'
 import { getNativeEnvironmentDefaults } from '../../src/utils/nativeEnvironment'
 import { isHostOnlyTech } from '../../src/data/frameworks'
-import { getAppDatabases, getServiceOwnedDatabases, isDatabaseVisibleToApp } from '../../src/utils/databaseScope'
+import { getAppDatabases, getServiceOwnedDatabases } from '../../src/utils/databaseScope'
 
 /** Version of the embedded `lazystack.json` blueprint format. */
 export const BLUEPRINT_VERSION = 1

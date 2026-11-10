@@ -36,7 +36,6 @@ export function generateMetaFiles(settings: ProjectSettings, credentials: Record
   const files: Record<string, string> = {}
   const activeDbs = settings.databases.filter(d => d.enabled)
   const paths = resolveStructurePaths(settings)
-  const appWorkspaceRoots = [...new Set(settings.apps.map(app => paths.getAppRelativePath(app.folderName, app.id, app.role).split('/').slice(0, -1).join('/') || paths.appsDir))]
   const useUnifiedWorkspace = settings.useUnifiedWorkspace !== false
   const nativeRunCommand = (app: ProjectSettings['apps'][number]) => {
     if (app.techId === 'python-fastapi') return `python -m venv .venv && source .venv/bin/activate\npip install -r requirements.txt${app.starterProfile === 'api-service' ? '\nalembic upgrade head' : ''}\nuvicorn main:app --reload --port ${app.port}`

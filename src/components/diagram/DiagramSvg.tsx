@@ -51,7 +51,6 @@ function edgeStyle(edge: TopologyEdge): { stroke: string; dash?: string; width: 
 const LABELLED = new Set<TopologyEdge['kind']>(['proxy-route', 'service-call', 'published-port'])
 
 export const DiagramSvg: React.FC<DiagramSvgProps> = ({ topology, columns, edges, nodeLines, zoneTitles, ariaLabel, svgRef }) => {
-  const nodeById = new Map(topology.nodes.map(node => [node.id, node]))
   const layout = layoutColumns(columns.map(column => column.ids), { nodeW: NODE_W, nodeH: NODE_H, gapX: GAP_X, gapY: GAP_Y, left: MARGIN, top: TOP })
   const keyed = edges.map((edge, index) => ({ edge, key: `e${index}` }))
   const routes = routeEdges(keyed.map(({ edge, key }) => ({ key, from: edge.from, to: edge.to })), layout.rects)

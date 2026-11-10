@@ -122,12 +122,12 @@ When the stack includes RabbitMQ, Kafka (KRaft), Redis or Valkey, LazyStack adds
 | Layout | Directory focus |
 | --- | --- |
 | Standard Monorepo | `apps/`, `packages/`, `infra/` |
-| Microservices Decoupled | `services/`, shared contracts, isolated service data |
+| Microservices Decoupled | `services/`, `shared/contracts/`, isolated service data |
 | Domain-Driven Design | `domains/`, `core/`, bounded contexts |
 | Polyglot | `frontend/clients/`, `backend/services/`, `backend/workers/`, `deploy/` |
 | Modular Monolith | `modules/`, `libs/`, shared deployment |
-| Hexagonal / Ports & Adapters | Services separated from core logic and adapters |
-| Serverless & Cloud-Native | `functions/`, shared packages, cloud infrastructure |
+| Hexagonal / Ports & Adapters | `services/`, shared `core/` and `adapters/` |
+| Serverless & Cloud-Native | `functions/`, `web/`, `shared/`, cloud infrastructure |
 | Event-Driven Services | APIs, consumers, event schemas and broker infrastructure |
 | Data Platform | Pipelines, ingestion services, dashboards and schemas |
 | AI / ML & LLM Platform | `models/`, `agents/`, `services/inference/`, `prompts/` |

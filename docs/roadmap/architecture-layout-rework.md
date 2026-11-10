@@ -1,6 +1,6 @@
 # Architecture layout and diagram rework
 
-Status: in progress · Target: next minor release
+Status: complete (phases 1–6) · Target: next minor release
 
 ## Progress
 
@@ -11,7 +11,7 @@ Status: in progress · Target: next minor release
 | 3. Presets that describe what they generate | **Done** |
 | 4. Topology model shared with Compose | **Done** |
 | 5. Diagram redraw | **Done** |
-| 6. Consistency checks in CI | Not started |
+| 6. Consistency checks in CI | **Done** |
 
 Phase 1 verification: the five CI presets in both workspace modes (803 files) and a large cart under all 16 architecture presets × both workspace modes × proxy on/off (64 projects, 8,704 files) scaffold byte-identically to the pre-change generator. The one intended exception is `modular-monolith` (the only preset on `hybrid`), whose per-service data stores are now scoped to their service. `npx tsc --noEmit` and `npm run verify:templates` pass.
 
@@ -265,12 +265,20 @@ Add a legend for the edge styles.
 
 ### Phase 6 — Consistency checks in CI
 
-Add `scripts/verify-layout.ts` and run it in `.github/workflows/ci.yml` next to `verify:templates`. For each architecture preset × both workspace modes, using a fixed sample cart:
+`scripts/verify-layout.ts` (`npm run verify:layout`) runs in `.github/workflows/ci.yml` next to `verify:templates`. For every architecture preset × both workspace modes (× proxy on/off for the plan and topology checks):
 
-1. The paths in `planScaffold` equal `scaffoldProject({ mode: 'create', dryRun: true }).changes`.
-2. Every `scaffoldDirs` entry is in the plan.
-3. The topology's container service names and published ports equal the `services:` keys and `ports:` in the generated Compose file. A line-based extraction is enough here, because the emitter's format is fixed.
-4. No preset description names a folder outside the plan (the Phase 3 check).
+1. Every `scaffoldDirs` folder is in the plan and has a README.
+2. Apps land in the folder the preset card advertises for their role.
+3. Preset text only names folders that exist.
+4. The Blueprint tree only shows planned paths.
+5. The planner's files equal `scaffoldProject({ dryRun: true }).changes.created`, with no duplicates.
+6. The topology's services and published ports equal the `services:` and `ports:` of the generated Compose file, and no two services publish the same host port.
+7. Both diagrams place every topology node exactly once.
+
+**Phase 6 checklist**
+- [x] Each of checks 3, 5, 6 was mutation-tested by planting the bug it targets (a bogus folder in a description, a file written outside the plan, a Compose port that disagrees with the topology, the Swagger/admin port clash) and confirming it fails.
+- [x] The documented behaviour changes are in `CHANGELOG.md` (under Unreleased), `README.md` and `docs/framework-layouts.md`.
+- [ ] Not run locally: the build-and-test steps of CI for the generated Go, Rust, React and FastAPI apps. Compose validity (`docker compose config`) was checked for all generated projects; the language builds depend on files this work did not change, but they have not been run.
 
 ## Files touched
 
