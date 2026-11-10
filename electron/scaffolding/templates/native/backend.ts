@@ -304,9 +304,522 @@ end
   }
 }
 
+/** .NET MAUI on .NET 10, matching the `dotnet new maui` single-project layout. */
+function maui(c: NativeContext): Files {
+  const ns = c.pascal
+  const appId = `com.lazystack.${c.snake.replace(/_/g, '').replace(/^(\d)/, 'app$1')}`
+  const tests = `tests/${ns}.Tests`
+  const purple = '#512BD4'
+  return {
+    [`${c.name}.csproj`]: `<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Linux can only build Android; iOS/Mac Catalyst need macOS, Windows needs Windows. -->
+    <TargetFrameworks>net10.0-android</TargetFrameworks>
+    <TargetFrameworks Condition="!$([MSBuild]::IsOSPlatform('linux'))">$(TargetFrameworks);net10.0-ios;net10.0-maccatalyst</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net10.0-windows10.0.19041.0</TargetFrameworks>
+
+    <OutputType>Exe</OutputType>
+    <RootNamespace>${ns}</RootNamespace>
+    <UseMaui>true</UseMaui>
+    <SingleProject>true</SingleProject>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <ApplicationTitle>${c.name}</ApplicationTitle>
+    <ApplicationId>${appId}</ApplicationId>
+    <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+    <ApplicationVersion>1</ApplicationVersion>
+
+    <!-- Run unpackaged on Windows so \`dotnet build -t:Run\` works without MSIX tooling. -->
+    <WindowsPackageType>None</WindowsPackageType>
+
+    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
+    <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <MauiIcon Include="Resources\\AppIcon\\appicon.svg" ForegroundFile="Resources\\AppIcon\\appiconfg.svg" Color="${purple}" />
+    <MauiSplashScreen Include="Resources\\Splash\\splash.svg" Color="${purple}" BaseSize="128,128" />
+    <MauiImage Include="Resources\\Images\\*.svg;Resources\\Images\\*.png" />
+    <MauiFont Include="Resources\\Fonts\\*.ttf;Resources\\Fonts\\*.otf" />
+    <MauiAsset Include="Resources\\Raw\\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
+  </ItemGroup>
+
+  <!-- The test project lives in this folder but builds on its own. -->
+  <ItemGroup>
+    <Compile Remove="tests\\**" />
+    <None Remove="tests\\**" />
+    <MauiXaml Remove="tests\\**" />
+  </ItemGroup>
+
+</Project>
+`,
+    'MauiProgram.cs': `using Microsoft.Extensions.Logging;
+using ${ns}.ViewModels;
+
+namespace ${ns};
+
+public static class MauiProgram
+{
+    public static MauiApp CreateMauiApp()
+    {
+        var builder = MauiApp.CreateBuilder();
+        builder.UseMauiApp<App>();
+
+#if DEBUG
+        builder.Logging.AddDebug();
+#endif
+
+        builder.Services.AddSingleton<CounterViewModel>();
+        builder.Services.AddSingleton<MainPage>();
+
+        return builder.Build();
+    }
+}
+`,
+    'App.xaml': `<?xml version="1.0" encoding="UTF-8" ?>
+<Application xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:${ns}"
+             x:Class="${ns}.App">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Resources/Styles/Colors.xaml" />
+                <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
+`,
+    'App.xaml.cs': `namespace ${ns};
+
+public partial class App : Application
+{
+    public App()
+    {
+        InitializeComponent();
+    }
+
+    protected override Window CreateWindow(IActivationState? activationState)
+    {
+        return new Window(new AppShell()) { Title = "${c.name}" };
+    }
+}
+`,
+    'AppShell.xaml': `<?xml version="1.0" encoding="UTF-8" ?>
+<Shell x:Class="${ns}.AppShell"
+       xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+       xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+       xmlns:local="clr-namespace:${ns}"
+       Title="${c.name}">
+
+    <ShellContent Title="Home"
+                  ContentTemplate="{DataTemplate local:MainPage}"
+                  Route="MainPage" />
+
+</Shell>
+`,
+    'AppShell.xaml.cs': `namespace ${ns};
+
+public partial class AppShell : Shell
+{
+    public AppShell()
+    {
+        InitializeComponent();
+    }
+}
+`,
+    'MainPage.xaml': `<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:${ns}.ViewModels"
+             x:Class="${ns}.MainPage"
+             x:DataType="vm:CounterViewModel"
+             Title="Home">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="30,0" Spacing="25" VerticalOptions="Center">
+            <Image Source="dotnet_bot.png" HeightRequest="150" Aspect="AspectFit" SemanticProperties.Description="dot net bot" />
+
+            <Label Text="${c.name}" Style="{StaticResource Headline}" SemanticProperties.HeadingLevel="Level1" />
+            <Label Text=".NET MAUI app generated by LazyStack" Style="{StaticResource SubHeadline}" />
+
+            <Button Text="{Binding ButtonText}"
+                    Command="{Binding IncrementCommand}"
+                    SemanticProperties.Hint="Counts the number of times you click"
+                    HorizontalOptions="Fill" />
+
+            <Label Text="{Binding ApiUrl, StringFormat='API: {0}'}" HorizontalOptions="Center" />
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>
+`,
+    'MainPage.xaml.cs': `using ${ns}.ViewModels;
+
+namespace ${ns};
+
+public partial class MainPage : ContentPage
+{
+    public MainPage(CounterViewModel viewModel)
+    {
+        InitializeComponent();
+        BindingContext = viewModel;
+    }
+}
+`,
+    'ViewModels/CounterViewModel.cs': `using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using System.Windows.Input;
+using ${ns}.Services;
+
+namespace ${ns}.ViewModels;
+
+/// <summary>Plain C# (no MAUI types) so it is unit-tested by ${tests}.</summary>
+public sealed class CounterViewModel : INotifyPropertyChanged
+{
+    private int _count;
+
+    public CounterViewModel()
+    {
+        IncrementCommand = new RelayCommand(Increment);
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    public ICommand IncrementCommand { get; }
+
+    public int Count => _count;
+
+    public string ButtonText => _count switch
+    {
+        0 => "Click me",
+        1 => "Clicked 1 time",
+        _ => $"Clicked {_count} times"
+    };
+
+    public string ApiUrl => ApiConfig.ForCurrentPlatform();
+
+    public void Increment()
+    {
+        _count++;
+        OnPropertyChanged(nameof(Count));
+        OnPropertyChanged(nameof(ButtonText));
+    }
+
+    private void OnPropertyChanged([CallerMemberName] string? name = null) =>
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+
+    private sealed class RelayCommand(Action execute) : ICommand
+    {
+        public event EventHandler? CanExecuteChanged { add { } remove { } }
+        public bool CanExecute(object? parameter) => true;
+        public void Execute(object? parameter) => execute();
+    }
+}
+`,
+    'Services/ApiConfig.cs': `namespace ${ns}.Services;
+
+/// <summary>
+/// Backend URL for this app. A MAUI app does not read the project .env at runtime, so copy the
+/// connection URL from .env into BaseUrl (or load it from Resources/Raw/appsettings.json).
+/// </summary>
+public static class ApiConfig
+{
+    public const string BaseUrl = "http://localhost:8000";
+
+    /// <summary>The Android emulator reaches the host machine at 10.0.2.2, not localhost.</summary>
+    public static string Resolve(string url, bool isAndroid)
+    {
+        if (!isAndroid) return url;
+        return url.Replace("://localhost", "://10.0.2.2").Replace("://127.0.0.1", "://10.0.2.2");
+    }
+
+    public static string ForCurrentPlatform() => Resolve(BaseUrl, OperatingSystem.IsAndroid());
+}
+`,
+    'Resources/AppIcon/appicon.svg': `<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n<svg width="456" height="456" viewBox="0 0 456 456" xmlns="http://www.w3.org/2000/svg">\n    <rect x="0" y="0" width="456" height="456" fill="${purple}" />\n</svg>\n`,
+    'Resources/AppIcon/appiconfg.svg': `<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n<svg width="456" height="456" viewBox="0 0 456 456" xmlns="http://www.w3.org/2000/svg">\n    <circle cx="228" cy="228" r="96" fill="#FFFFFF" />\n</svg>\n`,
+    'Resources/Splash/splash.svg': `<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n<svg width="456" height="456" viewBox="0 0 456 456" xmlns="http://www.w3.org/2000/svg">\n    <circle cx="228" cy="228" r="96" fill="#FFFFFF" />\n</svg>\n`,
+    'Resources/Images/dotnet_bot.svg': `<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">\n    <rect x="40" y="50" width="120" height="110" rx="24" fill="${purple}" />\n    <circle cx="75" cy="100" r="12" fill="#FFFFFF" />\n    <circle cx="125" cy="100" r="12" fill="#FFFFFF" />\n    <rect x="70" y="130" width="60" height="8" rx="4" fill="#FFFFFF" />\n</svg>\n`,
+    'Resources/Fonts/.gitkeep': '',
+    'Resources/Raw/AboutAssets.txt': 'Files in this folder are deployed with the app as MauiAsset items.\nRead them with `await FileSystem.OpenAppPackageFileAsync("AboutAssets.txt")`.\n',
+    'Resources/Styles/Colors.xaml': `<?xml version="1.0" encoding="UTF-8" ?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+    <Color x:Key="Primary">${purple}</Color>
+    <Color x:Key="PrimaryDark">#AC99EA</Color>
+    <Color x:Key="White">White</Color>
+    <Color x:Key="Black">Black</Color>
+    <Color x:Key="Gray100">#E1E1E1</Color>
+    <Color x:Key="Gray900">#212121</Color>
+</ResourceDictionary>
+`,
+    'Resources/Styles/Styles.xaml': `<?xml version="1.0" encoding="UTF-8" ?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <Style TargetType="Button">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Black}}" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="Padding" Value="14,10" />
+    </Style>
+
+    <Style TargetType="Label">
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}" />
+    </Style>
+
+    <Style TargetType="Label" x:Key="Headline">
+        <Setter Property="FontSize" Value="32" />
+        <Setter Property="HorizontalOptions" Value="Center" />
+        <Setter Property="HorizontalTextAlignment" Value="Center" />
+    </Style>
+
+    <Style TargetType="Label" x:Key="SubHeadline">
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="HorizontalOptions" Value="Center" />
+        <Setter Property="HorizontalTextAlignment" Value="Center" />
+    </Style>
+
+    <Style TargetType="Page" ApplyToDerivedTypes="True">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray900}}" />
+    </Style>
+
+</ResourceDictionary>
+`,
+    'Platforms/Android/AndroidManifest.xml': `<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application android:allowBackup="true" android:icon="@mipmap/appicon" android:roundIcon="@mipmap/appicon_round" android:supportsRtl="true" android:usesCleartextTraffic="true"></application>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+</manifest>
+`,
+    'Platforms/Android/MainActivity.cs': `using Android.App;
+using Android.Content.PM;
+using Android.OS;
+
+namespace ${ns};
+
+[Activity(Theme = "@style/Maui.SplashTheme", MainLauncher = true, LaunchMode = LaunchMode.SingleTop, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.UiMode | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize | ConfigChanges.Density)]
+public class MainActivity : MauiAppCompatActivity
+{
+}
+`,
+    'Platforms/Android/MainApplication.cs': `using Android.App;
+using Android.Runtime;
+
+namespace ${ns};
+
+[Application]
+public class MainApplication : MauiApplication
+{
+    public MainApplication(IntPtr handle, JniHandleOwnership ownership)
+        : base(handle, ownership)
+    {
+    }
+
+    protected override MauiApp CreateMauiApp() => MauiProgram.CreateMauiApp();
+}
+`,
+    'Platforms/Android/Resources/values/colors.xml': `<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">${purple}</color>
+    <color name="colorPrimaryDark">#2B0B98</color>
+    <color name="colorAccent">#2B0B98</color>
+</resources>
+`,
+    'Platforms/iOS/AppDelegate.cs': `using Foundation;
+
+namespace ${ns};
+
+[Register("AppDelegate")]
+public class AppDelegate : MauiUIApplicationDelegate
+{
+    protected override MauiApp CreateMauiApp() => MauiProgram.CreateMauiApp();
+}
+`,
+    'Platforms/iOS/Program.cs': `using UIKit;
+
+namespace ${ns};
+
+public class Program
+{
+    static void Main(string[] args)
+    {
+        UIApplication.Main(args, null, typeof(AppDelegate));
+    }
+}
+`,
+    'Platforms/iOS/Info.plist': applePlist(false),
+    'Platforms/MacCatalyst/AppDelegate.cs': `using Foundation;
+
+namespace ${ns};
+
+[Register("AppDelegate")]
+public class AppDelegate : MauiUIApplicationDelegate
+{
+    protected override MauiApp CreateMauiApp() => MauiProgram.CreateMauiApp();
+}
+`,
+    'Platforms/MacCatalyst/Program.cs': `using UIKit;
+
+namespace ${ns};
+
+public class Program
+{
+    static void Main(string[] args)
+    {
+        UIApplication.Main(args, null, typeof(AppDelegate));
+    }
+}
+`,
+    'Platforms/MacCatalyst/Info.plist': applePlist(true),
+    'Platforms/MacCatalyst/Entitlements.plist': `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>com.apple.security.app-sandbox</key>
+    <true/>
+    <key>com.apple.security.network.client</key>
+    <true/>
+</dict>
+</plist>
+`,
+    'Platforms/Windows/App.xaml': `<maui:MauiWinUIApplication
+    x:Class="${ns}.WinUI.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:maui="using:Microsoft.Maui"
+    xmlns:local="using:${ns}.WinUI">
+
+</maui:MauiWinUIApplication>
+`,
+    'Platforms/Windows/App.xaml.cs': `namespace ${ns}.WinUI;
+
+public partial class App : MauiWinUIApplication
+{
+    public App()
+    {
+        this.InitializeComponent();
+    }
+
+    protected override MauiApp CreateMauiApp() => MauiProgram.CreateMauiApp();
+}
+`,
+    'Platforms/Windows/app.manifest': `<?xml version="1.0" encoding="utf-8"?>
+<assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
+  <assemblyIdentity version="1.0.0.0" name="${ns}.WinUI.app"/>
+  <application xmlns="urn:schemas-microsoft-com:asm.v3">
+    <windowsSettings>
+      <dpiAwareness xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">PerMonitorV2</dpiAwareness>
+    </windowsSettings>
+  </application>
+</assembly>
+`,
+    'Properties/launchSettings.json': json({ profiles: { 'Windows Machine': { commandName: 'Project', nativeDebugging: false } } }),
+    [`${tests}/${ns}.Tests.csproj`]: `<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <!-- MAUI app projects cannot be referenced from a plain test project, so the platform-free
+       view models and services are compiled in directly. -->
+  <ItemGroup>
+    <Compile Include="..\\..\\ViewModels\\**\\*.cs" Link="App\\ViewModels\\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\\..\\Services\\**\\*.cs" Link="App\\Services\\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="4.0.1" />
+  </ItemGroup>
+
+</Project>
+`,
+    [`${tests}/CounterViewModelTests.cs`]: `using ${ns}.Services;
+using ${ns}.ViewModels;
+using Xunit;
+
+namespace ${ns}.Tests;
+
+public class CounterViewModelTests
+{
+    [Fact]
+    public void Increment_updates_count_and_text()
+    {
+        var viewModel = new CounterViewModel();
+        Assert.Equal("Click me", viewModel.ButtonText);
+
+        viewModel.IncrementCommand.Execute(null);
+        Assert.Equal(1, viewModel.Count);
+        Assert.Equal("Clicked 1 time", viewModel.ButtonText);
+
+        viewModel.Increment();
+        Assert.Equal("Clicked 2 times", viewModel.ButtonText);
+    }
+
+    [Fact]
+    public void Android_emulator_reaches_the_host_through_10_0_2_2()
+    {
+        Assert.Equal("http://10.0.2.2:8000", ApiConfig.Resolve("http://localhost:8000", isAndroid: true));
+        Assert.Equal("http://localhost:8000", ApiConfig.Resolve("http://localhost:8000", isAndroid: false));
+    }
+}
+`,
+    '.gitignore': GITIGNORE.dotnet + '*.apk\n*.aab\n*.ipa\n',
+    'README.md': readme(`${c.name} (.NET MAUI)`, '.NET MAUI app on .NET 10 generated by LazyStack, following the `dotnet new maui` single-project layout. It runs on the host (device, emulator or desktop), never in Docker.', [
+      ['Layout', `- \`MauiProgram.cs\`: app builder and dependency injection\n- \`App.xaml\`, \`AppShell.xaml\`: application resources and Shell navigation\n- \`MainPage.xaml\`: start page bound to \`ViewModels/CounterViewModel\`\n- \`Services/ApiConfig.cs\`: backend URL\n- \`Platforms/{Android,iOS,MacCatalyst,Windows}/\`: platform entry points\n- \`Resources/\`: app icon, splash screen, images, fonts, raw assets and XAML styles\n- \`${tests}/\`: xUnit tests for the view models and services`],
+      ['Prerequisites', shell('dotnet workload install maui           # macOS / Windows\ndotnet workload install maui-android   # Linux (Android only)') + '\n\nAndroid needs the Android SDK and an emulator or device (Android Studio is the easiest way to get both). iOS and Mac Catalyst need macOS with Xcode. Linux hosts can only build the Android target.'],
+      ['Run', shell('dotnet build -t:Run -f net10.0-android                   # Android emulator/device\ndotnet build -t:Run -f net10.0-maccatalyst               # macOS\ndotnet build -t:Run -f net10.0-windows10.0.19041.0       # Windows')],
+      ['Test', shell(`dotnet test ${tests}`)],
+      ['Reaching your API', 'A MAUI app does not read `.env` at runtime. Copy the connection URL from `.env` into `Services/ApiConfig.cs`. The Android emulator reaches your computer at `10.0.2.2` (handled by `ApiConfig.Resolve`); a physical phone needs your computer\'s LAN IP.']
+    ])
+  }
+}
+
+const applePlist = (catalyst: boolean) => `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+${catalyst ? '    <key>LSApplicationCategoryType</key>\n    <string>public.app-category.lifestyle</string>\n' : '    <key>LSRequiresIPhoneOS</key>\n    <true/>\n'}    <key>UIDeviceFamily</key>
+    <array>
+${catalyst ? '        <integer>2</integer>\n' : '        <integer>1</integer>\n        <integer>2</integer>\n'}    </array>
+    <key>UIRequiredDeviceCapabilities</key>
+    <array>
+        <string>arm64</string>
+    </array>
+    <key>UISupportedInterfaceOrientations</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+        <string>UIInterfaceOrientationLandscapeLeft</string>
+        <string>UIInterfaceOrientationLandscapeRight</string>
+    </array>
+    <key>XSAppIconAssets</key>
+    <string>Assets.xcassets/appicon.appiconset</string>
+</dict>
+</plist>
+`
+
 export const backendStarters: Record<string, (c: NativeContext) => Files> = {
   'csharp-aspnet': aspnet,
   'csharp-blazor': blazor,
+  'csharp-maui': maui,
   'elixir-phoenix': phoenix
 }
 

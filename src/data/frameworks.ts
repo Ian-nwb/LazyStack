@@ -802,6 +802,35 @@ export const TECH_CATALOG: TechItem[] = [
     ]
   },
   {
+    id: 'capacitor-app',
+    name: 'Capacitor (Web to Native)',
+    language: 'JS / TS',
+    category: 'mobile-desktop',
+    role: 'desktop-mobile',
+    defaultPort: 5173,
+    description: 'Vite web app wrapped in native Android and iOS shells with Capacitor, without a UI kit. The web build also runs in Docker.',
+    badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
+    supportsFlavor: true,
+    requires: [
+      { binary: 'node', label: 'Node.js Runtime', installHint: 'https://nodejs.org' },
+      { binary: 'npm', label: 'npm (Node PM)', installHint: 'Installed with Node.js' }
+    ]
+  },
+  {
+    id: 'csharp-maui',
+    hostOnly: true,
+    name: 'C# (.NET MAUI)',
+    language: 'C#',
+    category: 'mobile-desktop',
+    role: 'desktop-mobile',
+    defaultPort: 0,
+    description: 'Cross-platform native Android, iOS, macOS and Windows app with XAML and C# on .NET 10. Linux hosts can build the Android target only.',
+    badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
+    requires: [
+      { binary: 'dotnet', label: '.NET 10 SDK + MAUI workload', installHint: 'https://dot.net/download, then `dotnet workload install maui` (Linux: `maui-android`)' }
+    ]
+  },
+  {
     id: 'electron-app',
     hostOnly: true,
     name: 'Electron Desktop Client',
@@ -819,6 +848,7 @@ export const TECH_CATALOG: TechItem[] = [
   },
   {
     id: 'react-native-expo',
+    hostOnly: true,
     name: 'React Native (Expo)',
     language: 'JS / TS',
     category: 'mobile-desktop',

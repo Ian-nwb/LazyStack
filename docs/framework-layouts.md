@@ -26,6 +26,9 @@ The architecture root does not turn every service into a JavaScript package. A G
 | Play (Scala) | `build.sbt`, `project/`, `app/controllers/`, `app/views/`, `conf/` (`routes`, `application.conf`), `public/`, `test/` |
 | Clojure Ring | `deps.edn`, `build.clj`, `src/<ns>/` (`core`, `routes`), `test/`, `resources/` |
 | ASP.NET Core / Blazor | `.csproj`, `Program.cs`, `Endpoints/`, `appsettings*.json`; Blazor adds `Pages/`, `Layout/`, `_Imports.razor`, `wwwroot/` |
+| .NET MAUI | `<name>.csproj` (`UseMaui`, per-OS `TargetFrameworks`), `MauiProgram.cs`, `App.xaml`, `AppShell.xaml`, `MainPage.xaml`, `ViewModels/`, `Services/`, `Platforms/{Android,iOS,MacCatalyst,Windows}/`, `Resources/` (icon, splash, images, fonts, raw, styles), `tests/<Name>.Tests/` (xUnit); run on the host, Linux builds Android only |
+| React Native (Expo) | `package.json` (`main: expo-router/entry`), `app.json`, `eas.json`, `app/` (`_layout`, `(tabs)/`, `+not-found`), `components/`, `constants/`, `assets/`, `__tests__/` (jest-expo); run on the host |
+| Capacitor | Vite `index.html`, `src/` (`main`, `device`, `api` + Vitest test), `public/`, `capacitor.config.ts` (`.json` for JavaScript); `android/` and `ios/` come from `npx cap add`. The web build runs in Docker |
 | Phoenix | `mix.exs`, `config/*.exs`, `lib/<app>/`, `lib/<app>_web/` (endpoint, router, controllers), `test/` |
 | Go frameworks and `net/http` | `go.mod`, `main.go`, `internal/handlers/` (with `httptest` tests), `internal/config/` |
 | Rust Actix / Axum / Poem | `Cargo.toml`, `src/main.rs`, `src/routes.rs` (with tests), `src/config.rs` |

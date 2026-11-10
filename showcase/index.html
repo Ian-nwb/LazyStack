@@ -485,7 +485,7 @@ tr.pick td:first-child::before { display: inline-block; animation: nudgeX 1.6s e
             <li class="t">Next.js (App Router)</li><li class="t">Nuxt 3</li><li class="t">Remix / Router v7</li><li class="t">SvelteKit</li><li class="t">Astro</li><li class="t">PHP Laravel 11</li><li class="t">Ruby on Rails 7/8</li><li class="t">TanStack Start</li><li class="t">SolidStart</li><li class="t">C# Blazor Server/WASM</li><li class="t">Python Django</li><li class="t">Deno Fresh</li><li class="t">Reflex (Python UI)</li><li class="t">NiceGUI (Python Web)</li><li class="t">Anvil (Python Fullstack)</li>
           </ul></div></div>
           <div class="row"><div class="k">Mobile &amp; Desktop (7)</div><div class="v"><ul class="tags">
-            <li class="t">React Native (Expo Router)</li><li class="t">Tauri (Rust + Web)</li><li class="t">Dart (Flutter)</li><li class="t">Electron Desktop</li><li class="t">SwiftUI Apple Client</li><li class="t">Ionic (Capacitor)</li><li class="t">Rust GPUI Desktop</li>
+            <li class="t">React Native (Expo Router)</li><li class="t">Tauri (Rust + Web)</li><li class="t">Dart (Flutter)</li><li class="t">Electron Desktop</li><li class="t">SwiftUI Apple Client</li><li class="t">Ionic (Capacitor)</li><li class="t">Capacitor (plain Vite)</li><li class="t">.NET MAUI</li><li class="t">Rust GPUI Desktop</li>
           </ul></div></div>
           <div class="row"><div class="k">Scripting &amp; Tools (4)</div><div class="v"><ul class="tags">
             <li class="t">AssemblyScript (Wasm)</li><li class="t">Google Apps Script (clasp)</li><li class="t">Bash Worker / CLI</li><li class="t">SQL Migration &amp; Seeder</li>
@@ -567,7 +567,7 @@ lazystack scaffold --config lazystack.json --out ./generated</pre>
       </div>
       <div>
         <h2>Get <span class="thin">v1.1.2.</span></h2>
-        <p>v1.1.2 ships for Linux and Windows with working one-click package installs and live progress, Start/Stop Stack for every layout, and setup guidance for frameworks that need manual steps, on top of v1.1.1's new frameworks, framework-native project folders, and Open Existing Project.</p>
+        <p>v1.1.2 ships for Linux and Windows with working one-click package installs and live progress, Start/Stop Stack for every layout, setup guidance for frameworks that need manual steps, and new Capacitor, .NET MAUI and Expo SDK 58 starters, on top of v1.1.1's new frameworks, framework-native project folders, and Open Existing Project.</p>
 
         <div class="dl-rows">
           <div class="dl-row">
@@ -633,7 +633,7 @@ npm run dist:release  <span class="c"># build both targets</span></pre>
         <h2>What shipped <span class="thin">in 1.1.2.</span></h2>
         <p>v1.1.2 makes generated projects easier to run: package installs that work and show progress, a stack button that finds your Compose file, and a clear list of manual setup steps when your stack needs them.</p>
         <dl class="rows">
-          <div class="row"><dt>v1.1.2 · Released</dt><dd>Shipped: Install Packages fixed and now shows live progress (current step, output and a per-step summary); Start/Stop Stack works with Polyglot and custom infrastructure folders; a post-scaffold guide that lists the manual setup steps for frameworks that need them (Flutter, Apps Script, Tauri, Dioxus, Bevy and more) and for cloud databases; CLI support for cloud databases.</dd></div>
+          <div class="row"><dt>v1.1.2 · Released</dt><dd>Shipped: Install Packages fixed and now shows live progress (current step, output and a per-step summary); Start/Stop Stack works with Polyglot and custom infrastructure folders; a post-scaffold guide that lists the manual setup steps for frameworks that need them (Flutter, Apps Script, Tauri, Dioxus, Bevy and more) and for cloud databases; CLI support for cloud databases; new Capacitor and .NET MAUI starters and an Expo SDK 58 starter.</dd></div>
           <div class="row"><dt>v1.1.1 · Released</dt><dd>Shipped: Dioxus, Slint and Bevy (Rust) plus JavaFX and Java Swing desktop starters; framework-native project folders for every framework, matching each official initializer; Open Existing Project to view an existing repository as a diagram and add apps to it without touching your code; and fixes for starters and Dockerfiles that previously failed to build.</dd></div>
           <div class="row"><dt>v1.1.0 · Released</dt><dd>Shipped: Rust GPUI desktop, Yew and Leptos WebAssembly starters; framework-native paths and runtime environment defaults across generated apps; native layout previews; PHP public web root; and Caddy and Traefik reverse proxy configuration alongside Nginx and Apache.</dd></div>
           <div class="row"><dt>v1.0.9 · Released</dt><dd>Shipped: Universal 75+ framework runtime with automated dev command orchestration; automated Python virtual environment (.venv) creation and migration runner (Django, FastAPI, Flask); Symfony 7 backend scaffold with Composer multi-stage Dockerfile and native serve commands; multi-language dependency installer across all candidate project directories.</dd></div>

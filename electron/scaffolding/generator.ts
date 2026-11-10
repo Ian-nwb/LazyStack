@@ -455,11 +455,15 @@ export async function scaffoldProject(inputSettings: ProjectSettings, options: S
           }
         })
       }
-      for (const connection of app.connections || []) {
+      // Mobile starters read one fixed public variable; point it at the first connection.
+      const starterApiVar = ({ 'react-native-expo': 'EXPO_PUBLIC_API_URL', 'capacitor-app': 'VITE_API_URL' } as Record<string, string>)[app.techId]
+      for (const [index, connection] of (app.connections || []).entries()) {
         const target = appById.get(connection.targetAppId)!
         const connectionUrl = resolveServiceConnectionUrl(app, target, settings.proxy, connection)
-        appEnv += `${connection.envVar}=${connectionUrl}\n`
-        appEnvExample += `${connection.envVar}=${connectionUrl}\n`
+        let lines = `${connection.envVar}=${connectionUrl}\n`
+        if (starterApiVar && index === 0 && connection.envVar !== starterApiVar) lines += `${starterApiVar}=${connectionUrl}\n`
+        appEnv += lines
+        appEnvExample += lines
       }
       const appCloudVars = generateCloudEnvVars(settings.databases.filter(db => db.assignedAppId === app.id || db.assignedAppId === 'global' || !db.assignedAppId))
       appEnv += appCloudVars.env

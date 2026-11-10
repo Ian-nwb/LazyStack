@@ -291,6 +291,14 @@ jobs:
             tech_id: java-swing
           - language: java-javafx
             tech_id: java-javafx
+          - language: expo
+            tech_id: react-native-expo
+            node: 22
+          - language: capacitor
+            tech_id: capacitor-app
+            node: 22
+          - language: maui
+            tech_id: csharp-maui
 
     steps:
       - name: Check out repository
@@ -304,6 +312,18 @@ jobs:
 
       - name: Install dependencies and build CLI
         run: npm ci && npm run build:cli
+
+      - name: Setup Node.js 22 for generated mobile apps
+        if: matrix.node == 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Set up .NET 10
+        if: matrix.tech_id == 'csharp-maui'
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
 
       - name: Set up Java 17
         if: matrix.tech_id == 'java-springboot' || matrix.tech_id == 'kotlin-ktor' || matrix.tech_id == 'java-swing' || matrix.tech_id == 'java-javafx'
@@ -342,6 +362,9 @@ jobs:
           if [ "${{ matrix.tech_id }}" = 'kotlin-ktor' ]; then test -f "$TARGET_DIR/apps/service/build.gradle.kts"; fi
           if [ "${{ matrix.tech_id }}" = 'vanilla-php' ]; then test -f "$TARGET_DIR/apps/service/composer.json"; fi
           if [ "${{ matrix.tech_id }}" = 'java-swing' ] || [ "${{ matrix.tech_id }}" = 'java-javafx' ]; then test -f "$TARGET_DIR/apps/service/pom.xml"; test ! -e "$TARGET_DIR/apps/service/Dockerfile"; fi
+          if [ "${{ matrix.tech_id }}" = 'react-native-expo' ]; then test -f "$TARGET_DIR/apps/service/app.json"; test ! -e "$TARGET_DIR/apps/service/Dockerfile"; fi
+          if [ "${{ matrix.tech_id }}" = 'capacitor-app' ]; then test -f "$TARGET_DIR/apps/service/capacitor.config.ts"; test -f "$TARGET_DIR/apps/service/Dockerfile"; fi
+          if [ "${{ matrix.tech_id }}" = 'csharp-maui' ]; then test -f "$TARGET_DIR/apps/service/service.csproj"; test ! -e "$TARGET_DIR/apps/service/Dockerfile"; fi
 
       - name: Build and test generated Spring Boot project
         if: matrix.tech_id == 'java-springboot'
@@ -362,3 +385,19 @@ jobs:
       - name: Compile generated JavaFX project
         if: matrix.tech_id == 'java-javafx'
         run: mvn --batch-mode --no-transfer-progress -f ./native-output/native-${{ matrix.language }}/apps/service/pom.xml compile
+
+      - name: Typecheck and test generated Expo app
+        if: matrix.tech_id == 'react-native-expo'
+        working-directory: ./native-output/native-${{ matrix.language }}/apps/service
+        run: npm install --no-audit --no-fund && npx tsc --noEmit && npm test
+
+      - name: Build and test generated Capacitor app
+        if: matrix.tech_id == 'capacitor-app'
+        working-directory: ./native-output/native-${{ matrix.language }}/apps/service
+        run: npm install --no-audit --no-fund && npm run build && npm test && npx cap ls
+
+      # The full MAUI build needs the maui-android workload and Android SDK (several GB); the
+      # platform-free view models are tested on plain .NET 10 instead.
+      - name: Test generated .NET MAUI view models
+        if: matrix.tech_id == 'csharp-maui'
+        run: dotnet test ./native-output/native-${{ matrix.language }}/apps/service/tests/Service.Tests

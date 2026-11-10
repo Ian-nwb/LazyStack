@@ -2,6 +2,9 @@ import { CartApp, ProxyConfig, ServiceConnection } from '../types'
 
 export function getDefaultConnectionEnvVar(source: CartApp, target: CartApp): string {
   const targetName = target.folderName.toUpperCase().replace(/[^A-Z0-9]+/g, '_').replace(/^_|_$/g, '')
+  // Mobile clients only see variables with their bundler's public prefix.
+  if (source.techId === 'react-native-expo') return `EXPO_PUBLIC_${targetName}_API_URL`
+  if (source.techId === 'capacitor-app' || source.techId === 'ionic-framework') return `VITE_${targetName}_API_URL`
   if (source.role === 'frontend' || source.role === 'fullstack') {
     const publicPrefix = source.techId.includes('nextjs')
       ? 'NEXT_PUBLIC'
@@ -15,6 +18,9 @@ export function getDefaultConnectionEnvVar(source: CartApp, target: CartApp): st
   return `${targetName}_API_URL`
 }
 
+/** Mobile apps whose code runs on the device/WebView rather than in a server process. */
+const CLIENT_SIDE_APPS = new Set(['react-native-expo', 'capacitor-app', 'ionic-framework'])
+
 export function resolveServiceConnectionUrl(
   source: CartApp,
   target: CartApp,
@@ -24,7 +30,8 @@ export function resolveServiceConnectionUrl(
   if (connection.protocol === 'custom') return connection.customUrl || ''
 
   const scheme = connection.protocol
-  if (source.role === 'frontend' || source.role === 'fullstack') {
+  // Browser and WebView clients call the API from the user's device, so they need a host-reachable URL.
+  if (source.role === 'frontend' || source.role === 'fullstack' || CLIENT_SIDE_APPS.has(source.techId)) {
     const route = proxy.type !== 'none' && proxy.httpPort > 0
       ? (target.routePrefix && target.routePrefix !== '/' ? `/${target.routePrefix.replace(/^\/+|\/+$/g, '')}` : '')
       : ''

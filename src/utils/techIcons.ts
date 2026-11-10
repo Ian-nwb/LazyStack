@@ -112,6 +112,8 @@ const FRAMEWORK_ICON_OVERRIDES: Record<string, string> = {
   'google-apps-script': `${DEVICON_BASE}/google/google-original.svg`,
   'assemblyscript':     `${DEVICON_BASE}/wasm/wasm-original.svg`,
   'react-native-expo':  `${DEVICON_BASE}/react/react-original.svg`,
+  'capacitor-app':      `${DEVICON_BASE}/capacitor/capacitor-original.svg`,
+  'csharp-maui':        `${DEVICON_BASE}/dotnetcore/dotnetcore-original.svg`,
   'inferno-js':         `${DEVICON_BASE}/react/react-original.svg`,
 }
 

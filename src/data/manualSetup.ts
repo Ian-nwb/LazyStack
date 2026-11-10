@@ -30,14 +30,26 @@ export function getAppManualSetup(app: Pick<CartApp, 'techId' | 'folderName' | '
     case 'react-native-expo':
       return {
         reason: 'Expo apps run on a phone or an emulator, not in Docker.',
-        steps: ['Install Expo Go on your phone, or set up an Android emulator (Android Studio) / iOS Simulator (Xcode on macOS).', 'Run `npx expo start` and scan the QR code or press `a` / `i`.'],
+        steps: ['Install Expo Go on your phone, or set up an Android emulator (Android Studio) / iOS Simulator (Xcode on macOS).', 'Run `npx expo start` and scan the QR code or press `a` / `i`.', 'On a physical phone, replace `localhost` in `.env` (`EXPO_PUBLIC_API_URL`) with your computer\'s LAN IP.'],
         docs: 'https://docs.expo.dev/get-started/set-up-your-environment/'
       }
     case 'ionic-framework':
+    case 'capacitor-app':
       return {
         reason: 'The web build works out of the box; native Android/iOS shells are added with Capacitor and need the platform SDKs.',
-        steps: ['For native builds install Android Studio (Android) or Xcode on macOS (iOS).', 'Run `npm run build`, then `npx cap add android` (or `ios`) and `npx cap sync`.'],
+        steps: ['For native builds install Android Studio (Android) or Xcode on macOS (iOS).', 'Run `npm install @capacitor/android` (or `@capacitor/ios`), `npm run build`, then `npx cap add android` (or `ios`) and `npx cap sync`.'],
         docs: 'https://capacitorjs.com/docs/getting-started/environment-setup'
+      }
+    case 'csharp-maui':
+      return {
+        reason: '.NET MAUI needs the MAUI workload and the platform SDKs. Linux hosts can build the Android target only; iOS and Mac Catalyst need macOS with Xcode.',
+        steps: [
+          'Install the .NET 10 SDK, then `dotnet workload install maui` (on Linux: `dotnet workload install maui-android`).',
+          'For Android install Android Studio (SDK + emulator), or run `dotnet build -t:InstallAndroidDependencies -f net10.0-android -p:AcceptAndroidSDKLicenses=True`.',
+          'Run `dotnet build -t:Run -f net10.0-android` (or `net10.0-maccatalyst` on macOS, `net10.0-windows10.0.19041.0` on Windows).',
+          'Copy your backend URL from `.env` into `Services/ApiConfig.cs`; MAUI apps do not read `.env` at runtime.'
+        ],
+        docs: 'https://learn.microsoft.com/dotnet/maui/get-started/installation'
       }
     case 'tauri-app':
       return {

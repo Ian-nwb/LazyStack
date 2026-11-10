@@ -169,6 +169,11 @@ mongo_data/
     if (app.techId.startsWith('rust-')) return 'cargo run'
 
     // 4. C# / .NET
+    if (app.techId === 'csharp-maui') {
+      // MAUI can only target the generating OS's native platform (Linux builds Android only).
+      const mauiTarget = isWin ? 'net10.0-windows10.0.19041.0' : process.platform === 'darwin' ? 'net10.0-maccatalyst' : 'net10.0-android'
+      return `dotnet build -t:Run -f ${mauiTarget}`
+    }
     if (app.techId === 'csharp-aspnet' || app.techId === 'csharp-blazor') {
       return `dotnet run --urls=http://0.0.0.0:${app.port}`
     }

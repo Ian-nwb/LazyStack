@@ -5,7 +5,12 @@ All notable changes to LazyStack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.1.2] - Unreleased
+## [1.1.2] - 2026-11-10
+
+### Added
+- **Capacitor** (`capacitor-app`): a plain Vite web app (TypeScript or JavaScript, no UI kit) wrapped in native Android and iOS shells with Capacitor 8. It includes an `@capacitor/app` plugin example and a Vitest test. The web build runs in Docker; native builds use `npx cap add` / `npm run android`.
+- **.NET MAUI** (`csharp-maui`): a .NET 10 app following the `dotnet new maui` single-project layout (`Platforms/`, `Resources/`, Shell, a view model) with an xUnit test project. It always runs on the host; the dev orchestrator runs the Android target on Linux, Mac Catalyst on macOS and Windows on Windows. Linux can only build Android.
+- Both are recognized by **Open Existing Project** / `lazystack import` (`@capacitor/core` without Ionic; `<UseMaui>true</UseMaui>`), and both appear in the manual-setup popup.
 
 ### Fixed
 - **Install Packages** did nothing useful in many setups:
@@ -28,6 +33,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   The same steps are written to a "Manual setup required" section in the generated root README.
 - Installing packages now shows live progress: a spinner and step counter on the button, plus a panel with the current step, elapsed time, a progress bar and streaming output. When it finishes, the panel lists every step as installed, skipped (tool not installed, with the command to run) or failed (with its output).
 - Node workspaces are installed once from the root; Rust uses `cargo fetch`, Go uses `go mod tidy`, and Maven, Deno and Elixir (Hex) projects are covered.
+- **Expo** now uses a native starter matching `create-expo-app` on **SDK 58** (React Native 0.88, React 19.3, Expo Router tabs, `eas.json`, a jest-expo test), replacing the SDK 51 template. Expo is now host-only, so it no longer gets a Docker service.
+- Service connections from Expo, Capacitor and Ionic apps now use the bundler's public prefix (`EXPO_PUBLIC_…`, `VITE_…`) and a host-reachable URL (`localhost` or the proxy) instead of a Docker service name. Expo and Capacitor apps also get `EXPO_PUBLIC_API_URL` / `VITE_API_URL` pointing at their first connection, which the starters read.
 
 ## [1.1.1] - 2026-11-08
 

@@ -1,5 +1,14 @@
 # LazyStack CLI changelog
 
+## 1.1.2
+
+- Add Capacitor (`capacitor-app`) and .NET MAUI (`csharp-maui`) to the catalog; `import` detects both.
+- Expo starter moves to SDK 58 (Expo Router tabs, `eas.json`, jest-expo test) and is now host-only.
+- Connections from Expo, Capacitor and Ionic apps use public env prefixes (`EXPO_PUBLIC_`, `VITE_`) and host-reachable URLs.
+- `validate` and `scaffold` accept blueprints with cloud databases (Supabase, Firebase, Neon, ...), which have no local port.
+- The generated dev orchestrator starts Tauri with `npm run dev` (the starter has no `tauri dev` script).
+- Generated root READMEs gain a "Manual setup required" section for frameworks and cloud databases that need steps LazyStack can't do for you.
+
 ## 1.1.1
 
 - Add `import`, `add` and `apply` for existing projects (with `--dry-run`). Existing app folders are never modified; regenerated infrastructure is backed up to `.lazystack/backup/`.

@@ -49,6 +49,7 @@ const NPM_RULES: Rule[] = [
   [/"@ionic\/(react|angular|vue)"/, 'ionic-framework'],
   [/"@tauri-apps\//, 'tauri-app'],
   [/"expo"/, 'react-native-expo'],
+  [/"@capacitor\/core"/, 'capacitor-app'],
   [/"electron"/, 'electron-app'],
   [/"@nestjs\/core"/, 'ts-nestjs'],
   [/"elysia"/, 'ts-elysia'],
@@ -172,6 +173,7 @@ async function detectApp(dir: string, entries: string[]): Promise<{ techId: stri
   const csproj = entries.find(entry => entry.endsWith('.csproj'))
   if (csproj) {
     const text = await file(csproj)
+    if (/<UseMaui>\s*true\s*<\/UseMaui>/i.test(text)) return { techId: 'csharp-maui', confidence: 'high', evidence: `${csproj} sets UseMaui` }
     if (/BlazorWebAssembly/.test(text)) return { techId: 'csharp-blazor', confidence: 'high', evidence: `${csproj} uses the Blazor WebAssembly SDK` }
     if (/Sdk\.Web/.test(text)) return { techId: 'csharp-aspnet', confidence: 'high', evidence: `${csproj} uses the Web SDK` }
     return null
