@@ -249,7 +249,7 @@ export const StructureCustomizer: React.FC<StructureCustomizerProps> = ({ settin
               >
                 <option value="service-isolated">Database-per-Service (Isolated db/ folders)</option>
                 <option value="centralized">Centralized (All in infra/docker-compose)</option>
-                <option value="hybrid">Hybrid (Isolated relational + Shared cache/broker)</option>
+                <option value="hybrid">Hybrid (Per-service data stores, shared caches and brokers)</option>
               </select>
             </div>
           </div>

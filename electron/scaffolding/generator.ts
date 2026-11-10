@@ -2,19 +2,14 @@ import path from 'path'
 import fs from 'fs-extra'
 import { ProjectSettings } from '../../src/types'
 import { validateFolderName, validatePath, validateRelativeProjectPath, joinPaths } from '../../src/utils/pathValidation'
-import { generateDockerCompose, generateDockerDevCompose, getDockerfileForTech, getDbServiceName } from './templates/docker'
-import { generateNginxConfig, generateApacheConfig, generateCaddyConfig, generateTraefikConfig } from './templates/proxies'
-import { getStarterFilesForTech } from './templates/appTemplates'
-import { createDatabaseCredentials, generateMetaFiles } from './templates/meta'
+import { createDatabaseCredentials } from './templates/meta'
+import { planScaffold } from './plan'
 import { DATABASE_CATALOG } from '../../src/data/databases'
-import { generateCloudServiceFiles, generateCloudEnvVars } from './templates/cloudServices'
 import { resolveStructurePaths } from '../../src/data/structurePresets'
-import { TESTING_TOOLS } from '../../src/data/testingTools'
-import { resolveServiceConnectionUrl } from '../../src/utils/serviceConnections'
-import { getNativeEnvironmentDefaults } from '../../src/utils/nativeEnvironment'
 import { getDatabaseAdminUiOption } from '../../src/data/databaseAdminUis'
 import { TECH_CATALOG, isHostOnlyTech } from '../../src/data/frameworks'
 import { createScaffoldWriter, ScaffoldChanges, ScaffoldMode } from './writer'
+import { getAppDatabases } from '../../src/utils/databaseScope'
 
 export interface ScaffoldResult {
   success: boolean
@@ -25,8 +20,7 @@ export interface ScaffoldResult {
   changes?: ScaffoldChanges
 }
 
-/** Version of the embedded `lazystack.json` blueprint format. */
-export const BLUEPRINT_VERSION = 1
+export { BLUEPRINT_VERSION } from './plan'
 
 export interface ScaffoldOptions {
   /** `create` (default) writes a new project; `augment` adds to an existing one without overwriting app code. */
@@ -174,10 +168,7 @@ export async function scaffoldProject(inputSettings: ProjectSettings, options: S
   }
 
   for (const app of settings.apps.filter(item => item.techId === 'python-fastapi' && item.starterProfile === 'api-service')) {
-    const appDatabases = settings.databases.filter(db => {
-      if (!db.enabled || db.type === 'sqlite' || DATABASE_CATALOG.find(item => item.id === db.type)?.isCloud) return false
-      return resolveStructurePaths(settings).databaseIsolation !== 'service-isolated' || db.assignedAppId === app.id || db.assignedAppId === 'global' || !db.assignedAppId
-    })
+    const appDatabases = getAppDatabases(settings, app)
     const firstDb = appDatabases[0]
     if (firstDb && !['postgres', 'mysql', 'mariadb'].includes(firstDb.type)) {
       return { success: false, targetDir: '', filesCreated: 0, error: `The FastAPI API service profile needs PostgreSQL, MySQL, or MariaDB as its first configured database for '${app.folderName}'. Remove or reorder the incompatible database, or use the minimal starter.` }
@@ -204,9 +195,6 @@ export async function scaffoldProject(inputSettings: ProjectSettings, options: S
 
   const targetDir = path.normalize(joinPaths(settings.parentDir, settings.projectName))
   const paths = resolveStructurePaths(settings)
-  const appRootDirectories = settings.apps.length
-    ? [...new Set(settings.apps.map(app => paths.getAppRelativePath(app.folderName, app.id, app.role).split('/').slice(0, -1).join('/') || paths.appsDir))]
-    : [paths.appsDir]
   let filesCreated = 0
 
   const mode: ScaffoldMode = options.mode || 'create'
@@ -235,442 +223,27 @@ export async function scaffoldProject(inputSettings: ProjectSettings, options: S
     // 1. Ensure target directory exists
     await out.ensureDir(targetDir)
 
-    // 2. Scaffold configured directory contract
-    const presetExtraDirs: Record<string, string[]> = {
-      'ai-ml-platform': ['models', 'prompts', 'pipelines/eval', 'agents/workers'],
-      'clean-architecture': ['domain'],
-      'cqrs': ['events'],
-      'jamstack-edge': ['edge/workers', 'edge/schedulers'],
-      'mobile-crossplatform': ['packages/ui', 'packages/core'],
-      'cli-tooling': ['plugins', 'examples'],
-      'data-platform': ['schemas'],
-      'event-driven': ['events'],
-      'domain-driven': ['core']
-    }
-    const currentPreset = settings.structureConfig?.preset || 'monorepo'
-    const extraDirs = presetExtraDirs[currentPreset] || []
-
-    const directories = [
-      '.github/workflows',
-      '.vscode',
-      ...appRootDirectories,
-      ...extraDirs,
-      paths.docsDir,
-      paths.infraDir,
-      paths.scriptsDir,
-      ...(settings.useUnifiedWorkspace !== false ? [paths.packagesDir] : []),
-      ...(settings.structureConfig?.customFolders || []),
-      'tests'
-    ]
-
-    for (const dir of directories) {
-      await out.ensureDir(path.join(targetDir, dir))
-    }
-
-    // 3. Write Root Meta files
-    const databaseCredentials = createDatabaseCredentials(settings)
-    const metaFiles = generateMetaFiles(settings, databaseCredentials)
-    for (const [relPath, content] of Object.entries(metaFiles)) {
+    // 2. Plan every directory and file, then replay the plan through the writer so create,
+    //    augment and dry-run modes all share one source of truth.
+    const plan = planScaffold(settings, createDatabaseCredentials(settings), { existingAppDirs })
+    for (const dir of plan.dirs) await out.ensureDir(path.join(targetDir, dir))
+    for (const [relPath, file] of Object.entries(plan.files)) {
       const fullPath = path.join(targetDir, relPath)
       await out.ensureDir(path.dirname(fullPath))
-      await out.write(fullPath, content, 'utf8')
+      await out.write(fullPath, file.content, 'utf8')
       filesCreated++
-
-      // Ensure execution permission for shell scripts
-      if (relPath.endsWith('.sh')) {
+      if (file.mode) {
         try {
-          await out.chmod(fullPath, 0o755)
+          await out.chmod(fullPath, file.mode)
         } catch {
           // Ignore on Windows
         }
       }
     }
-
-    // 4. Write Docker Compose files
-    const composeContent = generateDockerCompose(settings)
-    await out.write(path.join(targetDir, paths.infraDir, 'docker-compose.yml'), composeContent, 'utf8')
-    filesCreated++
-
-    const devComposeContent = generateDockerDevCompose(settings)
-    await out.write(path.join(targetDir, paths.infraDir, 'docker-compose.dev.yml'), devComposeContent, 'utf8')
-    filesCreated++
-
-    // 5. Write Proxy Configurations
-    if (settings.proxy.type === 'nginx') {
-      const nginxConfigs = generateNginxConfig(settings)
-      const nginxDir = path.join(targetDir, paths.infraDir, 'nginx')
-      await out.ensureDir(nginxDir)
-      await out.write(path.join(nginxDir, 'nginx.conf'), nginxConfigs['nginx.conf'], 'utf8')
-      await out.write(path.join(nginxDir, 'default.conf'), nginxConfigs['default.conf'], 'utf8')
-      filesCreated += 2
-    } else if (settings.proxy.type === 'apache') {
-      const apacheConf = generateApacheConfig(settings)
-      const apacheDir = path.join(targetDir, paths.infraDir, 'apache')
-      await out.ensureDir(apacheDir)
-      await out.write(path.join(apacheDir, 'httpd.conf'), apacheConf, 'utf8')
-      filesCreated++
-    } else if (settings.proxy.type === 'caddy') {
-      const caddyDir = path.join(targetDir, paths.infraDir, 'caddy')
-      await out.ensureDir(caddyDir)
-      await out.write(path.join(caddyDir, 'Caddyfile'), generateCaddyConfig(settings), 'utf8')
-      filesCreated++
-    } else if (settings.proxy.type === 'traefik') {
-      const traefikDir = path.join(targetDir, paths.infraDir, 'traefik')
-      const configs = generateTraefikConfig(settings)
-      await out.ensureDir(traefikDir)
-      await out.write(path.join(traefikDir, 'traefik.yml'), configs['traefik.yml'], 'utf8')
-      await out.write(path.join(traefikDir, 'dynamic.yml'), configs['dynamic.yml'], 'utf8')
-      filesCreated += 2
-    }
-
-    // 6. SQLite setup
-    const hasSqlite = settings.databases.some(d => d.enabled && d.type === 'sqlite')
-    if (hasSqlite) {
-      const sqliteDir = path.join(targetDir, paths.infraDir, 'sqlite')
-      await out.ensureDir(sqliteDir)
-      await out.write(path.join(sqliteDir, 'README.md'), '# SQLite Shared Volume\nStores persistent database files (e.g. data.db) mounted across Docker containers and local apps.\n', 'utf8')
+    for (const copy of plan.diskCopies) {
+      await out.copyFile(path.join(targetDir, copy.from), path.join(targetDir, copy.to))
       filesCreated++
     }
-
-    // 6b. Cloud & BaaS service SDK files
-    const cloudFiles = generateCloudServiceFiles(settings.databases)
-    if (Object.keys(cloudFiles).length > 0) {
-      for (const [relPath, content] of Object.entries(cloudFiles)) {
-        // Rewrite packages/ to paths.packagesDir if customized
-        const targetRelPath = relPath.startsWith('packages/')
-          ? `${paths.packagesDir}/${relPath.slice('packages/'.length)}`
-          : relPath
-        const fullPath = path.join(targetDir, targetRelPath)
-        await out.ensureDir(path.dirname(fullPath))
-        await out.write(fullPath, content, 'utf8')
-        filesCreated++
-      }
-    }
-
-    // 6c. Cloud env vars appended to .env and .env.example
-    const cloudEnv = generateCloudEnvVars(settings.databases)
-    if (cloudEnv.env) {
-      const envPath = path.join(targetDir, '.env')
-      const envExamplePath = path.join(targetDir, '.env.example')
-      // Append to existing .env (created by meta generator)
-      if (await fs.pathExists(envPath)) {
-        await fs.appendFile(envPath, cloudEnv.env, 'utf8')
-      } else {
-        await out.write(envPath, cloudEnv.env, 'utf8')
-        filesCreated++
-      }
-      // Create/append .env.example
-      if (await fs.pathExists(envExamplePath)) {
-        await fs.appendFile(envExamplePath, cloudEnv.envExample, 'utf8')
-      } else {
-        await out.write(envExamplePath, cloudEnv.envExample, 'utf8')
-        filesCreated++
-      }
-    }
-
-    // 7. Scaffold each Microservice / Application Service
-    for (const app of settings.apps) {
-      const relAppPath = paths.getAppRelativePath(app.folderName, app.id, app.role)
-      const appDir = path.join(targetDir, relAppPath)
-      if (existingAppDirs.has(relAppPath)) continue
-      await out.ensureDir(appDir)
-
-      // Hosted and native desktop/mobile templates do not run as container services.
-      if (!isHostOnlyTech(app.techId)) {
-        const { dockerfile, dockerignore } = getDockerfileForTech(app.techId, app.port, app.folderName, app.starterProfile)
-        await out.write(path.join(appDir, 'Dockerfile'), dockerfile, 'utf8')
-        await out.write(path.join(appDir, '.dockerignore'), dockerignore, 'utf8')
-        filesCreated += 2
-      }
-
-      // Scoped databases for this microservice
-      const assignedDbs = settings.databases.filter(d => d.enabled && d.assignedAppId === app.id)
-
-      // Service-isolated database folder (migrations & schema)
-      if (assignedDbs.length > 0 && paths.databaseIsolation === 'service-isolated') {
-        const dbDir = path.join(appDir, 'db')
-        await out.ensureDir(path.join(dbDir, 'migrations'))
-        await out.ensureDir(path.join(dbDir, 'seeds'))
-        const schemaSql = `-- Database Schema for ${app.folderName}\n-- Dedicated Service Databases: ${assignedDbs.map(d => d.customName || d.type).join(', ')}\n\nCREATE TABLE IF NOT EXISTS service_health (\n  id SERIAL PRIMARY KEY,\n  service_name VARCHAR(100) DEFAULT '${app.folderName}',\n  status VARCHAR(20) DEFAULT 'healthy',\n  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n);\n`
-        await out.write(path.join(dbDir, 'schema.sql'), schemaSql, 'utf8')
-        const readmeDb = `# Database for ${app.folderName}\n\nThis folder holds local schema migrations and seed scripts for the ${app.folderName} microservice.\n\nAssigned instances:\n${assignedDbs.map(d => `- **${d.customName || d.type}** (Port :${d.port})`).join('\n')}\n`
-        await out.write(path.join(dbDir, 'README.md'), readmeDb, 'utf8')
-        filesCreated += 2
-      }
-
-      // App .env with service-level credentials
-      const nativeEnv = getNativeEnvironmentDefaults(app.techId)
-      let appEnv = `PORT=${app.port}\nAPP_NAME=${app.folderName}\n${nativeEnv}`
-      let appEnvExample = `PORT=${app.port}\nAPP_NAME=${app.folderName}\n${nativeEnv}`
-      if (app.techId === 'python-fastapi' && app.starterProfile === 'api-service') {
-        appEnv += 'API_TOKEN=local-dev-token-change-me\n'
-        appEnvExample += 'API_TOKEN=replace_with_random_secret\n'
-      }
-      const appDbs = settings.databases.filter(db => {
-        if (!db.enabled || db.type === 'sqlite' || DATABASE_CATALOG.find(item => item.id === db.type)?.isCloud) return false
-        if (paths.databaseIsolation === 'service-isolated') return db.assignedAppId === app.id || db.assignedAppId === 'global' || !db.assignedAppId
-        return true
-      })
-      if (appDbs.length > 0) {
-        appEnv += '\n# Database connection settings\n'
-        appEnvExample += '\n# Database connection settings\n'
-        appDbs.forEach((db, idx) => {
-          const serviceName = getDbServiceName(db, settings.databases.indexOf(db), settings.apps)
-          const credentials = databaseCredentials[serviceName]
-          const catalogEntry = DATABASE_CATALOG.find(item => item.id === db.type)
-          const containerPort = catalogEntry?.defaultPort || db.port
-          const host = app.runMode === 'docker' ? serviceName : 'localhost'
-          const port = app.runMode === 'docker' ? containerPort : db.port
-          let connectionUrl = ''
-          let exampleUrl = ''
-          if (['postgres', 'mysql', 'mariadb'].includes(db.type) && credentials) {
-            const scheme = db.type === 'postgres' ? 'postgresql' : db.type
-            connectionUrl = `${scheme}://${encodeURIComponent(credentials.username)}:${encodeURIComponent(credentials.password)}@${host}:${port}/${encodeURIComponent(credentials.database)}`
-            exampleUrl = `${scheme}://${encodeURIComponent(credentials.username)}:replace_me@${host}:${port}/${encodeURIComponent(credentials.database)}`
-          } else if (db.type === 'mongodb' && credentials) {
-            connectionUrl = `mongodb://${encodeURIComponent(credentials.username)}:${encodeURIComponent(credentials.password)}@${host}:${port}/${encodeURIComponent(credentials.database)}?authSource=admin`
-            exampleUrl = `mongodb://${encodeURIComponent(credentials.username)}:replace_me@${host}:${port}/${encodeURIComponent(credentials.database)}?authSource=admin`
-          } else if (['redis', 'valkey'].includes(db.type)) {
-            const scheme = db.type === 'valkey' ? 'redis' : 'redis'
-            connectionUrl = `${scheme}://${host}:${port}`
-            exampleUrl = connectionUrl
-          } else if (db.type === 'rabbitmq' && credentials) {
-            connectionUrl = `amqp://${encodeURIComponent(credentials.username)}:${encodeURIComponent(credentials.password)}@${host}:${port}`
-            exampleUrl = `amqp://${encodeURIComponent(credentials.username)}:replace_me@${host}:${port}`
-          }
-          const variable = idx === 0 ? 'DATABASE_URL' : `${serviceName.toUpperCase()}_URL`
-          if (connectionUrl) {
-            appEnv += `${variable}=${connectionUrl}\n`
-            appEnvExample += `${variable}=${exampleUrl}\n`
-            if (app.techId === 'fullstack-laravel' && idx === 0 && credentials && ['postgres', 'mysql', 'mariadb'].includes(db.type)) {
-              const driver = db.type === 'postgres' ? 'pgsql' : 'mysql'
-              const laravelDbEnv = `DB_CONNECTION=${driver}\nDB_HOST=${host}\nDB_PORT=${port}\nDB_DATABASE=${credentials.database}\nDB_USERNAME=${credentials.username}\n`
-              appEnv += laravelDbEnv + `DB_PASSWORD=${credentials.password}\n`
-              appEnvExample += laravelDbEnv + 'DB_PASSWORD=replace_me\n'
-            }
-          } else {
-            const variablePrefix = serviceName.toUpperCase()
-            appEnv += `${variablePrefix}_HOST=${host}\n${variablePrefix}_PORT=${port}\n`
-            appEnvExample += `${variablePrefix}_HOST=${host}\n${variablePrefix}_PORT=${port}\n`
-          }
-        })
-      }
-      // Mobile starters read one fixed public variable; point it at the first connection.
-      const starterApiVar = ({ 'react-native-expo': 'EXPO_PUBLIC_API_URL', 'capacitor-app': 'VITE_API_URL' } as Record<string, string>)[app.techId]
-      for (const [index, connection] of (app.connections || []).entries()) {
-        const target = appById.get(connection.targetAppId)!
-        const connectionUrl = resolveServiceConnectionUrl(app, target, settings.proxy, connection)
-        let lines = `${connection.envVar}=${connectionUrl}\n`
-        if (starterApiVar && index === 0 && connection.envVar !== starterApiVar) lines += `${starterApiVar}=${connectionUrl}\n`
-        appEnv += lines
-        appEnvExample += lines
-      }
-      const appCloudVars = generateCloudEnvVars(settings.databases.filter(db => db.assignedAppId === app.id || db.assignedAppId === 'global' || !db.assignedAppId))
-      appEnv += appCloudVars.env
-      appEnvExample += appCloudVars.envExample
-      await out.write(path.join(appDir, '.env'), appEnv, 'utf8')
-      await out.write(path.join(appDir, '.env.example'), appEnvExample, 'utf8')
-      filesCreated += 2
-
-      // Starter code files
-      const starterFiles = getStarterFilesForTech(app.techId, app.folderName, app.port, app.flavor, app.starterProfile)
-      for (const [fileName, fileContent] of Object.entries(starterFiles)) {
-        const filePath = path.join(appDir, fileName)
-        await out.ensureDir(path.dirname(filePath))
-        await out.write(filePath, fileContent, 'utf8')
-        filesCreated++
-      }
-
-      const selectedToolIds = app.testingTools || []
-      const selectedTools = selectedToolIds.map(id => TESTING_TOOLS.find(tool => tool.id === id)).filter((tool): tool is NonNullable<typeof tool> => Boolean(tool))
-      const customToolPackages = (app.customTestingTools || []).map(tool => tool.packageName).filter((name): name is string => Boolean(name && /^[a-zA-Z0-9@/_.*-]+$/.test(name)))
-      const appPackagePath = path.join(appDir, 'package.json')
-      const hasNpmTools = selectedTools.some(tool => tool.ecosystem === 'npm' || (tool.ecosystem === 'cli' && Boolean(tool.scriptName))) || customToolPackages.length > 0
-      if (hasNpmTools && await fs.pathExists(appPackagePath)) {
-        try {
-          const packageJson = await fs.readJson(appPackagePath)
-          packageJson.devDependencies = packageJson.devDependencies || {}
-          packageJson.scripts = packageJson.scripts || {}
-          for (const tool of selectedTools) {
-            if (tool.ecosystem === 'npm') for (const packageName of tool.installPackages || []) {
-              if (tool.runtimePackages?.includes(packageName)) {
-                packageJson.dependencies = packageJson.dependencies || {}
-                packageJson.dependencies[packageName] = 'latest'
-              } else {
-                packageJson.devDependencies[packageName] = 'latest'
-              }
-            }
-            if (tool.scriptName && tool.scriptCommand) packageJson.scripts[tool.scriptName] = tool.scriptCommand
-          }
-          if (selectedToolIds.includes('openapi-client')) {
-            const source = (app.connections || []).map(connection => ({ connection, app: appById.get(connection.targetAppId) }))
-              .find(item => item.app && ['http', 'https'].includes(item.connection.protocol) && (item.app.testingTools || []).includes('swagger-openapi'))
-            if (source?.app) {
-              packageJson.scripts['api:generate'] = 'openapi-typescript api-contract.yaml --output src/api/schema.d.ts'
-              packageJson.scripts.predev = 'npm run api:generate'
-              packageJson.scripts.prebuild = 'npm run api:generate'
-              await out.ensureDir(path.join(appDir, 'src/api'))
-              await out.write(path.join(appDir, 'src/api/client.ts'), `import createClient from 'openapi-fetch'\nimport type { paths } from './schema'\n\nexport const createApiClient = (baseUrl: string, bearerToken?: string) =>\n  createClient<paths>({\n    baseUrl,\n    headers: bearerToken ? { Authorization: 'Bearer ' + bearerToken } : {}\n  })\n`, 'utf8')
-              filesCreated++
-            }
-          }
-          for (const packageName of customToolPackages) packageJson.devDependencies[packageName] = 'latest'
-          await out.writeJson(appPackagePath, packageJson, { spaces: 2 })
-        } catch {
-          // Some non-Node services include JSON files that are not npm manifests; leave them untouched.
-        }
-      }
-
-      if (selectedToolIds.includes('swagger-openapi')) {
-        const title = JSON.stringify(app.folderName)
-        const description = JSON.stringify(`API contract for ${app.folderName}`)
-        const openApi = app.starterProfile === 'api-service' ? {
-          openapi: '3.1.0',
-          info: { title: app.folderName, version: '1.0.0', description: `CRUD API contract for ${app.folderName}` },
-          servers: [{ url: `http://localhost:${app.port}` }],
-          paths: {
-            '/api/items': {
-              get: { operationId: 'listItems', security: [{ BearerAuth: [] }], responses: { '200': { description: 'Items', content: { 'application/json': { schema: { type: 'array', items: { $ref: '#/components/schemas/ItemRead' } } } } } } },
-              post: { operationId: 'createItem', security: [{ BearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/ItemCreate' } } } }, responses: { '201': { description: 'Created item', content: { 'application/json': { schema: { $ref: '#/components/schemas/ItemRead' } } } } } }
-            },
-            '/api/items/{item_id}': {
-              parameters: [{ name: 'item_id', in: 'path', required: true, schema: { type: 'integer' } }],
-              get: { operationId: 'getItem', security: [{ BearerAuth: [] }], responses: { '200': { description: 'Item', content: { 'application/json': { schema: { $ref: '#/components/schemas/ItemRead' } } } }, '404': { description: 'Item not found' } } },
-              patch: { operationId: 'updateItem', security: [{ BearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/ItemUpdate' } } } }, responses: { '200': { description: 'Updated item', content: { 'application/json': { schema: { $ref: '#/components/schemas/ItemRead' } } } }, '404': { description: 'Item not found' } } },
-              delete: { operationId: 'deleteItem', security: [{ BearerAuth: [] }], responses: { '204': { description: 'Deleted item' }, '404': { description: 'Item not found' } } }
-            }
-          },
-          components: {
-            securitySchemes: { BearerAuth: { type: 'http', scheme: 'bearer' } },
-            schemas: {
-              ItemCreate: { type: 'object', required: ['title'], properties: { title: { type: 'string', minLength: 1, maxLength: 160 }, description: { type: ['string', 'null'] } } },
-              ItemUpdate: { type: 'object', properties: { title: { type: 'string', minLength: 1, maxLength: 160 }, description: { type: ['string', 'null'] }, completed: { type: 'boolean' } } },
-              ItemRead: { type: 'object', required: ['id', 'title', 'completed', 'created_at'], properties: { id: { type: 'integer' }, title: { type: 'string' }, description: { type: ['string', 'null'] }, completed: { type: 'boolean' }, created_at: { type: 'string', format: 'date-time' } } }
-            }
-          }
-        } : null
-        const spec = openApi ? JSON.stringify(openApi, null, 2) : `openapi: 3.1.0\ninfo:\n  title: ${title}\n  version: 1.0.0\n  description: ${description}\nservers:\n  - url: http://localhost:${app.port}\npaths:\n  /:\n    get:\n      summary: Service root\n      responses:\n        '200':\n          description: Service is responding\n`
-        await out.write(path.join(appDir, 'openapi.yaml'), spec + '\n', 'utf8')
-        filesCreated++
-      }
-
-      if (selectedToolIds.includes('playwright')) {
-        await out.ensureDir(path.join(appDir, 'tests/e2e'))
-        await out.write(path.join(appDir, 'playwright.config.ts'), `import { defineConfig } from '@playwright/test'\n\nexport default defineConfig({\n  testDir: './tests/e2e',\n  use: { baseURL: process.env.BASE_URL || 'http://127.0.0.1:${app.port}' },\n  reporter: 'list'\n})\n`, 'utf8')
-        await out.write(path.join(appDir, 'tests/e2e/home.spec.ts'), `import { test, expect } from '@playwright/test'\n\ntest('service responds', async ({ page }) => {\n  await page.goto('/')\n  await expect(page.locator('body')).toBeVisible()\n})\n`, 'utf8')
-        filesCreated += 2
-      }
-
-      if (selectedToolIds.includes('newman')) {
-        await out.ensureDir(path.join(appDir, 'tests'))
-        await out.write(path.join(appDir, 'tests/api.collection.json'), JSON.stringify({
-          info: { name: `${app.folderName} API checks`, schema: 'https://schema.getpostman.com/json/collection/v2.1.0/collection.json' },
-          item: [{ name: 'Root responds', request: { method: 'GET', url: `http://127.0.0.1:${app.port}/` }, event: [{ listen: 'test', script: { type: 'text/javascript', exec: ["pm.test('responds successfully', function () { pm.expect(pm.response.code).to.be.below(500) })"] } }] }]
-        }, null, 2) + '\n', 'utf8')
-        filesCreated++
-      }
-
-      if (selectedToolIds.includes('bruno')) {
-        await out.ensureDir(path.join(appDir, 'tests/bruno'))
-        await out.write(path.join(appDir, 'tests/bruno/health.bru'), `meta {\n  name: Health check\n  type: http\n  seq: 1\n}\n\nget {\n  url: http://127.0.0.1:${app.port}/health\n}\n\nassert {\n  res.status: < 500\n}\n`, 'utf8')
-        filesCreated++
-      }
-
-      if (selectedToolIds.includes('storybook')) {
-        await out.ensureDir(path.join(appDir, '.storybook'))
-        await out.write(path.join(appDir, '.storybook/main.ts'), `import type { StorybookConfig } from '@storybook/react-vite'\n\nconst config: StorybookConfig = {\n  stories: ['../src/**/*.mdx', '../src/**/*.stories.@(js|jsx|mjs|ts|tsx)'],\n  framework: { name: '@storybook/react-vite', options: {} }\n}\n\nexport default config\n`, 'utf8')
-        await out.write(path.join(appDir, '.storybook/preview.ts'), `import type { Preview } from '@storybook/react-vite'\n\nconst preview: Preview = { parameters: { controls: { matchers: { color: /(background|color)$/i, date: /Date$/ } } } }\nexport default preview\n`, 'utf8')
-        await out.ensureDir(path.join(appDir, 'src/stories'))
-        await out.write(path.join(appDir, 'src/stories/Button.stories.tsx'), `import type { Meta, StoryObj } from '@storybook/react'\n\nconst meta: Meta = { title: 'Getting Started/Button', tags: ['autodocs'] }\nexport default meta\ntype Story = StoryObj\n\nexport const Example: Story = {\n  render: () => <button type="button">A component story</button>\n}\n`, 'utf8')
-        filesCreated += 3
-      }
-
-      const customTools = app.customTestingTools || []
-      if (selectedTools.length || customTools.length) {
-        const setupNotes = [
-          ...selectedTools.map(tool => `- **${tool.name}** (${tool.category}): ${tool.description}${tool.installPackages?.length ? ` Packages: \`${tool.installPackages.join('`, `')}\`.` : ''}${tool.id === 'openapi-client' ? ' Edit the copied api-contract.yaml when the API changes, then run `npm run api:generate`; npm also regenerates client types before dev and build.' : tool.scriptCommand ? ` Run with \`${tool.scriptCommand}\`.` : ''}`),
-          ...customTools.map(tool => `- **${tool.name}**${tool.packageName ? ` (${tool.packageName})` : ''}: configure this tool's install and run command for your stack.`)
-        ]
-        await out.ensureDir(path.join(appDir, 'tests'))
-        await out.write(path.join(appDir, 'tests/TOOLING.md'), `# Testing tools for ${app.folderName}\n\n${setupNotes.join('\n')}\n`, 'utf8')
-        filesCreated++
-      }
-    }
-
-    for (const consumer of settings.apps.filter(app => (app.testingTools || []).includes('openapi-client'))) {
-      const source = (consumer.connections || []).map(connection => ({ connection, app: appById.get(connection.targetAppId) }))
-        .find(item => item.app && ['http', 'https'].includes(item.connection.protocol) && (item.app.testingTools || []).includes('swagger-openapi'))?.app
-      if (!source) continue
-      const sourcePath = path.join(targetDir, paths.getAppRelativePath(source.folderName, source.id, source.role), 'openapi.yaml')
-      const consumerPath = path.join(targetDir, paths.getAppRelativePath(consumer.folderName, consumer.id, consumer.role), 'api-contract.yaml')
-      await out.copyFile(sourcePath, consumerPath)
-      filesCreated++
-    }
-
-    // 8. Documentation files
-    const diagramId = (prefix: string, index: number) => `${prefix}_${index + 1}`
-    const mermaidLabel = (label: string) => JSON.stringify(label.replace(/[\r\n"]+/g, ' '))
-    const appNodeIds = new Map(settings.apps.map((app, index) => [app.id, diagramId('app', index)]))
-    const enabledDbs = settings.databases.filter(db => db.enabled)
-    const dbNodeIds = new Map(enabledDbs.map((db, index) => [db, diagramId('db', index)]))
-    const isCloudDb = (db: typeof enabledDbs[number]) => Boolean(DATABASE_CATALOG.find(item => item.id === db.type)?.isCloud && db.type !== 'pocketbase')
-    const serviceDiagram = [
-      'flowchart LR',
-      ...settings.apps.map((app, index) => `  ${diagramId('app', index)}[${mermaidLabel(`${app.folderName} · ${app.techId} · :${app.port}`)}]`),
-      ...enabledDbs.map((db, index) => `  ${diagramId('db', index)}[${mermaidLabel(`${db.customName || db.type} · ${db.type} · ${db.port ? `:${db.port}` : 'managed/file'}`)}]`),
-      ...settings.apps.flatMap(app => [
-        ...(app.connections || []).flatMap(connection => {
-          const target = appNodeIds.get(connection.targetAppId)
-          const source = appNodeIds.get(app.id)
-          return source && target ? [`  ${source} -->|${connection.protocol} ${connection.envVar}| ${target}`] : []
-        }),
-        ...enabledDbs.flatMap(db => {
-          const source = appNodeIds.get(app.id)
-          const target = dbNodeIds.get(db)
-          if (!source || !target) return []
-          const relevant = paths.databaseIsolation !== 'service-isolated' || db.assignedAppId === app.id || db.assignedAppId === 'global' || !db.assignedAppId
-          return relevant ? [`  ${source} -->|database| ${target}`] : []
-        })
-      ]),
-      ...(settings.apps.length + enabledDbs.length === 0 ? ['  empty[No services selected]'] : [])
-    ].join('\n')
-    const topologyLines = [
-      'flowchart LR',
-      '  subgraph host["Host machine"]',
-      '    client["Browser / external client"]',
-      ...settings.apps.filter(app => app.runMode === 'host').map(app => `    ${appNodeIds.get(app.id)}[${mermaidLabel(`${app.folderName} · host :${app.port}`)}]`),
-      ...enabledDbs.filter(db => db.type === 'sqlite').map(db => `    ${dbNodeIds.get(db)}[${mermaidLabel(`${db.customName || db.type} · local file`)}]`),
-      '  end',
-      '  subgraph docker["Docker bridge · lazystack_net"]',
-      ...(settings.proxy.type !== 'none' ? [`    gateway[${mermaidLabel(`${settings.proxy.type} gateway · host :${settings.proxy.httpPort}`)}]`] : []),
-      ...settings.apps.filter(app => app.runMode === 'docker').map(app => `    ${appNodeIds.get(app.id)}[${mermaidLabel(`${app.folderName} · container :${app.port} · published`)}]`),
-      ...enabledDbs.filter(db => !isCloudDb(db) && db.type !== 'sqlite').map(db => `    ${dbNodeIds.get(db)}[${mermaidLabel(`${db.customName || db.type} · container${db.port ? ` · host :${db.port}` : ''}`)}]`),
-      '  end',
-      ...enabledDbs.filter(isCloudDb).map(db => `  ${dbNodeIds.get(db)}[${mermaidLabel(`${db.customName || db.type} · managed external`)}]`),
-      ...(settings.proxy.type !== 'none' ? ['  client --> gateway'] : settings.apps.filter(app => app.runMode === 'docker').map(app => `  client --> ${appNodeIds.get(app.id)}`)),
-      ...(settings.proxy.type !== 'none' ? settings.apps.filter(app => app.runMode === 'docker').map(app => `  gateway -->|${app.routePrefix || '/'}| ${appNodeIds.get(app.id)}`) : []),
-      ...settings.apps.flatMap(app => (app.connections || []).flatMap(connection => {
-        const target = appNodeIds.get(connection.targetAppId)
-        const source = appNodeIds.get(app.id)
-        return source && target ? [`  ${source} -. ${connection.protocol} .-> ${target}`] : []
-      })),
-      ...settings.apps.flatMap(app => enabledDbs.flatMap(db => {
-        const source = appNodeIds.get(app.id)
-        const target = dbNodeIds.get(db)
-        const relevant = paths.databaseIsolation !== 'service-isolated' || db.assignedAppId === app.id || db.assignedAppId === 'global' || !db.assignedAppId
-        return source && target && relevant && (isCloudDb(db) || db.type === 'sqlite') ? [`  ${source} -. data connection .-> ${target}`] : []
-      })),
-      ...(settings.apps.length + enabledDbs.length === 0 ? ['  empty[No services selected]'] : [])
-    ].join('\n')
-    const archDoc = `# System Architecture: ${settings.projectName}\n\n- **Architecture style:** ${settings.structureConfig?.preset || 'monorepo'}\n- **Database pattern:** ${paths.databaseIsolation}\n- **Services:** ${settings.apps.length}\n- **Databases:** ${enabledDbs.length}\n- **Unified workspace:** ${settings.useUnifiedWorkspace === false ? 'off' : 'on'}\n\n## Service diagram\n\nShows service-to-service protocols and database dependencies.\n\n\`\`\`mermaid\n${serviceDiagram}\n\`\`\`\n\n## Network topology\n\nShows host-published endpoints, Docker bridge membership, host-run apps, and managed external services.\n\n\`\`\`mermaid\n${topologyLines}\n\`\`\`\n`
-    await out.write(path.join(targetDir, paths.docsDir, 'architecture.md'), archDoc, 'utf8')
-    filesCreated++
-
-    // 9. Embedded blueprint: lets LazyStack reopen, visualize and extend this project later.
-    //    Machine-specific locations are omitted; secrets live only in .env.
-    const { parentDir: _parentDir, targetDir: _targetDir, ...portableSettings } = settings
-    await out.write(path.join(targetDir, 'lazystack.json'), JSON.stringify({ $lazystack: BLUEPRINT_VERSION, ...portableSettings }, null, 2) + '\n')
-    filesCreated++
 
     // 10. Initialize Git repository for brand-new projects
     if (mode === 'create' && !options.dryRun && !(await fs.pathExists(path.join(targetDir, '.git')))) {

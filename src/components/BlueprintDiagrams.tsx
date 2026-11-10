@@ -1,7 +1,7 @@
 import React, { useRef } from 'react'
 import { CartApp, ProjectSettings, SelectedDatabase } from '../types'
 import { DATABASE_CATALOG } from '../data/databases'
-import { resolveStructurePaths } from '../data/structurePresets'
+import { isDatabaseVisibleToApp } from '../utils/databaseScope'
 
 const serviceLabel = (app: CartApp) => `${app.folderName} · ${app.techId}`
 const databaseLabel = (db: SelectedDatabase) => db.customName || DATABASE_CATALOG.find(item => item.id === db.type)?.name || db.type
@@ -35,14 +35,11 @@ export const ServiceDiagram: React.FC<{ settings: ProjectSettings }> = ({ settin
   const svgRef = useRef<SVGSVGElement>(null)
   const apps = settings.apps
   const databases = settings.databases.filter(db => db.enabled)
-  const paths = resolveStructurePaths(settings)
   const count = Math.max(apps.length, databases.length, 1)
   const height = Math.max(300, 100 + count * 112)
   const appY = (index: number) => 70 + index * 112
   const dbY = (index: number) => 70 + index * 112
-  const relevant = (app: CartApp, db: SelectedDatabase) => {
-    return paths.databaseIsolation !== 'service-isolated' || db.assignedAppId === app.id || db.assignedAppId === 'global' || !db.assignedAppId
-  }
+  const relevant = (app: CartApp, db: SelectedDatabase) => isDatabaseVisibleToApp(settings, app, db)
 
   return (
     <section className="space-y-4">

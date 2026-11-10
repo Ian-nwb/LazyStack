@@ -5,6 +5,7 @@ import { getDatabaseAdminUiOption } from '../../../src/data/databaseAdminUis'
 import { getNativeEnvironmentDefaults } from '../../../src/utils/nativeEnvironment'
 import { isHostOnlyTech } from '../../../src/data/frameworks'
 import { createContext } from './native/context'
+import { isDatabaseVisibleToApp } from '../../../src/utils/databaseScope'
 
 export function getDbServiceName(db: SelectedDatabase, idx: number, apps?: CartApp[]): string {
   if (db.customName) {
@@ -252,13 +253,7 @@ export function generateDockerCompose(settings: ProjectSettings): string {
       yaml += `    extra_hosts:\n      - "host.docker.internal:host-gateway"\n`
     }
 
-    const relevantDbs = activeDbs.filter(d => {
-      if (d.type === 'sqlite') return false
-      if (paths.databaseIsolation === 'service-isolated') {
-        return d.assignedAppId === app.id || d.assignedAppId === 'global' || !d.assignedAppId
-      }
-      return true
-    })
+    const relevantDbs = activeDbs.filter(d => d.type !== 'sqlite' && isDatabaseVisibleToApp(settings, app, d))
 
     const dependencies = new Map<string, 'service_healthy' | 'service_started'>()
     relevantDbs.forEach(db => {
