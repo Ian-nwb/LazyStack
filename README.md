@@ -1,6 +1,6 @@
 # LazyStack
 
-Current version: **1.1.1**. v1.1.1 adds Dioxus, Slint, Bevy, JavaFX and Java Swing starters, framework-native project folders for every framework, and **Open Existing Project** for viewing and extending projects you already have. See [the v1.1.1 plan](ROADMAP-1.1.1.md) and the [changelog](CHANGELOG.md).
+Current version: **1.1.1**. The v1.1.1 adds Dioxus, Slint, Bevy, JavaFX and Java Swing starters, framework-native project folders for every framework, and **Open Existing Project** for viewing and extending projects you already have. See [the v1.1.1 plan](ROADMAP-1.1.1.md) and the [changelog](CHANGELOG.md).
 
 LazyStack is a desktop stack builder and command-line scaffolder for composing application stacks. Choose languages, frameworks, databases, service connections, testing tools, and an architecture layout; LazyStack generates a project structure and supporting configuration.
 
