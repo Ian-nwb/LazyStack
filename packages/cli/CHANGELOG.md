@@ -1,5 +1,10 @@
 # LazyStack CLI changelog
 
+## 1.2.1
+
+- `lazystack presets` lists five stack presets: `t3-stack`, `fastapi-react`, `modern-mern`, `go-vue` and `rust-axum`. The other seven were removed.
+- 15 architecture layouts are offered again (1.2.0 offered 7). Only CLI and Tooling Monorepo is removed; blueprints that name it scaffold unchanged and are treated as custom.
+
 ## 1.2.0
 
 - `lazystack plan` prints the real project tree, computed from the files `scaffold` would write.

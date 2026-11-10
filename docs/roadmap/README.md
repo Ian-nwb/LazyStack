@@ -4,6 +4,7 @@ Planning notes written before each release. They record what was planned and, wh
 
 | Version | Plan |
 | --- | --- |
+| 1.2.1 | Stack presets reduced to five; 15 layouts offered |
 | 1.2.0 | [Architecture layout and diagram rework](architecture-layout-rework.md) |
 | 1.1.2 | [Expo SDK 58, Capacitor and .NET MAUI](v1.1.2.md) |
 | 1.1.1 | [New Rust/Java frameworks, native starters, Open Existing Project](v1.1.1.md) |

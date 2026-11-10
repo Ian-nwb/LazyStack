@@ -5,6 +5,12 @@ All notable changes to LazyStack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2026-11-10
+
+### Changed
+- **Stack presets reduced to the five most common**: T3 Next.js, FastAPI + React, Modern MERN, Go Echo + Vue 3 and Rust Axum. Supabase + Next.js, Firebase + React, Turso + SvelteKit, .NET Core Enterprise, AI Agent & LLM, Clean Architecture Go and Event-Driven Kafka were removed from the preset row and from `lazystack presets`. The same stacks can still be built by hand.
+- **Architecture layouts: 15 are offered.** 1.2.0 cut the layouts from 16 to 7 by mistake; Domain-Driven, Hexagonal, Clean Architecture, CQRS, Data Platform, AI/ML Platform, JAMstack and Edge, and Mobile and Cross-Platform are back. Only **CLI and Tooling Monorepo** stays removed. A blueprint that names a removed layout still scaffolds with its folders unchanged and opens as Custom.
+
 ## [1.2.0] - 2026-11-10
 
 ### Added
