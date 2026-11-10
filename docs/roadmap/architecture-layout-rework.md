@@ -1,6 +1,8 @@
 # Architecture layout and diagram rework
 
-Status: complete (phases 1–6) · Target: next minor release
+Status: shipped in 1.2.0
+
+After phase 6 the layouts were reduced from 16 to the 7 most used (monorepo, microservices, modular monolith, Polyglot, event-driven, serverless, custom). Sections below that mention Hexagonal, Clean Architecture, CQRS, DDD, Data Platform, AI/ML, JAMstack, Mobile and CLI tooling describe work that was done and later removed with those layouts. Blueprints that name a removed layout are normalized to Custom (`normalizeStructureConfig`).
 
 ## Progress
 

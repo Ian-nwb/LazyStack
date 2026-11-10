@@ -5,17 +5,18 @@ All notable changes to LazyStack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.2.0] - 2026-11-10
 
 ### Added
 - **Architecture layouts and diagrams are computed from the generator.** The Blueprint tree, the README's directory tree and `lazystack plan` list exactly the files LazyStack will write. The architecture picker shows where each app role is placed and a live "Resulting layout" for your cart; Custom mode can edit the folder for each role.
 - **Service diagram and Network topology were redrawn.** The service diagram shows gateway routes, call depth, connection variables and per-service data scope. The network topology separates the host machine, the named Docker network (`<project>_lazystack_net`) and managed external services, and shows each container as `service:port` with the port it is published on, including traffic through `host.docker.internal`.
 - Generated `docs/architecture.md` now contains the same two diagrams (Mermaid) plus published ports, services and databases, and the Blueprint "Export Markdown" button produces the same document.
-- Presets with extra root folders (for example Hexagonal `core/` and `adapters/`) create each folder with a short `README.md`, so git keeps them.
+- Presets with extra root folders (for example Microservices `shared/contracts/`) create each folder with a short `README.md`, so git keeps them.
 - `npm run verify:layout` (run in CI) checks that preset descriptions only name folders the generator creates, that the planned files equal the dry-run changes, and that the topology matches the generated Compose file.
 
 ### Changed
-- Preset descriptions only promise root-level folders; the layout inside each app is always the framework's own. Microservices, Hexagonal and Clean Architecture now differ in their root folders (`shared/contracts/`, `core/` plus `adapters/`, `domain/` plus `usecases/`).
+- **The architecture picker offers 7 layouts instead of 16**: Standard Monorepo, Microservices, Modular Monolith, Polyglot, Event-Driven, Serverless and Custom. Domain-Driven, Hexagonal, Clean Architecture, CQRS, Data Platform, AI/ML Platform, JAMstack and Edge, Mobile and Cross-Platform, and CLI and Tooling were removed. Existing blueprints and `lazystack.json` files that name a removed layout still scaffold with their folders unchanged and open as Custom; only the extra README-marked folders of that layout are no longer created.
+- Preset descriptions only promise root-level folders; the layout inside each app is always the framework's own. Microservices creates `shared/contracts/`.
 - **Serverless & Cloud-Native** places frontend and full-stack apps in `web/` (they previously went into `functions/`).
 - The **Hybrid** database isolation mode now does what it says: data stores are scoped per service, while caches and message brokers (Redis, Valkey, RabbitMQ, Kafka) stay shared. It is used by Modular Monolith.
 

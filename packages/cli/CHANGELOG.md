@@ -1,5 +1,15 @@
 # LazyStack CLI changelog
 
+## 1.2.0
+
+- `lazystack plan` prints the real project tree, computed from the files `scaffold` would write.
+- Generated `docs/architecture.md` has redrawn service and network diagrams (Mermaid) plus published ports, services and databases.
+- Architecture layouts reduced to 7 (monorepo, microservices, modular monolith, Polyglot, event-driven, serverless, custom). Blueprints naming a removed layout still work and are treated as custom.
+- `hybrid` database isolation scopes data stores per service and shares caches and brokers.
+- Fix: Swagger UI and a database admin UI could be published on the same host port.
+- Fix: Compose and app `.env` files could disagree on a database service name when a disabled or cloud database came first.
+- Fix: `add --dry-run` no longer modifies `.env` and lists the change.
+
 ## 1.1.3
 
 - Generated reverse proxy gateways work: Nginx no longer exits on start, Apache loads `mod_unixd`, Traefik's routes file is valid YAML, and Nginx, Caddy and Traefik strip the route prefix so `/api/health` reaches the API as `/health`.

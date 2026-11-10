@@ -28,14 +28,14 @@
 
 LazyStack is a desktop app and a command-line tool for starting polyglot projects. Combine a React client, a FastAPI service, a Go worker and an Expo app with PostgreSQL and Redis, choose an architecture layout, and get a project where every app follows its framework's own conventions and the whole stack starts with `npm run dev`.
 
-**Current version: 1.1.3.** It fixes the reverse proxy gateways in generated projects (Nginx, Apache, Caddy and Traefik now start and route `/api/...` correctly) and stops projects from replacing each other's Docker containers. 1.1.2 made Install Packages and Start/Stop Stack work, added manual setup guidance, and added Capacitor, .NET MAUI and Expo SDK 58 starters. See the [changelog](CHANGELOG.md).
+**Current version: 1.2.0.** The architecture layout, Blueprint tree, service diagram and network topology are now computed from what the generator writes, so they match the generated project. The architecture picker is trimmed to the seven most-used layouts, and two Docker Compose bugs are fixed (a Swagger UI and database admin UI port clash, and a mismatched database hostname). See the [changelog](CHANGELOG.md).
 
 ## Download
 
 | Platform | Package |
 | --- | --- |
-| Linux x64 | [`LazyStack-1.1.3.AppImage`](https://github.com/Ian-nwb/LazyStack/releases/download/v1.1.3/LazyStack-1.1.3.AppImage) |
-| Windows x64 | [`LazyStack.1.1.3.exe`](https://github.com/Ian-nwb/LazyStack/releases/download/v1.1.3/LazyStack.1.1.3.exe) (portable) |
+| Linux x64 | [`LazyStack-1.2.0.AppImage`](https://github.com/Ian-nwb/LazyStack/releases/download/v1.2.0/LazyStack-1.2.0.AppImage) |
+| Windows x64 | [`LazyStack.1.2.0.exe`](https://github.com/Ian-nwb/LazyStack/releases/download/v1.2.0/LazyStack.1.2.0.exe) (portable) |
 | macOS |package not yet available (sponsor me a Macbook for app signature) |
 
 The CLI is on npm: `npx lazystack --help`.
@@ -47,7 +47,7 @@ To run the projects LazyStack generates you need Docker with Compose, plus the t
 - **87 frameworks across every role.** Frontends, backend services, full-stack apps, workers, desktop and mobile clients, and scripts, in JavaScript/TypeScript, Python, Go, Rust, Java, Kotlin, C#, PHP, Ruby, Elixir, Swift, Dart and a long tail of others.
 - **Framework-native starters.** Each app gets what its own initializer would create (`create-expo-app`, `nest new`, `django-admin startproject`, `mix phx.new`, `dx new`, `dotnet new maui`, start.spring.io, and so on), with a passing test, a `.gitignore` and a README.
 - **25 databases and services.** PostgreSQL, MySQL, MongoDB, Redis, Kafka, ClickHouse, Qdrant and more run in Compose with generated credentials; Supabase, Firebase, Neon, Turso and other cloud providers get SDK clients and environment variables. Optional admin UIs: Adminer, pgAdmin, Prisma Studio, phpMyAdmin, Mongo Express, Redis Commander.
-- **16 architecture layouts.** Standard monorepo, microservices, DDD, Polyglot, hexagonal, CQRS, and others, or your own folder structure.
+- **7 architecture layouts.** Standard monorepo, microservices, modular monolith, Polyglot, event-driven and serverless, or your own folder structure. The Blueprint shows the exact resulting tree.
 - **Service connections.** Wire apps together with URLs, environment variable names, health checks and startup order.
 - **One command to run everything.** The generated dev orchestrator starts databases in Docker and every app on the host with hot reload and colour-coded output.
 - **Deployment files.** Docker Compose, Nginx/Apache/Caddy/Traefik config, Kubernetes manifests, a Helm chart, Terraform for AWS/GCP/DigitalOcean and GitHub Actions workflows.
@@ -123,19 +123,10 @@ When the stack includes RabbitMQ, Kafka (KRaft), Redis or Valkey, LazyStack adds
 | --- | --- |
 | Standard Monorepo | `apps/`, `packages/`, `infra/` |
 | Microservices Decoupled | `services/`, `shared/contracts/`, isolated service data |
-| Domain-Driven Design | `domains/`, `core/`, bounded contexts |
 | Polyglot | `frontend/clients/`, `backend/services/`, `backend/workers/`, `deploy/` |
-| Modular Monolith | `modules/`, `libs/`, shared deployment |
-| Hexagonal / Ports & Adapters | `services/`, shared `core/` and `adapters/` |
+| Modular Monolith | `modules/`, `libs/`, per-module data, shared caches and brokers |
 | Serverless & Cloud-Native | `functions/`, `web/`, `shared/`, cloud infrastructure |
-| Event-Driven Services | APIs, consumers, event schemas and broker infrastructure |
-| Data Platform | Pipelines, ingestion services, dashboards and schemas |
-| AI / ML & LLM Platform | `models/`, `agents/`, `services/inference/`, `prompts/` |
-| Clean Architecture / Onion | `domain/`, `usecases/`, `adapters/`, `services/` |
-| CQRS & Event Sourcing | `services/commands/`, `services/projections/`, `events/` |
-| JAMstack & Edge Platform | `sites/`, `edge/workers/`, `edge/schedulers/`, `deploy/` |
-| Mobile & Cross-Platform | `apps/mobile/`, `apps/web/`, `apps/desktop/`, `packages/ui/` |
-| CLI & Tooling Monorepo | `packages/cli/`, `packages/core/`, `plugins/`, `build-infra/` |
+| Event-Driven Services | `services/`, `consumers/`, `events/`, broker infrastructure |
 | Custom Structure | Your own roots, folders and per-app paths |
 
 Apps are placed inside the layout's root and then follow their framework's layout; see [framework layouts](docs/framework-layouts.md).
