@@ -4,6 +4,7 @@ import { generateNginxConfig, generateApacheConfig, generateCaddyConfig, generat
 import { getStarterFilesForTech } from './templates/appTemplates'
 import { generateMetaFiles, GeneratedDatabaseCredential, README_TREE_PLACEHOLDER } from './templates/meta'
 import { buildPlanTree, renderPlanTreeText } from '../../src/utils/planTree'
+import { renderArchitectureMarkdown } from '../../src/utils/architectureDoc'
 import { DATABASE_CATALOG } from '../../src/data/databases'
 import { generateCloudServiceFiles, generateCloudEnvVars } from './templates/cloudServices'
 import { resolveStructurePaths, resolvePresetScaffoldDirs } from '../../src/data/structurePresets'
@@ -404,63 +405,8 @@ export function planScaffold(settings: ProjectSettings, databaseCredentials: Rec
     out.copyFile(sourcePath, consumerPath)
   }
 
-  // 8. Documentation files
-  const diagramId = (prefix: string, index: number) => `${prefix}_${index + 1}`
-  const mermaidLabel = (label: string) => JSON.stringify(label.replace(/[\r\n"]+/g, ' '))
-  const appNodeIds = new Map(settings.apps.map((app, index) => [app.id, diagramId('app', index)]))
-  const enabledDbs = settings.databases.filter(db => db.enabled)
-  const dbNodeIds = new Map(enabledDbs.map((db, index) => [db, diagramId('db', index)]))
-  const isCloudDb = (db: typeof enabledDbs[number]) => Boolean(DATABASE_CATALOG.find(item => item.id === db.type)?.isCloud && db.type !== 'pocketbase')
-  const serviceDiagram = [
-    'flowchart LR',
-    ...settings.apps.map((app, index) => `  ${diagramId('app', index)}[${mermaidLabel(`${app.folderName} · ${app.techId} · :${app.port}`)}]`),
-    ...enabledDbs.map((db, index) => `  ${diagramId('db', index)}[${mermaidLabel(`${db.customName || db.type} · ${db.type} · ${db.port ? `:${db.port}` : 'managed/file'}`)}]`),
-    ...settings.apps.flatMap(app => [
-      ...(app.connections || []).flatMap(connection => {
-        const target = appNodeIds.get(connection.targetAppId)
-        const source = appNodeIds.get(app.id)
-        return source && target ? [`  ${source} -->|${connection.protocol} ${connection.envVar}| ${target}`] : []
-      }),
-      ...enabledDbs.flatMap(db => {
-        const source = appNodeIds.get(app.id)
-        const target = dbNodeIds.get(db)
-        if (!source || !target) return []
-        const relevant = isDatabaseVisibleToApp(settings, app, db)
-        return relevant ? [`  ${source} -->|database| ${target}`] : []
-      })
-    ]),
-    ...(settings.apps.length + enabledDbs.length === 0 ? ['  empty[No services selected]'] : [])
-  ].join('\n')
-  const topologyLines = [
-    'flowchart LR',
-    '  subgraph host["Host machine"]',
-    '    client["Browser / external client"]',
-    ...settings.apps.filter(app => app.runMode === 'host').map(app => `    ${appNodeIds.get(app.id)}[${mermaidLabel(`${app.folderName} · host :${app.port}`)}]`),
-    ...enabledDbs.filter(db => db.type === 'sqlite').map(db => `    ${dbNodeIds.get(db)}[${mermaidLabel(`${db.customName || db.type} · local file`)}]`),
-    '  end',
-    '  subgraph docker["Docker bridge · lazystack_net"]',
-    ...(settings.proxy.type !== 'none' ? [`    gateway[${mermaidLabel(`${settings.proxy.type} gateway · host :${settings.proxy.httpPort}`)}]`] : []),
-    ...settings.apps.filter(app => app.runMode === 'docker').map(app => `    ${appNodeIds.get(app.id)}[${mermaidLabel(`${app.folderName} · container :${app.port} · published`)}]`),
-    ...enabledDbs.filter(db => !isCloudDb(db) && db.type !== 'sqlite').map(db => `    ${dbNodeIds.get(db)}[${mermaidLabel(`${db.customName || db.type} · container${db.port ? ` · host :${db.port}` : ''}`)}]`),
-    '  end',
-    ...enabledDbs.filter(isCloudDb).map(db => `  ${dbNodeIds.get(db)}[${mermaidLabel(`${db.customName || db.type} · managed external`)}]`),
-    ...(settings.proxy.type !== 'none' ? ['  client --> gateway'] : settings.apps.filter(app => app.runMode === 'docker').map(app => `  client --> ${appNodeIds.get(app.id)}`)),
-    ...(settings.proxy.type !== 'none' ? settings.apps.filter(app => app.runMode === 'docker').map(app => `  gateway -->|${app.routePrefix || '/'}| ${appNodeIds.get(app.id)}`) : []),
-    ...settings.apps.flatMap(app => (app.connections || []).flatMap(connection => {
-      const target = appNodeIds.get(connection.targetAppId)
-      const source = appNodeIds.get(app.id)
-      return source && target ? [`  ${source} -. ${connection.protocol} .-> ${target}`] : []
-    })),
-    ...settings.apps.flatMap(app => enabledDbs.flatMap(db => {
-      const source = appNodeIds.get(app.id)
-      const target = dbNodeIds.get(db)
-      const relevant = isDatabaseVisibleToApp(settings, app, db)
-      return source && target && relevant && (isCloudDb(db) || db.type === 'sqlite') ? [`  ${source} -. data connection .-> ${target}`] : []
-    })),
-    ...(settings.apps.length + enabledDbs.length === 0 ? ['  empty[No services selected]'] : [])
-  ].join('\n')
-  const archDoc = `# System Architecture: ${settings.projectName}\n\n- **Architecture style:** ${settings.structureConfig?.preset || 'monorepo'}\n- **Database pattern:** ${paths.databaseIsolation}\n- **Services:** ${settings.apps.length}\n- **Databases:** ${enabledDbs.length}\n- **Unified workspace:** ${settings.useUnifiedWorkspace === false ? 'off' : 'on'}\n\n## Service diagram\n\nShows service-to-service protocols and database dependencies.\n\n\`\`\`mermaid\n${serviceDiagram}\n\`\`\`\n\n## Network topology\n\nShows host-published endpoints, Docker bridge membership, host-run apps, and managed external services.\n\n\`\`\`mermaid\n${topologyLines}\n\`\`\`\n`
-  out.write(path.join(targetDir, paths.docsDir, 'architecture.md'), archDoc, 'utf8')
+  // 8. Documentation: diagrams come from the same topology model as Compose and the Blueprint tabs.
+  out.write(path.join(targetDir, paths.docsDir, 'architecture.md'), renderArchitectureMarkdown(settings), 'utf8')
 
   // 9. Embedded blueprint: lets LazyStack reopen, visualize and extend this project later.
   //    Machine-specific locations are omitted; secrets live only in .env.

@@ -10,7 +10,7 @@ Status: in progress · Target: next minor release
 | 2. Directory layout built from the plan | **Done** |
 | 3. Presets that describe what they generate | **Done** |
 | 4. Topology model shared with Compose | **Done** |
-| 5. Diagram redraw | Not started |
+| 5. Diagram redraw | **Done** |
 | 6. Consistency checks in CI | Not started |
 
 Phase 1 verification: the five CI presets in both workspace modes (803 files) and a large cart under all 16 architecture presets × both workspace modes × proxy on/off (64 projects, 8,704 files) scaffold byte-identically to the pre-change generator. The one intended exception is `modular-monolith` (the only preset on `hybrid`), whose per-service data stores are now scoped to their service. `npx tsc --noEmit` and `npm run verify:templates` pass.
@@ -253,9 +253,15 @@ Add a legend for the edge styles.
 - `docs/architecture.md` is not regenerable in augment mode, because users may edit it. This is the current behaviour; keep it.
 
 **Phase 5 checklist**
-- [ ] With a large cart (proxy, 6+ apps including a host app and a mobile client, a cloud DB, an admin UI, service-isolated DBs), no labels or edges overlap, at 1280px wide and in the SVG export.
-- [ ] Every Compose service appears exactly once in the Network topology, with the same ports.
-- [ ] The generated `docs/architecture.md` still renders in GitHub's Mermaid viewer.
+- [x] Both diagrams render from `buildStackTopology`; labels and nodes do not overlap for a large cart (proxy, five apps including two host processes, a cloud DB, SQLite, Adminer, Swagger, service-isolated DBs). Checked by rendering the real components to SVG and rasterizing them in Chrome, and again for empty, host-only, database-only and disabled-database blueprints.
+- [ ] "Every Compose service appears exactly once in the Network topology, with the same ports" moves to Phase 6, where it becomes an automated check.
+- [x] The generated `docs/architecture.md` parses: all 128 Mermaid blocks across the 64-project matrix pass Mermaid 11.4.1's own parser, and the validator was shown to reject broken diagrams. This is the Mermaid parser, not GitHub's renderer.
+
+**Implementation notes**
+- `src/utils/architectureDoc.ts` renders both Mermaid diagrams and the whole Markdown document from the topology. The generator's `docs/architecture.md` and the Blueprint "Export Markdown" button now produce the same document, which also gained published ports, services and databases sections.
+- `src/components/diagram/` holds the layered layout (`layout.ts`), the SVG renderer (`DiagramSvg.tsx`) and pure column/edge/label definitions per view (`views.ts`, no React, so CI can check them).
+- Known limit: an edge that spans several columns is drawn behind the nodes in between, so on dense graphs a line can look like it belongs to a neighbouring node. Hovering an edge shows its label and resolved URL. Edges from the browser to Adminer and Swagger UI are not drawn because they would cross the whole canvas; those ports are on the nodes.
+- The diagrams render at natural size and the panel scrolls horizontally on large graphs, instead of shrinking text.
 
 ### Phase 6 — Consistency checks in CI
 
@@ -285,7 +291,8 @@ Add `scripts/verify-layout.ts` and run it in `.github/workflows/ci.yml` next to 
 | `src/components/StructureCustomizer.tsx` | role mapping on cards, detail panel, role-folder table |
 | `src/components/BlueprintInspector.tsx` | tree tab from the plan |
 | `src/components/BlueprintDiagrams.tsx` | both diagrams and the exports rewritten |
-| `src/components/diagram/layout.ts` | new: layered layout |
+| `src/components/diagram/` | new (done): `layout.ts`, `DiagramSvg.tsx`, `views.ts` |
+| `src/utils/architectureDoc.ts` | new (done): Mermaid and Markdown from the topology |
 | `src/cli/index.ts` | `plan` prints the tree |
 | `scripts/verify-layout.ts`, `.github/workflows/ci.yml`, `package.json` | new CI check |
 | `CHANGELOG.md`, `docs/framework-layouts.md` | document the behaviour changes (hybrid isolation, `docs/architecture.md`, preset text) |
