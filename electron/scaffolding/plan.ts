@@ -6,7 +6,7 @@ import { generateMetaFiles, GeneratedDatabaseCredential, README_TREE_PLACEHOLDER
 import { buildPlanTree, renderPlanTreeText } from '../../src/utils/planTree'
 import { DATABASE_CATALOG } from '../../src/data/databases'
 import { generateCloudServiceFiles, generateCloudEnvVars } from './templates/cloudServices'
-import { resolveStructurePaths } from '../../src/data/structurePresets'
+import { resolveStructurePaths, resolvePresetScaffoldDirs } from '../../src/data/structurePresets'
 import { TESTING_TOOLS } from '../../src/data/testingTools'
 import { resolveServiceConnectionUrl } from '../../src/utils/serviceConnections'
 import { getNativeEnvironmentDefaults } from '../../src/utils/nativeEnvironment'
@@ -76,19 +76,9 @@ export function planScaffold(settings: ProjectSettings, databaseCredentials: Rec
   }
 
   // 2. Scaffold configured directory contract
-  const presetExtraDirs: Record<string, string[]> = {
-    'ai-ml-platform': ['models', 'prompts', 'pipelines/eval', 'agents/workers'],
-    'clean-architecture': ['domain'],
-    'cqrs': ['events'],
-    'jamstack-edge': ['edge/workers', 'edge/schedulers'],
-    'mobile-crossplatform': ['packages/ui', 'packages/core'],
-    'cli-tooling': ['plugins', 'examples'],
-    'data-platform': ['schemas'],
-    'event-driven': ['events'],
-    'domain-driven': ['core']
-  }
-  const currentPreset = settings.structureConfig?.preset || 'monorepo'
-  const extraDirs = presetExtraDirs[currentPreset] || []
+  // Folders the selected architecture preset promises, each with a README so git keeps it.
+  const presetDirs = settings.structureConfig ? resolvePresetScaffoldDirs(settings.structureConfig) : []
+  const extraDirs = presetDirs.map(dir => dir.path)
 
   const directories = [
     '.github/workflows',
@@ -105,6 +95,11 @@ export function planScaffold(settings: ProjectSettings, databaseCredentials: Rec
 
   for (const dir of directories) {
     out.ensureDir(path.join(targetDir, dir))
+  }
+
+  for (const dir of presetDirs) {
+    const title = dir.path.split('/').pop() || dir.path
+    out.write(path.join(targetDir, dir.path, 'README.md'), `# ${title}\n\n${dir.purpose}\n`, 'utf8')
   }
 
   // 3. Write Root Meta files

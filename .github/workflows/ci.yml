@@ -32,6 +32,9 @@ jobs:
       - name: Verify framework templates against catalog and Dockerfiles
         run: npm run verify:templates
 
+      - name: Verify architecture presets against the scaffold plan
+        run: npm run verify:layout
+
   cli_package_smoke:
     name: npm CLI Package Smoke Check
     needs: build_and_typecheck

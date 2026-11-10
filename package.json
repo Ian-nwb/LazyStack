@@ -14,6 +14,7 @@
     "preview": "vite preview",
     "precli": "npm run build:cli",
     "cli": "node ./bin/lazystack.js",
+    "verify:layout": "esbuild scripts/verify-layout.ts --bundle --platform=node --format=esm --packages=external --outfile=dist-scripts/verify-layout.mjs --log-level=warning && node dist-scripts/verify-layout.mjs",
     "verify:templates": "esbuild scripts/verify-templates.ts --bundle --platform=node --format=esm --packages=external --outfile=dist-scripts/verify-templates.mjs --log-level=warning && node dist-scripts/verify-templates.mjs",
     "start": "electron .",
     "pack": "npm run build && electron-builder --dir",

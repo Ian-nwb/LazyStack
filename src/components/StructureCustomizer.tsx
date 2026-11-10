@@ -1,8 +1,22 @@
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { FolderTree, Sliders, Check, Sparkles, Database, Layers, Plus, X } from 'lucide-react'
-import { ArchitecturePreset, FolderStructureConfig, ProjectSettings } from '../types'
-import { ARCHITECTURE_PRESETS, getDefaultStructureConfig } from '../data/structurePresets'
-import { validateFolderName } from '../utils/pathValidation'
+import { AppRole, ArchitecturePreset, CartApp, FolderStructureConfig, ProjectSettings, SelectedDatabase } from '../types'
+import { ARCHITECTURE_PRESETS, getDefaultStructureConfig, getRoleFolders, resolveStructurePaths } from '../data/structurePresets'
+import { validateFolderName, validateRelativeProjectPath } from '../utils/pathValidation'
+import { PlanTree } from './PlanTree'
+
+const APP_ROLES: AppRole[] = ['frontend', 'backend', 'fullstack', 'worker', 'desktop-mobile', 'other']
+
+/** Stand-in apps so the layout preview is useful before anything is in the cart. */
+const SAMPLE_APPS: CartApp[] = [
+  { id: 'sample-web', folderName: 'web', role: 'frontend', techId: 'react-vite', port: 5173, runMode: 'docker', routePrefix: '/' },
+  { id: 'sample-api', folderName: 'api', role: 'backend', techId: 'ts-express', port: 3001, runMode: 'docker', routePrefix: '/api' },
+  { id: 'sample-jobs', folderName: 'jobs', role: 'worker', techId: 'ts-express', port: 3002, runMode: 'docker', routePrefix: '/jobs' },
+  { id: 'sample-desktop', folderName: 'desktop', role: 'desktop-mobile', techId: 'tauri-app', port: 1420, runMode: 'host', routePrefix: '/desktop' }
+]
+const SAMPLE_DATABASES: SelectedDatabase[] = [
+  { id: 'sample-pg', type: 'postgres', enabled: true, port: 5432, assignedAppId: 'sample-api' }
+]
 
 interface StructureCustomizerProps {
   settings: ProjectSettings
@@ -78,6 +92,24 @@ export const StructureCustomizer: React.FC<StructureCustomizerProps> = ({ settin
     })
   }
 
+  const previewSettings = useMemo<ProjectSettings>(() => {
+    const hasApps = settings.apps.length > 0
+    return {
+      ...settings,
+      projectName: settings.projectName || 'my-project',
+      structureConfig: currentConfig,
+      apps: hasApps ? settings.apps : SAMPLE_APPS,
+      databases: hasApps ? settings.databases : SAMPLE_DATABASES
+    }
+  }, [settings, currentConfig])
+
+  const handleRoleFolder = (role: AppRole, folder: string) => {
+    const next = { ...(currentConfig.appDirectories || {}) }
+    if (folder.trim()) next[role] = folder.trim()
+    else delete next[role]
+    onUpdateStructure({ ...currentConfig, appDirectories: next, isCustom: true })
+  }
+
   return (
     <div className="space-y-6">
       {/* Preset Cards Header */}
@@ -146,17 +178,38 @@ export const StructureCustomizer: React.FC<StructureCustomizerProps> = ({ settin
                 <p className="text-[11px] text-zinc-400 mb-2 leading-relaxed">
                   {preset.tagline}
                 </p>
+                {isSelected && <p className="text-[10px] text-zinc-500 mb-1 leading-relaxed">{preset.description}</p>}
               </div>
 
-              <div className="mt-2 pt-2 border-t border-surface-800 flex items-center justify-between text-[10px] font-mono text-zinc-500">
-                <span>{preset.config.appsDir}/</span>
-                <span className={`px-1.5 py-0.2 rounded border ${preset.badgeColor}`}>
-                  {preset.config.databaseIsolation}
-                </span>
+              <div className="mt-2 pt-2 border-t border-surface-800 space-y-1 text-[10px] font-mono text-zinc-500">
+                {getRoleFolders(preset.config).map(group => (
+                  <div key={group.folder} className="flex items-center justify-between gap-2">
+                    <span className="truncate">{group.roles.length === APP_ROLES.length ? 'all apps' : group.roles.join(', ')}</span>
+                    <span className="text-zinc-300 shrink-0">{group.folder}/</span>
+                  </div>
+                ))}
+                <div className="pt-1">
+                  <span className={`px-1.5 py-0.2 rounded border ${preset.badgeColor}`}>
+                    {preset.config.databaseIsolation}
+                  </span>
+                </div>
               </div>
             </div>
           )
         })}
+      </div>
+
+      {/* Layout preview, computed from the generator's own plan */}
+      <div>
+        <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-2">Resulting layout</h4>
+        <PlanTree
+          settings={previewSettings}
+          appDetail="none"
+          className="bg-surface-900 border border-surface-700 rounded-xl p-4 text-zinc-300 leading-relaxed text-xs"
+          caption={settings.apps.length === 0
+            ? 'Preview uses sample apps (frontend, backend, worker and desktop) because the cart is empty. It is computed from the files the generator will write.'
+            : 'Computed from the files the generator will write for your current apps.'}
+        />
       </div>
 
       {/* Customization Details Panel */}
@@ -292,6 +345,36 @@ export const StructureCustomizer: React.FC<StructureCustomizerProps> = ({ settin
             <p className="mt-1.5 text-[10px] text-zinc-500">Added folders are created at the project root.</p>
           </div>
 
+          {/* Role -> folder mapping */}
+          <div className="pt-3 border-t border-surface-800">
+            <label className="block text-[11px] font-semibold text-zinc-300 mb-2 flex items-center gap-1.5">
+              <Layers className="w-3.5 h-3.5 text-zinc-400" />
+              App Folder by Role
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {APP_ROLES.map(role => {
+                const value = currentConfig.appDirectories?.[role] || ''
+                const validation = value ? validateRelativeProjectPath(value) : { valid: true }
+                return (
+                  <div key={role}>
+                    <label className="block text-[11px] text-zinc-400 mb-1" htmlFor={`role-folder-${role}`}>{role}</label>
+                    <input
+                      id={`role-folder-${role}`}
+                      type="text"
+                      value={value}
+                      onChange={(e) => handleRoleFolder(role, e.target.value)}
+                      placeholder={currentConfig.appsDir}
+                      aria-invalid={!validation.valid}
+                      className="w-full bg-surface-950 border border-surface-700 focus:border-zinc-400 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono focus:outline-none"
+                    />
+                    {!validation.valid && <span className="text-[10px] text-red-400">{'error' in validation ? validation.error : 'Enter a valid relative path.'}</span>}
+                  </div>
+                )
+              })}
+            </div>
+            <p className="mt-1.5 text-[10px] text-zinc-500">Leave a role empty to place its apps in the Apps / Microservices Root.</p>
+          </div>
+
           {/* Per-Service Custom Path Overrides */}
           {settings.apps.length > 0 && (
             <div className="pt-3 border-t border-surface-800">
@@ -301,11 +384,8 @@ export const StructureCustomizer: React.FC<StructureCustomizerProps> = ({ settin
               </label>
               <div className="space-y-2">
                 {settings.apps.map(app => {
-                  const defaultPath = (currentConfig.customAppPaths?.[app.id] || (
-                    currentConfig.appDirectories?.[app.role]
-                      ? `${currentConfig.appDirectories[app.role]}/${app.folderName}`
-                      : `${currentConfig.appsDir}/${app.folderName}`
-                  ))
+                  const defaultPath = resolveStructurePaths({ ...settings, structureConfig: { ...currentConfig, customAppPaths: undefined } })
+                    .getAppRelativePath(app.folderName, app.id, app.role)
                   const currentPath = currentConfig.customAppPaths?.[app.id] || ''
 
                   return (

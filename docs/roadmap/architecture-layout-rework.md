@@ -8,7 +8,7 @@ Status: in progress · Target: next minor release
 | --- | --- |
 | 1. Shared database scope and pure planner | **Done** (verified, see below) |
 | 2. Directory layout built from the plan | **Done** |
-| 3. Presets that describe what they generate | Not started |
+| 3. Presets that describe what they generate | **Done** |
 | 4. Topology model shared with Compose | Not started |
 | 5. Diagram redraw | Not started |
 | 6. Consistency checks in CI | Not started |
@@ -165,9 +165,14 @@ export function buildPlanTree(plan: ScaffoldPlan, settings: ProjectSettings, opt
 **3.5 Isolation option text.** Change the `hybrid` option to "Hybrid (per-service data stores, shared caches and brokers)" to match task 1.1.
 
 **Phase 3 checklist**
-- [ ] No preset description names a folder the planner doesn't create. Verify with a script that scans the descriptions for path-like tokens and checks each one against the planned dirs.
-- [ ] Every `scaffoldDirs` folder exists after scaffolding and is tracked by git once committed.
-- [ ] A `lazystack.json` that uses a removed or aliased preset ID still scaffolds and imports.
+- [x] No preset description names a folder the planner doesn't create (`npm run verify:layout`, mutation-tested, runs in CI).
+- [x] Every `scaffoldDirs` folder exists after scaffolding and has a README.md so git tracks it.
+- [x] Aliases were not needed: decision 2 gave Microservices (`shared/contracts`), Hexagonal (`core/`, `adapters/`) and Clean Architecture (`domain/`, `usecases/`) their own root folders instead of merging them, so no preset ID was removed and `normalizeStructureConfig` was not added.
+
+**Implementation notes**
+- `previewTree` is gone; the preset cards show the folder for each role (`getRoleFolders`) and a "Resulting layout" panel renders the planner's tree for the current cart, or sample apps when the cart is empty.
+- Serverless now maps `frontend` and `fullstack` apps to `web/` so its description is true. This moves those apps; the other 15 presets keep their app folders. `monorepo`, `polyglot`, `modular-monolith` and `custom` generate byte-identical projects.
+- Custom mode has an "App Folder by Role" table (edits `appDirectories`), and per-service placeholders use `getAppRelativePath`.
 
 ### Phase 4 — Topology model shared with Compose
 

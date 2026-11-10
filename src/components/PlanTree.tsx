@@ -34,18 +34,18 @@ const Node: React.FC<{ node: PlanTreeNode; isLast: boolean }> = ({ node, isLast 
   </div>
 )
 
-export const PlanTree: React.FC<{ settings: ProjectSettings }> = ({ settings }) => {
-  const { tree, error } = usePlanTree(settings)
+export const PlanTree: React.FC<{ settings: ProjectSettings; appDetail?: 'none' | 'summary'; caption?: string; className?: string }> = ({ settings, appDetail = 'summary', caption, className }) => {
+  const { tree, error } = usePlanTree(settings, { appDetail })
   if (error || !tree) {
     return <div className="border border-surface-700 rounded-xl p-5 text-xs text-zinc-400">The directory tree is unavailable until the blueprint is valid: {error}</div>
   }
   return (
-    <div className="bg-surface-900 border border-surface-700 rounded-xl p-5 text-zinc-300 leading-relaxed max-w-3xl">
+    <div className={className || "bg-surface-900 border border-surface-700 rounded-xl p-5 text-zinc-300 leading-relaxed max-w-3xl"}>
       <div className="text-white font-bold mb-2">📁 {tree.name}/</div>
       <div className="pl-4 border-l border-surface-700 space-y-0.5">
         {tree.children.map((child, index) => <Node key={child.path} node={child} isLast={index === tree.children.length - 1} />)}
       </div>
-      <p className="mt-4 text-[11px] text-zinc-500 font-sans">This tree is computed from the files the generator will write. Folders deeper than two levels are collapsed.</p>
+      <p className="mt-4 text-[11px] text-zinc-500 font-sans">{caption || 'This tree is computed from the files the generator will write. Folders deeper than two levels are collapsed.'}</p>
     </div>
   )
 }

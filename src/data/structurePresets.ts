@@ -1,4 +1,4 @@
-import { ArchitecturePreset, FolderStructureConfig, ProjectSettings } from '../types'
+import { AppRole, ArchitecturePreset, FolderStructureConfig, ProjectSettings } from '../types'
 
 export interface ArchitecturePresetMeta {
   id: ArchitecturePreset
@@ -8,15 +8,25 @@ export interface ArchitecturePresetMeta {
   icon: string
   badgeColor: string
   config: FolderStructureConfig
-  previewTree: string
+  /** Extra root-level folders this layout creates, each with a README so git keeps it. */
+  scaffoldDirs: PresetScaffoldDir[]
+}
+
+export interface PresetScaffoldDir {
+  /** Folder relative to `base`; an empty path means the base folder itself. */
+  path: string
+  /** `packages` resolves under the configured shared-packages root, `root` under the project root. */
+  base: 'root' | 'packages'
+  /** Written to the folder's README.md. */
+  purpose: string
 }
 
 export const ARCHITECTURE_PRESETS: ArchitecturePresetMeta[] = [
   {
     id: 'monorepo',
     name: 'Standard Monorepo',
-    tagline: 'Standard Turborepo / Nx monorepo layout',
-    description: 'Centralized apps/ directory with shared packages/ and infra/ orchestration. Great for full-stack web apps and shared libraries.',
+    tagline: 'Apps in apps/, shared code in packages/',
+    description: 'Every app lives under apps/, shared code under packages/, and orchestration under infra/. A good default for full-stack web projects.',
     icon: '📦',
     badgeColor: 'border-blue-500/40 bg-blue-500/10 text-blue-300',
     config: {
@@ -29,23 +39,13 @@ export const ARCHITECTURE_PRESETS: ArchitecturePresetMeta[] = [
       scriptsDir: 'scripts',
       databaseIsolation: 'centralized'
     },
-    previewTree: `├── 📁 apps/
-│   ├── 📁 web-client/
-│   └── 📁 api-server/
-├── 📁 infra/
-│   ├── 📄 docker-compose.yml
-│   └── 📁 nginx/
-├── 📁 packages/
-│   ├── 📁 types/
-│   └── 📁 shared/
-├── 📁 docs/
-└── 📁 scripts/`
+    scaffoldDirs: []
   },
   {
     id: 'microservices',
     name: 'Microservices Decoupled',
-    tagline: 'Database-per-Service with independent domain isolation',
-    description: 'Each service has its own dedicated directory, local db/ migrations, and environment secrets. Ideal for scalable backend teams.',
+    tagline: 'One folder per service, per-service data stores',
+    description: 'Every service gets a folder under services/ and, when it has its own database, a db/ folder with schema and migrations. Contracts shared between services live in shared/contracts.',
     icon: '⚡',
     badgeColor: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300',
     config: {
@@ -58,28 +58,15 @@ export const ARCHITECTURE_PRESETS: ArchitecturePresetMeta[] = [
       scriptsDir: 'scripts',
       databaseIsolation: 'service-isolated'
     },
-    previewTree: `├── 📁 services/
-│   ├── 📁 auth-service/
-│   │   ├── 📁 src/
-│   │   ├── 📁 db/ (migrations & seed)
-│   │   └── 📄 .env (AUTH_DB_URL)
-│   └── 📁 order-service/
-│       ├── 📁 src/
-│       ├── 📁 db/ (migrations & seed)
-│       └── 📄 .env (ORDER_DB_URL)
-├── 📁 infra/
-│   ├── 📄 docker-compose.yml
-│   └── 📁 gateway/
-├── 📁 shared/
-│   ├── 📁 contracts/
-│   └── 📁 events/
-└── 📁 scripts/`
+    scaffoldDirs: [
+      { path: 'contracts', base: 'packages', purpose: 'API and message contracts shared by more than one service.' }
+    ]
   },
   {
     id: 'domain-driven',
     name: 'Domain-Driven Design (DDD)',
-    tagline: 'Bounded contexts with domain isolation and core kernels',
-    description: 'Organizes microservices around business domains (identity, billing, catalog) with shared core kernel definitions.',
+    tagline: 'Domains in domains/, shared kernel in core/',
+    description: 'Every app is a domain folder under domains/ with its own data stores. Code shared across domains (domain events, common types) lives in the core/ kernel.',
     icon: '🏛️',
     badgeColor: 'border-purple-500/40 bg-purple-500/10 text-purple-300',
     config: {
@@ -92,25 +79,15 @@ export const ARCHITECTURE_PRESETS: ArchitecturePresetMeta[] = [
       scriptsDir: 'scripts',
       databaseIsolation: 'service-isolated'
     },
-    previewTree: `├── 📁 domains/
-│   ├── 📁 identity/
-│   │   ├── 📁 api/
-│   │   └── 📁 db/
-│   └── 📁 billing/
-│       ├── 📁 api/
-│       └── 📁 db/
-├── 📁 core/
-│   ├── 📁 domain-events/
-│   └── 📁 types/
-├── 📁 infra/
-│   └── 📄 docker-compose.yml
-└── 📁 docs/`
+    scaffoldDirs: [
+      { path: '', base: 'packages', purpose: 'Shared kernel: domain events and common types used across domains.' }
+    ]
   },
   {
     id: 'polyglot',
     name: 'Polyglot',
-    tagline: 'Frontend / Backend Split across role-specific roots',
-    description: 'A polyglot-friendly layout: frontend clients go in frontend/clients, backend services in backend/services, with shared code and deployment configuration alongside them.',
+    tagline: 'Apps split by role into frontend/ and backend/',
+    description: 'Apps are placed by role: frontends in frontend/clients, backend services in backend/services, workers in backend/workers and desktop or mobile apps in clients/desktop. Deployment config lives in deploy/.',
     icon: '🌐',
     badgeColor: 'border-cyan-500/40 bg-cyan-500/10 text-cyan-300',
     config: {
@@ -131,24 +108,13 @@ export const ARCHITECTURE_PRESETS: ArchitecturePresetMeta[] = [
       scriptsDir: 'scripts',
       databaseIsolation: 'service-isolated'
     },
-    previewTree: `├── 📁 frontend/clients/
-│   └── 📁 web-dashboard/
-├── 📁 backend/services/
-│   ├── 📁 api-gateway/
-│   └── 📁 user-service/
-├── 📁 backend/workers/
-├── 📁 apps/fullstack/
-├── 📁 deploy/
-│   ├── 📄 docker-compose.yml
-│   └── 📁 k8s/
-├── 📁 shared/
-└── 📁 docs/`
+    scaffoldDirs: []
   },
   {
     id: 'modular-monolith',
     name: 'Modular Monolith',
-    tagline: 'Feature modules with high cohesion and shared libs',
-    description: 'Keeps all microservices as feature modules inside modules/ with unified deployment and clean boundaries.',
+    tagline: 'Feature modules in modules/, shared libs in libs/',
+    description: 'Every module is a folder under modules/ with shared libraries in libs/. Data stores are per module; caches and message brokers are shared by all modules.',
     icon: '🧩',
     badgeColor: 'border-amber-500/40 bg-amber-500/10 text-amber-300',
     config: {
@@ -161,20 +127,13 @@ export const ARCHITECTURE_PRESETS: ArchitecturePresetMeta[] = [
       scriptsDir: 'scripts',
       databaseIsolation: 'hybrid'
     },
-    previewTree: `├── 📁 modules/
-│   ├── 📁 auth/
-│   ├── 📁 billing/
-│   └── 📁 notifications/
-├── 📁 apps/ (host wrappers)
-├── 📁 libs/ (shared utilities)
-├── 📁 infra/
-└── 📁 docs/`
+    scaffoldDirs: []
   },
   {
     id: 'hexagonal',
     name: 'Hexagonal / Ports & Adapters',
-    tagline: 'Domain logic decoupled from external infrastructure',
-    description: 'Strict separation between domain logic (core/), inbound/outbound ports (adapters/), and runnable microservices.',
+    tagline: 'Services plus a shared domain core and adapters',
+    description: 'Services live in services/. Domain logic shared between them goes in core/ and shared adapter implementations (database, HTTP, messaging) in adapters/. Layering inside each service follows its framework.',
     icon: '🔷',
     badgeColor: 'border-indigo-500/40 bg-indigo-500/10 text-indigo-300',
     config: {
@@ -187,48 +146,39 @@ export const ARCHITECTURE_PRESETS: ArchitecturePresetMeta[] = [
       scriptsDir: 'scripts',
       databaseIsolation: 'service-isolated'
     },
-    previewTree: `├── 📁 services/
-│   └── 📁 order-service/
-│       ├── 📁 core/ (pure domain logic)
-│       ├── 📁 adapters/ (db, http, event handlers)
-│       └── 📁 ports/ (interfaces)
-├── 📁 infra/
-│   └── 📄 docker-compose.yml
-├── 📁 core/ (shared value objects)
-└── 📁 scripts/`
+    scaffoldDirs: [
+      { path: '', base: 'packages', purpose: 'Shared domain core: value objects and business rules with no infrastructure dependencies.' },
+      { path: 'adapters', base: 'root', purpose: 'Shared adapter implementations for databases, HTTP clients and messaging.' }
+    ]
   },
   {
     id: 'serverless',
     name: 'Serverless & Cloud-Native',
-    tagline: 'Functions, web frontend, and cloud infra templates',
-    description: 'Designed for cloud-native setups with functions/ for micro-handlers, web/ for frontends, and terraform/ or cdk/ under infra/.',
+    tagline: 'Functions in functions/, web clients in web/',
+    description: 'Backend handlers live in functions/, frontend and full-stack apps in web/, shared code in shared/ and cloud infrastructure (Terraform, Compose) in infra/.',
     icon: '☁️',
     badgeColor: 'border-rose-500/40 bg-rose-500/10 text-rose-300',
     config: {
       preset: 'serverless',
       isCustom: false,
       appsDir: 'functions',
+      appDirectories: {
+        frontend: 'web',
+        fullstack: 'web'
+      },
       infraDir: 'infra',
       packagesDir: 'shared',
       docsDir: 'docs',
       scriptsDir: 'scripts',
       databaseIsolation: 'centralized'
     },
-    previewTree: `├── 📁 functions/
-│   ├── 📁 auth-handler/
-│   └── 📁 webhook-listener/
-├── 📁 web/ (SPA / Edge client)
-├── 📁 infra/
-│   ├── 📁 terraform/
-│   └── 📄 docker-compose.yml
-├── 📁 shared/
-└── 📁 docs/`
+    scaffoldDirs: []
   },
   {
     id: 'event-driven',
     name: 'Event-Driven Services',
-    tagline: 'Organize producers, consumers, and shared event contracts',
-    description: 'Separates API services, background consumers, and event schemas while keeping brokers and deployment configuration in infrastructure.',
+    tagline: 'Services, consumers and typed event contracts',
+    description: 'API services live in services/, background consumers in consumers/, frontends in frontend/apps, and typed event schemas in events/. Brokers and deployment config live in infra/.',
     icon: '📨',
     badgeColor: 'border-orange-500/40 bg-orange-500/10 text-orange-300',
     config: {
@@ -249,20 +199,15 @@ export const ARCHITECTURE_PRESETS: ArchitecturePresetMeta[] = [
       scriptsDir: 'scripts',
       databaseIsolation: 'service-isolated'
     },
-    previewTree: `├── 📁 services/
-│   ├── 📁 api-gateway/
-│   └── 📁 order-service/
-├── 📁 consumers/
-│   └── 📁 email-worker/
-├── 📁 events/ (schemas and contracts)
-├── 📁 infra/ (brokers and compose)
-└── 📁 docs/`
+    scaffoldDirs: [
+      { path: '', base: 'packages', purpose: 'Typed event schemas, publishers and consumer harnesses shared by producers and consumers.' }
+    ]
   },
   {
     id: 'data-platform',
     name: 'Data Platform',
-    tagline: 'Separate ingestion, processing, and analytics workloads',
-    description: 'Groups data jobs and ingestion APIs independently from dashboards, schemas, and the infrastructure that runs pipelines.',
+    tagline: 'Pipelines, ingestion services and dashboards',
+    description: 'Pipeline jobs live in pipelines/jobs, ingestion services in services/ingestion, dashboards in apps/dashboards and data contracts in schemas/.',
     icon: '📊',
     badgeColor: 'border-violet-500/40 bg-violet-500/10 text-violet-300',
     config: {
@@ -283,20 +228,15 @@ export const ARCHITECTURE_PRESETS: ArchitecturePresetMeta[] = [
       scriptsDir: 'scripts',
       databaseIsolation: 'centralized'
     },
-    previewTree: `├── 📁 pipelines/jobs/
-│   ├── 📁 ingestion/
-│   └── 📁 transforms/
-├── 📁 services/ingestion/
-├── 📁 apps/dashboards/
-├── 📁 schemas/ (data contracts)
-├── 📁 infra/ (warehouse and orchestration)
-└── 📁 docs/`
+    scaffoldDirs: [
+      { path: '', base: 'packages', purpose: 'Data contracts and schemas shared by pipelines, services and dashboards.' }
+    ]
   },
   {
     id: 'ai-ml-platform',
     name: 'AI / ML & LLM Platform',
-    tagline: 'Models, agent workflows, pipelines, and inference serving',
-    description: 'Structured for AI products: model definitions and prompt pipelines in models/, autonomous agent workers in agents/, inference gateways in services/, and evaluation pipelines alongside shared vector schemas.',
+    tagline: 'Models, agents, inference, evaluation and prompts',
+    description: 'Model definitions live in models/, agent workers in agents/workers, inference services in services/inference, dashboards in apps/dashboard, evaluation in pipelines/eval and versioned prompts in prompts/.',
     icon: '🤖',
     badgeColor: 'border-pink-500/40 bg-pink-500/10 text-pink-300',
     config: {
@@ -317,19 +257,18 @@ export const ARCHITECTURE_PRESETS: ArchitecturePresetMeta[] = [
       scriptsDir: 'scripts',
       databaseIsolation: 'centralized'
     },
-    previewTree: `├── 📁 models/ (weights, prompts, fine-tuning)
-├── 📁 agents/workers/ (background agent loop)
-├── 📁 services/inference/ (FastAPI / Triton serving)
-├── 📁 apps/dashboard/ (UI & playground)
-├── 📁 pipelines/eval/ (benchmarks & RAG eval)
-├── 📁 prompts/ (versioned DSPy/LangChain schemas)
-└── 📁 infra/ (vector DBs, GPUs & compose)`
+    scaffoldDirs: [
+      { path: 'models', base: 'root', purpose: 'Model definitions, fine-tuning code and weights references.' },
+      { path: '', base: 'packages', purpose: 'Versioned prompt templates and schemas.' },
+      { path: 'pipelines/eval', base: 'root', purpose: 'Benchmarks and retrieval evaluation pipelines.' },
+      { path: 'agents/workers', base: 'root', purpose: 'Background agent loops and workers.' }
+    ]
   },
   {
     id: 'clean-architecture',
     name: 'Clean Architecture / Onion',
-    tagline: 'Strict concentric domain isolation & dependency inversion',
-    description: 'Separates enterprise core business logic from outer delivery mechanisms: domain entities in domain/, application use-cases in usecases/, inbound/outbound controllers in adapters/, and drivers in infrastructure/.',
+    tagline: 'Services plus shared domain rules and use cases',
+    description: 'Services live in services/. Enterprise business rules shared between them go in domain/ and application use cases in usecases/. Layering inside each service follows its framework.',
     icon: '🧅',
     badgeColor: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300',
     config: {
@@ -350,21 +289,16 @@ export const ARCHITECTURE_PRESETS: ArchitecturePresetMeta[] = [
       scriptsDir: 'scripts',
       databaseIsolation: 'service-isolated'
     },
-    previewTree: `├── 📁 services/
-│   └── 📁 core-service/
-│       ├── 📁 domain/ (entities & business rules)
-│       ├── 📁 usecases/ (application workflows)
-│       ├── 📁 adapters/ (controllers, presenters)
-│       └── 📁 infrastructure/ (DB repos, HTTP, gRPC)
-├── 📁 domain/ (shared enterprise business rules)
-├── 📁 infra/ (docker-compose & terraform)
-└── 📁 docs/`
+    scaffoldDirs: [
+      { path: '', base: 'packages', purpose: 'Enterprise business rules: entities and domain logic with no framework dependencies.' },
+      { path: 'usecases', base: 'root', purpose: 'Application use cases shared between services.' }
+    ]
   },
   {
     id: 'cqrs',
     name: 'CQRS & Event Sourcing',
-    tagline: 'Separated Command / Query paths with append-only event store',
-    description: 'Decouples write-side command processors from read-side query projections with an append-only event store and pub/sub message bus.',
+    tagline: 'Command services, projections and event contracts',
+    description: 'Command (write) services live in services/commands, projection (read) services in services/projections, read-model UIs in apps/queries-ui and versioned event contracts in events/.',
     icon: '⚡',
     badgeColor: 'border-yellow-500/40 bg-yellow-500/10 text-yellow-300',
     config: {
@@ -385,18 +319,15 @@ export const ARCHITECTURE_PRESETS: ArchitecturePresetMeta[] = [
       scriptsDir: 'scripts',
       databaseIsolation: 'service-isolated'
     },
-    previewTree: `├── 📁 services/commands/ (write-side handlers)
-├── 📁 services/projections/ (read-side query builders)
-├── 📁 apps/queries-ui/ (read-model view clients)
-├── 📁 events/ (versioned event contracts)
-├── 📁 infra/ (event store, Kafka, Postgres read replica)
-└── 📁 docs/`
+    scaffoldDirs: [
+      { path: '', base: 'packages', purpose: 'Versioned event contracts shared by command and projection services.' }
+    ]
   },
   {
     id: 'jamstack-edge',
     name: 'JAMstack & Edge Platform',
-    tagline: 'Edge computing workers, headless backends & static CDNs',
-    description: 'Optimized for globally distributed architectures with edge functions (Cloudflare Workers/Fastly/Vercel Edge), headless CMS/API services, and ultra-fast static web clients.',
+    tagline: 'Sites in sites/, edge functions in edge/',
+    description: 'Sites live in sites/, edge workers in edge/workers, scheduled edge tasks in edge/schedulers, shared components and SDKs in packages/ and deployment config in deploy/.',
     icon: '🚀',
     badgeColor: 'border-purple-500/40 bg-purple-500/10 text-purple-300',
     config: {
@@ -417,18 +348,16 @@ export const ARCHITECTURE_PRESETS: ArchitecturePresetMeta[] = [
       scriptsDir: 'scripts',
       databaseIsolation: 'centralized'
     },
-    previewTree: `├── 📁 sites/web/ (SSR / SSG storefront)
-├── 📁 edge/workers/ (Cloudflare / Edge runtime API)
-├── 📁 edge/schedulers/ (cron edge tasks)
-├── 📁 packages/ (shared components & SDKs)
-├── 📁 deploy/ (Terraform, Wrangler, Vercel configs)
-└── 📁 docs/`
+    scaffoldDirs: [
+      { path: 'edge/workers', base: 'root', purpose: 'Edge runtime request handlers.' },
+      { path: 'edge/schedulers', base: 'root', purpose: 'Scheduled edge tasks.' }
+    ]
   },
   {
     id: 'mobile-crossplatform',
     name: 'Mobile & Cross-Platform Monorepo',
-    tagline: 'Shared core & UI design system across Web, Mobile & Desktop',
-    description: 'Unified codebase powering iOS/Android (React Native / Flutter / Expo), Desktop (Electron / Tauri), and Web apps with a shared multiplatform UI and state store.',
+    tagline: 'Mobile, web and desktop apps with shared packages',
+    description: 'Mobile apps live in apps/mobile, web clients in apps/web, backend services in services/api, workers in services/workers, with shared UI in packages/ui and shared logic in packages/core.',
     icon: '📱',
     badgeColor: 'border-teal-500/40 bg-teal-500/10 text-teal-300',
     config: {
@@ -449,19 +378,16 @@ export const ARCHITECTURE_PRESETS: ArchitecturePresetMeta[] = [
       scriptsDir: 'scripts',
       databaseIsolation: 'service-isolated'
     },
-    previewTree: `├── 📁 apps/mobile/ (React Native / Flutter / Expo)
-├── 📁 apps/web/ (Next.js / Vite web client)
-├── 📁 apps/desktop/ (Tauri / Electron desktop)
-├── 📁 services/api/ (GraphQL / REST backend)
-├── 📁 packages/ui/ (cross-platform design tokens)
-├── 📁 packages/core/ (business logic & state)
-└── 📁 infra/`
+    scaffoldDirs: [
+      { path: 'ui', base: 'packages', purpose: 'Cross-platform design tokens and UI components.' },
+      { path: 'core', base: 'packages', purpose: 'Business logic and state shared by mobile, web and desktop apps.' }
+    ]
   },
   {
     id: 'cli-tooling',
     name: 'Developer Tooling & CLI Monorepo',
-    tagline: 'Multi-package CLI toolchains, plugins & native binaries',
-    description: 'Engineered for developer tool builders and open-source ecosystems: binary CLI runners in packages/cli, core logic in packages/core, pluggable extensions in plugins/, and release automation in scripts/.',
+    tagline: 'CLI packages, plugins and examples',
+    description: 'Tool packages live in packages/ (CLI in packages/cli, engine in packages/core), extensions in plugins/, sandbox apps in examples/ and packaging config in build-infra/.',
     icon: '🧰',
     badgeColor: 'border-blue-500/40 bg-blue-500/10 text-blue-300',
     config: {
@@ -482,18 +408,16 @@ export const ARCHITECTURE_PRESETS: ArchitecturePresetMeta[] = [
       scriptsDir: 'scripts',
       databaseIsolation: 'centralized'
     },
-    previewTree: `├── 📁 packages/cli/ (binary entrypoint & CLI commands)
-├── 📁 packages/core/ (engine & compiler logic)
-├── 📁 plugins/ (pluggable runtime extensions)
-├── 📁 examples/ (sandbox verification apps)
-├── 📁 build-infra/ (cross-compilation & packaging)
-└── 📁 scripts/ (release & publishing pipelines)`
+    scaffoldDirs: [
+      { path: 'plugins', base: 'root', purpose: 'Pluggable runtime extensions.' },
+      { path: 'examples', base: 'root', purpose: 'Sandbox apps that exercise the tool.' }
+    ]
   },
   {
     id: 'custom',
     name: 'Custom Structure',
-    tagline: 'Define your own directory contract and paths',
-    description: 'Customize root service folders, infrastructure directory, shared packages, and per-service path overrides.',
+    tagline: 'Your own directory contract',
+    description: 'Choose the root folders for apps, infrastructure, packages, docs and scripts, and map each app role to its own folder.',
     icon: '🛠️',
     badgeColor: 'border-zinc-500/40 bg-zinc-500/10 text-zinc-300',
     config: {
@@ -506,13 +430,32 @@ export const ARCHITECTURE_PRESETS: ArchitecturePresetMeta[] = [
       scriptsDir: 'scripts',
       databaseIsolation: 'service-isolated'
     },
-    previewTree: `├── 📁 [custom_services]/
-├── 📁 [custom_infra]/
-├── 📁 [custom_packages]/
-├── 📁 [custom_docs]/
-└── 📁 [custom_scripts]/`
+    scaffoldDirs: []
   }
 ]
+
+const APP_ROLES: AppRole[] = ['frontend', 'backend', 'fullstack', 'worker', 'desktop-mobile', 'other']
+const trimSlashes = (value: string) => value.replace(/^\/+|\/+$/g, '')
+
+/** Where each app role lands under a structure config, with roles that share a folder grouped. */
+export function getRoleFolders(config: FolderStructureConfig): Array<{ folder: string; roles: AppRole[] }> {
+  const groups = new Map<string, AppRole[]>()
+  for (const role of APP_ROLES) {
+    const folder = trimSlashes(config.appDirectories?.[role] || config.appsDir || 'apps')
+    groups.set(folder, [...(groups.get(folder) || []), role])
+  }
+  return [...groups].map(([folder, roles]) => ({ folder, roles }))
+}
+
+/** Extra folders a preset creates, resolved to project-relative paths. */
+export function resolvePresetScaffoldDirs(config: FolderStructureConfig): Array<{ path: string; purpose: string }> {
+  const meta = ARCHITECTURE_PRESETS.find(item => item.id === config.preset)
+  const packages = trimSlashes(config.packagesDir || 'packages')
+  return (meta?.scaffoldDirs || []).map(dir => ({
+    path: dir.base === 'packages' ? trimSlashes(dir.path ? `${packages}/${dir.path}` : packages) : trimSlashes(dir.path),
+    purpose: dir.purpose
+  }))
+}
 
 export function getDefaultStructureConfig(): FolderStructureConfig {
   return {
