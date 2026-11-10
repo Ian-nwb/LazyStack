@@ -5,7 +5,7 @@ All notable changes to LazyStack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.1.3] - 2026-11-10
 
 ### Fixed
 - **Reverse proxy gateways did not work.** Nginx (the default) exited on start because Compose mounted the main `nginx.conf` into `conf.d/`; Apache refused to start without `mod_unixd`; Traefik's routes file was invalid YAML. Nginx, Caddy and Traefik also forwarded the route prefix, so `/api/health` reached the API as `/api/health` instead of `/health`. All four now start and strip the prefix (Apache lists longer prefixes first), and the gateway waits for the app containers.

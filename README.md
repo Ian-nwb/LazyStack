@@ -28,14 +28,14 @@
 
 LazyStack is a desktop app and a command-line tool for starting polyglot projects. Combine a React client, a FastAPI service, a Go worker and an Expo app with PostgreSQL and Redis, choose an architecture layout, and get a project where every app follows its framework's own conventions and the whole stack starts with `npm run dev`.
 
-**Current version: 1.1.2.** It makes Install Packages work (with live progress), fixes Start/Stop Stack for every layout, shows the manual setup steps a stack needs, and adds Capacitor and .NET MAUI starters plus an Expo SDK 58 starter. See the [changelog](CHANGELOG.md).
+**Current version: 1.1.3.** It fixes the reverse proxy gateways in generated projects (Nginx, Apache, Caddy and Traefik now start and route `/api/...` correctly) and stops projects from replacing each other's Docker containers. 1.1.2 made Install Packages and Start/Stop Stack work, added manual setup guidance, and added Capacitor, .NET MAUI and Expo SDK 58 starters. See the [changelog](CHANGELOG.md).
 
 ## Download
 
 | Platform | Package |
 | --- | --- |
-| Linux x64 | [`LazyStack-1.1.2.AppImage`](https://github.com/Ian-nwb/LazyStack/releases/download/v1.1.2/LazyStack-1.1.2.AppImage) |
-| Windows x64 | [`LazyStack.1.1.2.exe`](https://github.com/Ian-nwb/LazyStack/releases/download/v1.1.2/LazyStack.1.1.2.exe) (portable) |
+| Linux x64 | [`LazyStack-1.1.3.AppImage`](https://github.com/Ian-nwb/LazyStack/releases/download/v1.1.3/LazyStack-1.1.3.AppImage) |
+| Windows x64 | [`LazyStack.1.1.3.exe`](https://github.com/Ian-nwb/LazyStack/releases/download/v1.1.3/LazyStack.1.1.3.exe) (portable) |
 | macOS |package not yet available (sponsor me a Macbook for app signature) |
 
 The CLI is on npm: `npx lazystack --help`.

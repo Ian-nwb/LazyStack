@@ -1,5 +1,10 @@
 # LazyStack CLI changelog
 
+## 1.1.3
+
+- Generated reverse proxy gateways work: Nginx no longer exits on start, Apache loads `mod_unixd`, Traefik's routes file is valid YAML, and Nginx, Caddy and Traefik strip the route prefix so `/api/health` reaches the API as `/health`.
+- Generated Compose files set `name:` from the project name, so two projects no longer replace each other's containers; the gateway starts after the app containers.
+
 ## 1.1.2
 
 - Add Capacitor (`capacitor-app`) and .NET MAUI (`csharp-maui`) to the catalog; `import` detects both.
