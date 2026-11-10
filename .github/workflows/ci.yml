@@ -198,6 +198,38 @@ jobs:
           trap 'kill "$server_pid" 2>/dev/null || true' EXIT
           curl --fail --silent --show-error --retry 10 --retry-connrefused --retry-delay 1 http://127.0.0.1:8000/health
 
+      - name: Boot generated stack and route through every reverse proxy
+        if: matrix.preset == 'fastapi-react'
+        run: |
+          ROOT="$PWD/matrix-output/test-fastapi-react"
+          docker compose -p lsci --env-file "$ROOT/.env" -f "$ROOT/infra/docker-compose.yml" up -d --build --wait --wait-timeout 300 || true
+          cleanup() {
+            docker compose -p lsci -f "$ROOT/infra/docker-compose.yml" logs --tail 50 || true
+            docker rm -f px-apache px-caddy px-traefik >/dev/null 2>&1 || true
+            docker compose -p lsci -f "$ROOT/infra/docker-compose.yml" down -v || true
+          }
+          trap cleanup EXIT
+          check() { curl --fail --silent --show-error --retry 20 --retry-all-errors --retry-delay 2 "http://127.0.0.1:$1$2"; echo; }
+          # nginx (the preset's proxy) is part of the Compose stack.
+          check 80 /
+          check 80 /api/health
+          # Swap in each other proxy's generated config against the same running apps.
+          port=8081
+          for proxy in apache caddy traefik; do
+            node -e 'const fs=require("fs");const c=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));c.proxy={...c.proxy,type:process.argv[2],httpPort:+process.argv[3]};c.projectName="px-"+process.argv[2];fs.writeFileSync("px.json",JSON.stringify(c));' "$ROOT/lazystack.json" $proxy $port
+            node ./bin/lazystack.js scaffold --config px.json --out ./proxy-output >/dev/null
+            CFG="$PWD/proxy-output/px-$proxy/infra/$proxy"
+            case $proxy in
+              apache)  docker run -d --name px-$proxy --network lsci_lazystack_net -p $port:$port -v "$CFG/httpd.conf:/usr/local/apache2/conf/httpd.conf:ro" httpd:alpine ;;
+              caddy)   docker run -d --name px-$proxy --network lsci_lazystack_net -p $port:$port -v "$CFG/Caddyfile:/etc/caddy/Caddyfile:ro" caddy:2-alpine ;;
+              traefik) docker run -d --name px-$proxy --network lsci_lazystack_net -p $port:$port -v "$CFG:/etc/traefik:ro" traefik:v3.3 --configFile=/etc/traefik/traefik.yml ;;
+            esac
+            echo "== $proxy"
+            check $port / || { docker logs px-$proxy; exit 1; }
+            check $port /api/health || { docker logs px-$proxy; exit 1; }
+            port=$((port + 1))
+          done
+
       - name: Generate API-service profile fixture
         if: matrix.preset == 'fastapi-react'
         run: |

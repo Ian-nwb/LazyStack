@@ -33,7 +33,10 @@ export function generateDockerCompose(settings: ProjectSettings): string {
   const dockerApps = settings.apps.filter(a => a.runMode === 'docker' && !isHostOnlyTech(a.techId))
   const hasNamedVolumes = activeDbs.some(db => db.type !== 'sqlite')
 
-  let yaml = `networks:\n  lazystack_net:\n    driver: bridge\n\n${hasNamedVolumes ? 'volumes:\n' : ''}`
+  // Without a name, Compose uses the folder name (`infra`), so every LazyStack project would share
+  // one Compose project and starting one would replace another's containers.
+  const composeName = settings.projectName.toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^[^a-z0-9]+|-+$/g, '') || 'lazystack'
+  let yaml = `name: ${composeName}\n\nnetworks:\n  lazystack_net:\n    driver: bridge\n\n${hasNamedVolumes ? 'volumes:\n' : ''}`
 
   activeDbs.forEach((db, idx) => {
     if (db.type !== 'sqlite') {
@@ -311,11 +314,14 @@ export function generateDockerCompose(settings: ProjectSettings): string {
     yaml += `    image: ${gatewayImages[settings.proxy.type]}\n`
     if (settings.proxy.type === 'traefik') yaml += `    command: ["--configFile=/etc/traefik/traefik.yml"]\n`
     yaml += `    ports:\n      - "${settings.proxy.httpPort}:${settings.proxy.httpPort}"\n`
-    if (settings.proxy.type === 'nginx') yaml += `    volumes:\n      - ./nginx:/etc/nginx/conf.d:ro\n`
+    // nginx.conf is a main config (user, events, http); only default.conf belongs in conf.d.
+    if (settings.proxy.type === 'nginx') yaml += `    volumes:\n      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro\n      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro\n`
     else if (settings.proxy.type === 'apache') yaml += `    volumes:\n      - ./apache/httpd.conf:/usr/local/apache2/conf/httpd.conf:ro\n`
     else if (settings.proxy.type === 'caddy') yaml += `    volumes:\n      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro\n`
     else if (settings.proxy.type === 'traefik') yaml += `    volumes:\n      - ./traefik:/etc/traefik:ro\n`
     yaml += `    extra_hosts:\n      - "host.docker.internal:host-gateway"\n`
+    // Proxies resolve upstream hosts at startup, so start the app containers first.
+    if (dockerApps.length) yaml += `    depends_on:\n${dockerApps.map(app => `      - ${app.folderName}\n`).join('')}`
     yaml += `    networks:\n      - lazystack_net\n    restart: unless-stopped\n`
   }
 
