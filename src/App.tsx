@@ -17,7 +17,7 @@ import { ProjectSettings, CartApp, SelectedDatabase, ProxyConfig, FolderStructur
 import { Layers, Database, Globe, Eye, FolderOpen, ExternalLink, Copy, Check, CheckCircle2, AlertCircle, Loader2, Wrench, Terminal, Package, Play, Square } from 'lucide-react'
 import { StackPreset } from './data/presets'
 import { joinPaths } from './utils/pathValidation'
-import { getDefaultStructureConfig } from './data/structurePresets'
+import { getDefaultStructureConfig, normalizeStructureConfig } from './data/structurePresets'
 import { getDatabaseAdminUiCommandName, getDatabaseAdminUiOption } from './data/databaseAdminUis'
 
 export const App: React.FC = () => {
@@ -190,7 +190,7 @@ export const App: React.FC = () => {
       setApps(imported.apps)
       setDatabases(imported.databases)
       setProxy(imported.proxy)
-      if (imported.structureConfig) setStructureConfig(imported.structureConfig)
+      if (imported.structureConfig) setStructureConfig(normalizeStructureConfig(imported.structureConfig))
       setUseUnifiedWorkspace(imported.useUnifiedWorkspace !== false)
       setExistingProject({ dir: imported.targetDir, source: result.source || 'detected', detected: result.detected || [], unrecognized: result.unrecognized || [], warnings: result.warnings || [] })
       setActiveTab('inspector')
@@ -376,7 +376,7 @@ export const App: React.FC = () => {
     if (Array.isArray(imported.apps)) setApps(imported.apps)
     if (Array.isArray(imported.databases)) setDatabases(imported.databases)
     if (imported.proxy) setProxy(imported.proxy)
-    if (imported.structureConfig) setStructureConfig(imported.structureConfig)
+    if (imported.structureConfig) setStructureConfig(normalizeStructureConfig(imported.structureConfig))
     if (typeof imported.useUnifiedWorkspace === 'boolean') setUseUnifiedWorkspace(imported.useUnifiedWorkspace)
   }
 

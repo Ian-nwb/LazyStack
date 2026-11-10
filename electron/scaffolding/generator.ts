@@ -5,6 +5,7 @@ import { ProjectSettings } from '../../src/types'
 import { validateFolderName, validatePath, validateRelativeProjectPath, joinPaths } from '../../src/utils/pathValidation'
 import { createDatabaseCredentials } from './templates/meta'
 import { planScaffold } from './plan'
+import { normalizeStructureConfig } from '../../src/data/structurePresets'
 import { DATABASE_CATALOG } from '../../src/data/databases'
 import { resolveStructurePaths } from '../../src/data/structurePresets'
 import { getDatabaseAdminUiOption } from '../../src/data/databaseAdminUis'
@@ -35,6 +36,7 @@ export async function scaffoldProject(inputSettings: ProjectSettings, options: S
   // say `docker` for them (e.g. Electron, Tauri, Flutter), so normalize instead of failing.
   const settings: ProjectSettings = {
     ...inputSettings,
+    structureConfig: normalizeStructureConfig(inputSettings.structureConfig),
     apps: inputSettings.apps.map(app => isHostOnlyTech(app.techId) && app.runMode !== 'host' ? { ...app, runMode: 'host' } : app)
   }
 

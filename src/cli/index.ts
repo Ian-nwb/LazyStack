@@ -11,7 +11,7 @@ import { importProject } from '../../electron/project/importer'
 import { TECH_CATALOG } from '../data/frameworks'
 import { DATABASE_CATALOG } from '../data/databases'
 import { STACK_PRESETS, StackPreset } from '../data/presets'
-import { ARCHITECTURE_PRESETS } from '../data/structurePresets'
+import { ARCHITECTURE_PRESETS, normalizeStructureConfig } from '../data/structurePresets'
 import { ProjectSettings, CartApp } from '../types'
 import { TESTING_TOOLS } from '../data/testingTools'
 import cliPackage from '../../packages/cli/package.json'
@@ -405,7 +405,7 @@ export async function runCli(args: string[] = process.argv.slice(2)) {
         for (const conn of app.connections || []) console.log(`    depends on ${s.apps.find(target => target.id === conn.targetAppId)?.folderName || conn.targetAppId} via ${conn.protocol}`)
       }
       console.log(`\nDatabases: ${(s.databases || []).filter(db => db.enabled).map(db => `${db.customName || db.type} (:${db.port})`).join(', ') || 'none'}`)
-      console.log(`\nProject layout (${s.structureConfig?.preset || 'monorepo'}):\n`)
+      console.log(`\nProject layout (${normalizeStructureConfig(s.structureConfig)?.preset || 'monorepo'}):\n`)
       console.log(renderPlanTreeText(buildPlanTree(planScaffold(s, createDatabaseCredentials(s)), s, { appDetail: 'summary' })))
       console.log()
       console.log(`Workspace: ${s.useUnifiedWorkspace === false ? 'native tooling only' : 'unified JavaScript/TypeScript workspace enabled'}`)
