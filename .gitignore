@@ -73,3 +73,6 @@ CLAUDE.md
 
 # Template verifier build output
 dist-scripts/
+
+# Runtime crash dumps
+erl_crash.dump

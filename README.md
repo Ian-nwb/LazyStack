@@ -1,295 +1,185 @@
-# LazyStack
+<p align="center">
+  <img src="build/icon.png" alt="" width="88" height="88">
+</p>
 
-Current version: **1.1.2**. v1.1.2 fixes Install Packages (with live progress), makes Start/Stop Stack work with every infrastructure layout, adds setup guidance for frameworks that need manual steps, adds Capacitor and .NET MAUI starters, and moves Expo to SDK 58. v1.1.1 added Dioxus, Slint, Bevy, JavaFX and Java Swing starters, framework-native project folders for every framework, and **Open Existing Project**. See the [changelog](CHANGELOG.md).
+<h1 align="center">LazyStack</h1>
 
-LazyStack is a desktop stack builder and command-line scaffolder for composing application stacks. Choose languages, frameworks, databases, service connections, testing tools, and an architecture layout; LazyStack generates a project structure and supporting configuration.
+<p align="center">
+  Pick your frameworks, databases and layout. LazyStack writes the project:<br>
+  native app folders, Docker Compose, <code>.env</code>, a reverse proxy and one command to run it all.
+</p>
+
+<p align="center">
+  <a href="https://github.com/Ian-nwb/LazyStack/releases/latest"><img alt="Release" src="https://img.shields.io/github/v/release/Ian-nwb/LazyStack?label=release&color=111"></a>
+  <a href="https://github.com/Ian-nwb/LazyStack/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/Ian-nwb/LazyStack/ci.yml?branch=main&label=CI"></a>
+  <a href="https://www.npmjs.com/package/lazystack"><img alt="npm" src="https://img.shields.io/npm/v/lazystack?label=cli&color=111"></a>
+  <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/github/license/Ian-nwb/LazyStack?color=111"></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/Ian-nwb/LazyStack/releases/latest"><b>Download</b></a> ·
+  <a href="https://lazystack-showcase.vercel.app">Website</a> ·
+  <a href="#cli">CLI</a> ·
+  <a href="CHANGELOG.md">Changelog</a> ·
+  <a href=".github/CONTRIBUTING.md">Contributing</a>
+</p>
+
+![LazyStack app stack view](showcase/assets/screens/stack.webp)
+
+LazyStack is a desktop app and a command-line tool for starting polyglot projects. Combine a React client, a FastAPI service, a Go worker and an Expo app with PostgreSQL and Redis, choose an architecture layout, and get a project where every app follows its framework's own conventions and the whole stack starts with `npm run dev`.
+
+**Current version: 1.1.2.** It makes Install Packages work (with live progress), fixes Start/Stop Stack for every layout, shows the manual setup steps a stack needs, and adds Capacitor and .NET MAUI starters plus an Expo SDK 58 starter. See the [changelog](CHANGELOG.md).
 
 ## Download
 
-Download **Linux AppImage** or **Windows portable .exe** from the [GitHub Releases](https://github.com/Ian-nwb/LazyStack/releases).
-
 | Platform | Package |
 | --- | --- |
-| Linux x64 | AppImage |
-| Windows x64 | Portable .exe |
+| Linux x64 | [`LazyStack-1.1.2.AppImage`](https://github.com/Ian-nwb/LazyStack/releases/download/v1.1.2/LazyStack-1.1.2.AppImage) |
+| Windows x64 | [`LazyStack.1.1.2.exe`](https://github.com/Ian-nwb/LazyStack/releases/download/v1.1.2/LazyStack.1.1.2.exe) (portable) |
+| macOS |package not yet available (sponsor me a Macbook for app signature) |
 
-macOS package not yet available (sponsor me a Macbook for app signature)
+The CLI is on npm: `npx lazystack --help`.
 
-## Features
+To run the projects LazyStack generates you need Docker with Compose, plus the toolchains of the frameworks you pick. The **Host Auditor** tab checks them and can install missing ones.
 
-- **Mix application roles:** Generate frontend clients, backend services, full-stack apps, workers, and desktop/mobile clients together.
-- **Broad technology catalog:** Use established frameworks or start with plain language/runtime templates. Current options include React, Vue, Angular, Solid, Qwik, HTMX, Lit, Kotlin/JS, SwiftUI, Reflex, NiceGUI, Anvil, Python, PHP, Go, Java, JavaFX, Java Swing, Node.js, Kotlin/Ktor, Swift/Vapor, Rust (Axum, Actix, Poem, Dioxus, Slint, Bevy, GPUI, Yew, Leptos), AssemblyScript, Google Apps Script, React Native (Expo), Capacitor, Ionic, .NET MAUI, Inferno.js, and many more.
-- **Framework-native project structure:** Each app starts inside its selected architecture root, then gets the folders its framework's own initializer would create (`ng new`, `nest new`, `django-admin startproject`, `mix phx.new`, `dx new`, `javafx-archetype-fxml`, start.spring.io, and so on), including tests, `.gitignore`, and a README with run commands. Django gets a project package plus a `core` app; Spring Boot gets `web/` controllers and JUnit tests; Go gets `internal/handlers` and `internal/config`; Rust services get `routes.rs` and `config.rs`. Blueprint previews are derived from the exact files that will be written.
-- **Open existing projects:** Use **Open Existing Project** (or `lazystack import`) on a folder you already have. LazyStack restores its `lazystack.json`, or detects frameworks from manifests, databases from Compose files, and the reverse proxy from its config. It then shows the stack in the Blueprint diagrams. Add apps, databases or a proxy, review a change preview, and apply: existing app folders are never modified, `.env` files only gain missing keys, and regenerated infrastructure files are backed up to `.lazystack/backup/` first.
-- **Architecture layouts:** Choose a preset or customize root directories, additional folders, and per-app paths.
-- **Polyglot layout:** Route browser clients to `frontend/clients/`, API services to `backend/services/`, workers to `backend/workers/`, and deployment files to `deploy/`.
-- **Service connections:** Configure API URLs, environment variable names, health checks, and startup dependencies between services.
-- **Database configuration:** Add self-hosted databases or managed cloud providers, configure per-service database scope, and generate local credentials in `.env`.
-- **Database web UIs:** Optionally attach an admin UI to each database instance: Adminer, pgAdmin, or Prisma Studio for PostgreSQL; Adminer, phpMyAdmin, or Prisma Studio for MySQL/MariaDB; Mongo Express for MongoDB; and Redis Commander for Redis/Valkey. Prisma Studio runs on the host so its local web server is reachable; the generated project adds an `npm run prisma:studio:<database>` command. Start the database stack first, then run that command and open the configured local port. It uses Prisma CLI 7's direct connection URL support, so it does not require a Prisma schema.
-- **Testing tools:** Select tools per app, organized by test purpose. See [Testing tools](#testing-tools).
-- **Infrastructure output:** Generate Docker Compose, optional Nginx, Apache, Caddy, or Traefik routing, environment files, scripts, shared packages, and starter documentation.
-- **Blueprints and CLI:** Export JSON blueprints and scaffold them without opening the desktop interface.
-- **Unified Dev Orchestrator:** Run your entire polyglot stack from a single `npm run dev` command with auto database spin-up, concurrent hot-reload, and live ANSI-colored output per service.
-- **Event-Driven Worker Wiring:** Auto-scaffold typed event contracts, dead-letter queues, and polyglot worker starters (Node.js, Python, Go) when brokers are in the stack.
-- **Terraform / OpenTofu Export:** Auto-generate ready-to-deploy `.tf` modules for AWS ECS/Fargate, GCP Cloud Run, or DigitalOcean App Platform alongside every scaffolded project.
-- **Kubernetes & Helm Charts:** Generate Deployment, Service, ConfigMap, Secret, and Ingress YAML definitions tailored to the scaffolded topology, plus a Helm chart skeleton.
-- **CI/CD Workflows:** Ready-to-use `.github/workflows/deploy.yml` with container build and push pipelines to GHCR via matrix strategy, one job per service.
+## What it does
 
-## Frontend and vanilla starters
+- **87 frameworks across every role.** Frontends, backend services, full-stack apps, workers, desktop and mobile clients, and scripts, in JavaScript/TypeScript, Python, Go, Rust, Java, Kotlin, C#, PHP, Ruby, Elixir, Swift, Dart and a long tail of others.
+- **Framework-native starters.** Each app gets what its own initializer would create (`create-expo-app`, `nest new`, `django-admin startproject`, `mix phx.new`, `dx new`, `dotnet new maui`, start.spring.io, and so on), with a passing test, a `.gitignore` and a README.
+- **25 databases and services.** PostgreSQL, MySQL, MongoDB, Redis, Kafka, ClickHouse, Qdrant and more run in Compose with generated credentials; Supabase, Firebase, Neon, Turso and other cloud providers get SDK clients and environment variables. Optional admin UIs: Adminer, pgAdmin, Prisma Studio, phpMyAdmin, Mongo Express, Redis Commander.
+- **16 architecture layouts.** Standard monorepo, microservices, DDD, Polyglot, hexagonal, CQRS, and others, or your own folder structure.
+- **Service connections.** Wire apps together with URLs, environment variable names, health checks and startup order.
+- **One command to run everything.** The generated dev orchestrator starts databases in Docker and every app on the host with hot reload and colour-coded output.
+- **Deployment files.** Docker Compose, Nginx/Apache/Caddy/Traefik config, Kubernetes manifests, a Helm chart, Terraform for AWS/GCP/DigitalOcean and GitHub Actions workflows.
+- **Existing projects.** Open a folder you already have: LazyStack detects its apps, databases and proxy, shows the stack as a diagram, and adds new services without touching your code.
+- **Testing tools per app.** Jest, Vitest, pytest, JUnit, Playwright, Cypress, k6, Pact, Storybook, OWASP ZAP and more, opt-in per app.
 
-Frontend and UI choices include React + Vite, React + MUI, Vue + Vite, Angular, SolidJS, Qwik, HTMX, Lit web components, vanilla HTML/CSS/JavaScript, Kotlin/JS, Rust Yew and Leptos for WebAssembly, and SwiftUI for native Apple clients. Rust GPUI creates a native desktop application and runs on the host. Python UI choices include Reflex and NiceGUI, which combine a Python backend with browser-rendered UI. Anvil is included as a hosted Python full-stack option; its apps are continued in the Anvil editor.
+## Screenshots
 
-For plain services, choose Vanilla Node.js, PHP, Go (`net/http`), Python standard-library HTTP, or Java JDK `HttpServer`. These are framework-free starters with runnable source and README instructions. Existing framework choices include Go Chi/Echo, PHP Laravel, Kotlin Ktor, Swift Vapor, and others. See [native framework layout conventions](docs/framework-layouts.md) for examples across the catalog.
-
-## Testing tools
-
-Testing is a first-class stack choice. Select tools for the app's language and testing needs; the generator records the choices in the project configuration and adds available starter/configuration files.
-
-| Test area | Available examples |
+| | |
 | --- | --- |
-| Unit and component | Jest, Vitest, Testing Library, pytest, Go `testing`, PHPUnit, JUnit |
-| API and integration | Supertest, Newman, Bruno, REST Assured, Swagger UI, and Swagger/OpenAPI spec validation with the Redocly CLI |
-| Browser end-to-end | Playwright, Cypress, WebdriverIO, Puppeteer |
-| UI component development | Storybook |
-| Performance and load | k6, Artillery |
-| Contract and schema | Pact, OpenAPI validation |
-| Security checks | OWASP ZAP |
-| Extend the catalog | Add custom testing tools by name and package |
+| ![Framework picker](showcase/assets/screens/picker.webp) | ![Service diagram](showcase/assets/screens/diagram.webp) |
+| **Framework picker.** Prerequisites are checked on your machine as you browse. | **Service diagram.** Apps, connections and the databases they use. |
+| ![Manual setup steps](showcase/assets/screens/manual-setup.webp) | ![Install packages](showcase/assets/screens/install.webp) |
+| **Manual setup.** Steps LazyStack can't do for you, listed after scaffolding. | **Install Packages.** Every ecosystem's dependencies, with live progress. |
 
-The tool list varies with the selected stack, and teams can choose more than one tool for an app. Tools are opt-in; the generator does not install every test runner into every generated service.
+## CLI
 
-## Architecture layouts
+The `lazystack` CLI uses the same generator as the desktop app.
+
+```bash
+npx lazystack init --preset fastapi-react --name my-api          # interactive or preset-based blueprint
+npx lazystack scaffold --config lazystack.json --out ./projects  # --out is the parent directory
+cd projects/my-api && npx lazystack dev                          # databases in Docker, apps on the host
+```
+
+| Command | What it does |
+| --- | --- |
+| `init` | Create a blueprint interactively or from a preset |
+| `list`, `presets`, `search <term>` | Browse the catalog (`search --json` for scripts) |
+| `validate`, `plan`, `doctor` | Check a blueprint, preview the services, check host toolchains |
+| `export` | Write a preset as a blueprint you can edit |
+| `scaffold` | Generate a project (`--dry-run` to preview, `--force` to update a non-empty folder) |
+| `import`, `add`, `apply` | Read an existing project, add an app to it, or apply an edited blueprint (`--dry-run` supported) |
+| `dev` | Start a generated project's stack (`--docker` to run everything in containers) |
+
+## Generated projects
+
+Every project includes a root README, `.env` and `.env.example`, Docker Compose files under the infrastructure folder, `scripts/dev-orchestrator.mjs`, and an embedded `lazystack.json` so it can be opened again later.
+
+<details>
+<summary><b>Dev orchestrator</b></summary>
+
+`npm run dev` (or `lazystack dev`) in a generated project:
+
+1. Starts the databases and brokers in Docker with `docker compose up -d`.
+2. Runs every app on the host with its native command (`uvicorn`, `go run`, `cargo run`, `mvn spring-boot:run`, `npx expo start`, ...).
+3. Prefixes each line of output with the app's name in its own colour.
+4. Passes the root `.env` to every process.
+5. Stops all child processes on Ctrl+C.
+
+`npm run dev:docker` runs the whole stack in containers instead.
+</details>
+
+<details>
+<summary><b>Event-driven wiring</b></summary>
+
+When the stack includes RabbitMQ, Kafka (KRaft), Redis or Valkey, LazyStack adds `packages/events/` with typed event envelopes, a retry policy with exponential backoff and a dead-letter topic, plus publisher and consumer starters for Node.js, Python and Go.
+</details>
+
+<details>
+<summary><b>Deployment output</b></summary>
+
+- `infra/terraform/`: AWS ECS/Fargate modules, with GCP Cloud Run and DigitalOcean App Platform definitions ready to enable.
+- `infra/k8s/`: a Deployment and Service per app, a ConfigMap, placeholder Secrets and an Ingress when a proxy is configured.
+- `infra/helm/<project>/`: a Helm chart skeleton.
+- `.github/workflows/`: `ci.yml` validates the Compose config; `deploy.yml` builds and pushes every service image to GHCR.
+</details>
+
+<details>
+<summary><b>Architecture layouts</b></summary>
 
 | Layout | Directory focus |
 | --- | --- |
 | Standard Monorepo | `apps/`, `packages/`, `infra/` |
 | Microservices Decoupled | `services/`, shared contracts, isolated service data |
 | Domain-Driven Design | `domains/`, `core/`, bounded contexts |
-| **Polyglot** | `frontend/clients/`, `backend/services/`, `backend/workers/`, `deploy/` |
+| Polyglot | `frontend/clients/`, `backend/services/`, `backend/workers/`, `deploy/` |
 | Modular Monolith | `modules/`, `libs/`, shared deployment |
 | Hexagonal / Ports & Adapters | Services separated from core logic and adapters |
 | Serverless & Cloud-Native | `functions/`, shared packages, cloud infrastructure |
-| Event-Driven Services | APIs, consumers, event schemas, and broker infrastructure |
-| Data Platform | Pipelines, ingestion services, dashboards, and schemas |
-| **AI / ML & LLM Platform** | `models/`, `agents/`, `services/inference/`, DSPy/LangChain `prompts/` |
-| **Clean Architecture / Onion** | `domain/`, `usecases/`, `adapters/`, `services/` with strict concentric boundaries |
-| **CQRS & Event Sourcing** | `services/commands/`, `services/projections/`, `events/` contracts |
-| **JAMstack & Edge Platform** | `sites/`, `edge/workers/`, `edge/schedulers/`, `deploy/` edge runtimes |
-| **Mobile & Cross-Platform** | `apps/mobile/`, `apps/web/`, `apps/desktop/`, shared `packages/ui/` |
-| **CLI & Tooling Monorepo** | `packages/cli/`, `packages/core/`, `plugins/`, `build-infra/` |
-| Custom Structure | User-defined roots, custom folders, and per-app paths |
+| Event-Driven Services | APIs, consumers, event schemas and broker infrastructure |
+| Data Platform | Pipelines, ingestion services, dashboards and schemas |
+| AI / ML & LLM Platform | `models/`, `agents/`, `services/inference/`, `prompts/` |
+| Clean Architecture / Onion | `domain/`, `usecases/`, `adapters/`, `services/` |
+| CQRS & Event Sourcing | `services/commands/`, `services/projections/`, `events/` |
+| JAMstack & Edge Platform | `sites/`, `edge/workers/`, `edge/schedulers/`, `deploy/` |
+| Mobile & Cross-Platform | `apps/mobile/`, `apps/web/`, `apps/desktop/`, `packages/ui/` |
+| CLI & Tooling Monorepo | `packages/cli/`, `packages/core/`, `plugins/`, `build-infra/` |
+| Custom Structure | Your own roots, folders and per-app paths |
 
-## Databases
+Apps are placed inside the layout's root and then follow their framework's layout; see [framework layouts](docs/framework-layouts.md).
+</details>
 
-Self-hosted options include SQLite, PostgreSQL, MySQL, MariaDB, MongoDB, Redis, Valkey, Apache Kafka (KRaft), ClickHouse, SurrealDB, Neo4j, Qdrant, Meilisearch, MinIO, ScyllaDB, RabbitMQ, and PocketBase. Cloud and backend-as-a-service options include Supabase, Firebase, PlanetScale, Neon, Turso, Upstash, Appwrite, and Convex.
+## Build from source
 
-Generated database passwords are stored in the project root `.env`. Keep that file private; `.env.example` contains safe placeholders.
-
-## Requirements
-
-- Node.js 20 or newer and npm 10 or newer to run or build LazyStack from source.
-- Docker Engine/Desktop with Docker Compose to run generated container stacks.
-- The runtime/toolchain required by the templates you select.
-
-## Run from source
+Requires Node.js 20+ and npm 10+.
 
 ```bash
 git clone https://github.com/Ian-nwb/LazyStack.git
 cd LazyStack
 npm install
-npm run dev
+npm run dev            # browser UI with a local API
+npm run build && npm start   # desktop app
 ```
 
-To build and run the desktop app locally:
+Package the desktop app:
 
 ```bash
-npm run build
-npm start
+npm run dist:linux     # release/<version>/LazyStack-<version>.AppImage
+npm run dist:win       # release/<version>/LazyStack <version>.exe (portable)
+npm run dist:release   # both
 ```
-
-## CLI
-
-The standalone CLI package is available in `packages/cli` (`lazystack`). It supports blueprint initialization, catalog search, validation, planning, prerequisite checks, export, scaffolding, and unified dev orchestration. See [CHANGELOG.md](CHANGELOG.md).
-
-```bash
-npm run build:cli
-npm run cli -- help
-npm run cli -- init --preset fastapi-react --name my-api
-npm run cli -- validate --config lazystack.json
-npm run cli -- plan --config lazystack.json
-npm run cli -- doctor --config lazystack.json
-npm run cli -- dev --dir ./my-api
-npm run cli -- list
-npm run cli -- presets
-```
-
-Work with a project that already exists:
-
-```bash
-npm run cli -- import --dir ./my-project                      # detect apps, databases and proxy
-npm run cli -- add --dir ./my-project --tech rust-dioxus --name dashboard --dry-run
-npm run cli -- add --dir ./my-project --tech rust-dioxus --name dashboard
-npm run cli -- import --dir ./my-project --out edited.json    # edit, then:
-npm run cli -- apply --dir ./my-project --config edited.json
-```
-
-Export a blueprint, then scaffold it:
-
-```bash
-npm run cli -- export --preset modern-mern --name my-app --out lazystack.json
-npm run cli -- scaffold --config lazystack.json --out ./generated
-```
-
-Or scaffold directly from a preset:
-
-```bash
-npm run cli -- scaffold --preset fastapi-react --name my-api --out ./generated
-```
-
-`--out` is the parent directory where the generated project will be created.
-
----
-
-## Unified Dev Orchestrator
-
-Running a polyglot monorepo traditionally requires either running full container builds for every minor code edit or opening multiple terminal tabs manually. LazyStack generates an automated zero-dependency dev orchestrator in `scripts/dev-orchestrator.mjs`:
-
-```bash
-# In any scaffolded project root:
-npm run dev
-# Or using the LazyStack CLI:
-lazystack dev
-```
-
-### How it works
-
-1. **Background Infrastructure Auto-Boot**: If your stack includes databases or message brokers (Postgres, Redis, Kafka, RabbitMQ, MongoDB, etc.), the orchestrator automatically boots only those background infrastructure containers via `docker compose --env-file .env -f infra/docker-compose.yml up -d`.
-2. **Concurrent Host Execution**: All frontend apps, backend APIs, and workers run directly on your host machine with hot-reloading enabled.
-3. **Live Colored Prefixes**: Standard output and error streams from every service are line-buffered and multiplexed in a single terminal with distinctive ANSI colors:
-   - `[client]` in Cyan
-   - `[api]` in Green
-   - `[worker]` in Magenta
-   - `[docs]` in Yellow
-4. **Dynamic Environment Variable Injection**: Parses root `.env` variables and automatically propagates them to each child process's execution environment.
-5. **Clean Process Teardown**: Intercepts `SIGINT` (Ctrl+C) and `SIGTERM`, killing all spawned process trees gracefully without orphaned background ports.
-6. **Docker Alternative**: If you prefer running the entire application stack in containers, simply pass `--docker`:
-   ```bash
-   npm run dev:docker
-   # or
-   lazystack dev --docker
-   ```
-
----
-
-## Event-Driven Message Brokers & Worker Wiring
-
-When your stack includes a message broker (RabbitMQ, Apache Kafka, Redis, or Valkey) or worker services, LazyStack automatically scaffolds an event-driven architecture with shared typed event contracts in `packages/events/`:
-
-### Architecture & Capabilities
-
-- **Apache Kafka (KRaft mode)**: Zero-ZooKeeper event streaming container (`apache/kafka:3.7.0`) pre-configured with healthchecks and topic partitions.
-- **Battle-Tested RabbitMQ & Redis Streams**: Pre-configured AMQP management UI (port 15672) and Redis stream consumer groups.
-- **Shared Typed Contracts (`packages/events/src/index.ts`)**:
-  - `BaseEvent<T>` envelope containing unique event IDs, topics, source metadata, timestamps, and correlation IDs for distributed tracing.
-  - Domain payload interfaces: `UserRegisteredPayload`, `OrderCreatedPayload`, `TaskQueuedPayload`, `TaskCompletedPayload`, and `DeadLetterPayload`.
-- **Dead-Letter Queue (DLQ) & Exponential Backoff**:
-  - Built-in `RetryPolicy` supporting customizable retry attempts, base backoff delay, and automatic routing of poisoned messages to `events.dead_letter`.
-- **Pre-Wired Worker Starters**:
-  - **TypeScript / Node.js**: `packages/events/src/publisher.ts` and `consumer.ts` with typed error handling and DLQ emission.
-  - **Python**: `packages/events/examples/worker.py` handling broker subscription loops, exception recovery, and message ack/nack.
-  - **Go**: `packages/events/examples/worker.go` leveraging lightweight goroutines, channel multiplexing, and graceful OS signal teardown.
-- **Environment Integration**:
-  - Automatically exports `EVENT_BROKER_TYPE`, `EVENT_RETRY_LIMIT`, `EVENT_BACKOFF_MS`, and `EVENT_DLQ_TOPIC` in `.env` and `.env.example`.
-
----
-
-## Cloud Deployment
-
-Every scaffolded project ships ready-to-use infrastructure export files in `infra/`.
-
-### Terraform / OpenTofu
-
-`.tf` modules are generated under `infra/terraform/` covering three providers:
-
-- **AWS ECS/Fargate** — task definitions, services, ECS cluster, and security groups per app
-- **GCP Cloud Run** — Cloud Run v2 service definitions (commented out, uncomment to activate)
-- **DigitalOcean App Platform** — App spec with GHCR image source (commented out)
-
-```bash
-cd infra/terraform
-terraform init
-terraform plan
-terraform apply
-```
-
-### Kubernetes & Helm
-
-Raw manifests under `infra/k8s/`:
-- **`<service>.yaml`** — Deployment + ClusterIP Service with resource limits and liveness probe
-- **`configmap.yaml`** — Non-secret environment variables
-- **`secret.yaml`** — Placeholder secrets (replace before applying; use Sealed Secrets or External Secrets Operator in production)
-- **`ingress.yaml`** — Nginx Ingress with per-service path routing (generated when a proxy is configured)
-
-Helm chart under `infra/helm/<project>/`:
-
-```bash
-# Apply raw manifests
-kubectl apply -f infra/k8s/
-
-# Or via Helm
-helm install my-project ./infra/helm/my-project
-```
-
-### GitHub Actions CI/CD
-
-Two workflows are generated in `.github/workflows/`:
-
-- **`ci.yml`** — Validates Docker Compose config on every push and PR
-- **`deploy.yml`** — Builds and pushes all service containers to GHCR via a matrix job, then triggers deployment on every merge to `main`
-
----
-
-## Build packages
-
-Scripts build Linux AppImage and Windows portable EXE packages; macOS is not yet supported.
-
-```bash
-npm run dist:linux    # Linux AppImage
-npm run dist:win      # Windows portable EXE
-npm run dist:release  # build both targets
-```
-
-## Future feature ideas
-
-These are proposals, not currently included features.
-
-1. Local AI stack assistant that drafts blueprints from natural-language requests.
-2. Separate development, staging, and production profiles.
-3. Kubernetes manifests and Helm chart export.
-4. Terraform and Pulumi infrastructure export.
-5. Database backup and restore workflows.
-6. Integrations with Vault, 1Password, and cloud secret stores.
-7. Deployment workflow generators for cloud and self-hosted platforms.
-8. Shareable plugin and template registry.
-9. Architecture migration assistant for evolving generated projects.
-10. More framework-specific unit, integration, contract, and browser test starters.
-11. CPU, memory, and storage sizing estimates.
-12. Team review and merge workflows for blueprint changes.
-13. Optional OpenTelemetry, Prometheus, Grafana, and log collection.
-14. gRPC/protobuf and event schemas with broker wiring.
-15. Configurable service-to-service authentication.
 
 ## Repository layout
 
 ```text
-electron/       Electron main process and project scaffolding
-src/components/ Desktop interface
-src/data/       Framework, database, testing, and architecture catalogs
-src/cli/        Blueprint and scaffolding CLI
-build/          App icons and packaging resources
-release/        Local desktop build artifacts
+electron/            Electron main process, scaffolding generator and templates
+src/                 Desktop interface (React), shared catalogs and the CLI source
+packages/cli/        The published lazystack npm package
+scripts/             Template verifier used in CI
+docs/                Framework layouts, release guides and release plans
+showcase/            Project website
 ```
+
+## Ideas under consideration
+
+Not built yet: a local AI assistant that drafts blueprints from a description, separate development/staging/production profiles, OpenTelemetry and Grafana wiring, database backup and restore, Vault and 1Password integration, a shareable template registry, Pulumi export, and sizing estimates.
+
+## Contributing
+
+Bug reports, framework requests and pull requests are welcome. See [CONTRIBUTING](.github/CONTRIBUTING.md) for how the code is organised and how to check a change.
 
 ## License
 
-LazyStack is distributed under the MIT License. See [LICENSE](LICENSE).
+[MIT](LICENSE) © Ian-nwb

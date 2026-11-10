@@ -1,0 +1,20 @@
+name: Feature or framework request
+description: Suggest a framework, database or feature.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: request
+    attributes:
+      label: What would you like LazyStack to do?
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why is it useful?
+      description: The stack or workflow you have in mind.
+  - type: input
+    id: reference
+    attributes:
+      label: Official docs or initializer
+      description: For a new framework, link its docs or the command that creates a new project (e.g. `npm create vite`).

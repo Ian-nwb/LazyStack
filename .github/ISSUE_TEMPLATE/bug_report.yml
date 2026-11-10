@@ -1,0 +1,42 @@
+name: Bug report
+description: Something LazyStack generated or did is wrong.
+labels: [bug]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: LazyStack version
+      description: Desktop app version, or the output of `lazystack --version`.
+      placeholder: "1.1.2"
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Where did it happen?
+      options:
+        - Desktop app (Linux AppImage)
+        - Desktop app (Windows .exe)
+        - CLI (npm)
+        - Running from source
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: The frameworks, databases and layout you picked, or the blueprint (`lazystack.json`) with secrets removed.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error output
+      description: Terminal output, Docker logs or a screenshot.
+      render: shell

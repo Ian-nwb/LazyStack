@@ -1,7 +1,7 @@
 {
   "name": "lazystack",
   "version": "1.1.2",
-  "description": "Automated Tech Stack & Monorepo Boilerplate Generator",
+  "description": "Desktop app and CLI that scaffolds polyglot projects: 87 frameworks, 25 databases, Docker Compose, reverse proxy and a dev orchestrator from one blueprint.",
   "type": "module",
   "main": "dist-electron/main.js",
   "bin": {
@@ -29,8 +29,11 @@
     "scaffolding",
     "docker",
     "devops",
-    "assembly",
-    "drogon"
+    "project-generator",
+    "polyglot",
+    "docker-compose",
+    "boilerplate",
+    "cli"
   ],
   "author": {
     "name": "Ian-nwb",
@@ -88,5 +91,12 @@
     "vite": "^6.2.1",
     "vite-plugin-electron": "^0.29.0",
     "vite-plugin-electron-renderer": "^0.14.6"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ian-nwb/LazyStack.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Ian-nwb/LazyStack/issues"
   }
 }
