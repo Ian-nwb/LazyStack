@@ -146,11 +146,19 @@ export interface SelectedDatabase {
 
 export type ArchitecturePreset =
   | 'monorepo'             // apps/, packages/, infra/
-  | 'microservices'        // services/, shared/contracts, infra/
+  | 'microservices'        // services/, shared/, infra/, gateway/
+  | 'domain-driven'        // domains/<domain>/, core/, infra/
+  | 'polyglot'             // backend/services/, frontend/clients/, deploy/
   | 'modular-monolith'     // modules/<feature>/, libs/, infra/
-  | 'polyglot'             // frontend/clients, backend/services, backend/workers, deploy/
-  | 'event-driven'         // services/, consumers/, events/
+  | 'hexagonal'            // services/, adapters/, core/, infra/
   | 'serverless'           // functions/, web/, infra/
+  | 'event-driven'         // services/, consumers/, events/contracts/
+  | 'data-platform'        // pipelines/, schemas/, analytics apps/
+  | 'ai-ml-platform'       // models/, agents/, services/inference, pipelines/eval
+  | 'clean-architecture'   // domain/, usecases/, adapters/, services/
+  | 'cqrs'                 // services/commands, services/projections, events/
+  | 'jamstack-edge'        // sites/, edge/workers, deploy/
+  | 'mobile-crossplatform' // apps/mobile, apps/web, apps/desktop, packages/ui
   | 'custom'               // User custom paths
 
 export type DatabaseIsolationMode =
