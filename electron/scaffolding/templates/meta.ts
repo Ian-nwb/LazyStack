@@ -5,6 +5,7 @@ import { getDbServiceName } from './docker'
 import { TESTING_TOOLS } from '../../../src/data/testingTools'
 import { getDatabaseAdminUiOption } from '../../../src/data/databaseAdminUis'
 import { TECH_CATALOG, isHostOnlyTech } from '../../../src/data/frameworks'
+import { getHostPlatform } from '../../../src/utils/hostPlatform'
 import { getAppManualSetup, getDatabaseManualSetup } from '../../../src/data/manualSetup'
 
 /** Replaced by the planner with the real directory tree once every path is known. */
@@ -151,7 +152,8 @@ mongo_data/
   files['.gitattributes'] = `* text=auto eol=lf\nscripts/*.sh text eol=lf\n`
 
   const getAppDevCommand = (app: ProjectSettings['apps'][number]) => {
-    const isWin = process.platform === 'win32'
+    const hostPlatform = getHostPlatform()
+    const isWin = hostPlatform === 'win32'
     const pyBin = isWin ? '.venv\\\\Scripts\\\\python.exe' : '.venv/bin/python'
     const uvicornBin = isWin ? '.venv\\\\Scripts\\\\uvicorn.exe' : '.venv/bin/uvicorn'
 
@@ -175,7 +177,7 @@ mongo_data/
     // 4. C# / .NET
     if (app.techId === 'csharp-maui') {
       // MAUI can only target the generating OS's native platform (Linux builds Android only).
-      const mauiTarget = isWin ? 'net10.0-windows10.0.19041.0' : process.platform === 'darwin' ? 'net10.0-maccatalyst' : 'net10.0-android'
+      const mauiTarget = isWin ? 'net10.0-windows10.0.19041.0' : hostPlatform === 'darwin' ? 'net10.0-maccatalyst' : 'net10.0-android'
       return `dotnet build -t:Run -f ${mauiTarget}`
     }
     if (app.techId === 'csharp-aspnet' || app.techId === 'csharp-blazor') {

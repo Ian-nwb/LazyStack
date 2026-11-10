@@ -35,6 +35,9 @@ jobs:
       - name: Verify architecture presets against the scaffold plan
         run: npm run verify:layout
 
+      - name: Verify the Blueprint planner runs without Node globals
+        run: npm run verify:browser
+
   cli_package_smoke:
     name: npm CLI Package Smoke Check
     needs: build_and_typecheck
