@@ -5,53 +5,33 @@ import { getDatabaseAdminUiOption } from '../../../src/data/databaseAdminUis'
 import { getNativeEnvironmentDefaults } from '../../../src/utils/nativeEnvironment'
 import { isHostOnlyTech } from '../../../src/data/frameworks'
 import { createContext } from './native/context'
-import { isDatabaseVisibleToApp } from '../../../src/utils/databaseScope'
+import { buildStackTopology, getDbServiceName } from '../../../src/utils/stackTopology'
 
-export function getDbServiceName(db: SelectedDatabase, idx: number, apps?: CartApp[]): string {
-  if (db.customName) {
-    const slug = db.customName.toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/^_+|_+$/g, '')
-    if (slug) return slug
-  }
-  const assignedApp = apps?.find(a => a.id === db.assignedAppId)
-  if (assignedApp) {
-    return `${assignedApp.folderName}_${db.type}`
-  }
-  return idx > 0 ? `${db.type}_${idx + 1}` : db.type
-}
+export { getDbServiceName }
 
 const yamlQuote = (value: string) => JSON.stringify(value)
 
 export function generateDockerCompose(settings: ProjectSettings): string {
   const paths = resolveStructurePaths(settings)
 
-  // Filter out cloud-only databases — they don't need Docker containers
-  const activeDbs = settings.databases.filter(d => {
-    if (!d.enabled) return false
-    const def = DATABASE_CATALOG.find(c => c.id === d.type)
-    // Cloud services without imageTag don't get Docker containers
-    return !def?.isCloud || def?.imageTag
-  })
-  const dockerApps = settings.apps.filter(a => a.runMode === 'docker' && !isHostOnlyTech(a.techId))
-  const hasNamedVolumes = activeDbs.some(db => db.type !== 'sqlite')
+  // Every service name, port and dependency below comes from the shared topology model, which
+  // also drives the Blueprint diagrams. Only database containers (not SQLite files or managed cloud
+  // services) get a Compose service.
+  const topology = buildStackTopology(settings)
+  const activeDbs = topology.dbContainers.map(item => item.db)
+  const dockerApps = topology.dockerApps
+  const hasNamedVolumes = activeDbs.length > 0
+  let yaml = `name: ${topology.composeName}\n\nnetworks:\n  lazystack_net:\n    driver: bridge\n\n${hasNamedVolumes ? 'volumes:\n' : ''}`
 
-  // Without a name, Compose uses the folder name (`infra`), so every LazyStack project would share
-  // one Compose project and starting one would replace another's containers.
-  const composeName = settings.projectName.toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^[^a-z0-9]+|-+$/g, '') || 'lazystack'
-  let yaml = `name: ${composeName}\n\nnetworks:\n  lazystack_net:\n    driver: bridge\n\n${hasNamedVolumes ? 'volumes:\n' : ''}`
-
-  activeDbs.forEach((db, idx) => {
-    if (db.type !== 'sqlite') {
-      const sName = getDbServiceName(db, idx, settings.apps)
-      yaml += `  ${sName}_data:\n`
-    }
+  activeDbs.forEach(db => {
+    yaml += `  ${topology.serviceNameOf(db)}_data:\n`
   })
 
   yaml += `\nservices:\n`
 
   // Database Services
-  activeDbs.forEach((db, idx) => {
-    if (db.type === 'sqlite') return
-    const sName = getDbServiceName(db, idx, settings.apps)
+  activeDbs.forEach(db => {
+    const sName = topology.serviceNameOf(db)
 
     yaml += `  ${sName}:\n`
     switch (db.type) {
@@ -201,7 +181,7 @@ export function generateDockerCompose(settings: ProjectSettings): string {
     // Prisma Studio runs on the host so it can bind a reachable local port.
     // The current Studio CLI binds to loopback inside containers.
     if (!option || option.hostProcess) return
-    const sName = getDbServiceName(db, settings.databases.indexOf(db), settings.apps)
+    const sName = topology.serviceNameOf(db)
     const uiServiceName = `${sName}_admin_ui`
     const uiPort = db.adminUiPort || option.defaultPort
     const composeVariable = (key: string, fallback: string) => '${' + key + ':-' + fallback + '}'
@@ -249,26 +229,15 @@ export function generateDockerCompose(settings: ProjectSettings): string {
       yaml += `    ports:\n      - "${app.port}:${app.port}"\n`
     }
     yaml += `    env_file:\n      - ../${appRelPath}/.env\n`
-    if ((app.connections || []).some(connection => settings.apps.find(target => target.id === connection.targetAppId)?.runMode === 'host')) {
+    if (topology.needsHostGateway.has(app.id)) {
       yaml += `    extra_hosts:\n      - "host.docker.internal:host-gateway"\n`
     }
 
-    const relevantDbs = activeDbs.filter(d => d.type !== 'sqlite' && isDatabaseVisibleToApp(settings, app, d))
-
-    const dependencies = new Map<string, 'service_healthy' | 'service_started'>()
-    relevantDbs.forEach(db => {
-      const index = settings.databases.indexOf(db)
-      dependencies.set(getDbServiceName(db, index, settings.apps), 'service_healthy')
-    })
-    for (const connection of app.connections || []) {
-      const target = settings.apps.find(item => item.id === connection.targetAppId)
-      if (!target || target.runMode !== 'docker') continue
-      dependencies.set(target.folderName, target.healthCheck?.enabled ? 'service_healthy' : 'service_started')
-    }
-    if (dependencies.size > 0) {
+    const dependencies = topology.appDependencies.get(app.id) || []
+    if (dependencies.length > 0) {
       yaml += `    depends_on:\n`
-      dependencies.forEach((condition, serviceName) => {
-        yaml += `      ${serviceName}:\n        condition: ${condition}\n`
+      dependencies.forEach(({ service, condition }) => {
+        yaml += `      ${service}:\n        condition: ${condition}\n`
       })
     }
     if (app.healthCheck?.enabled) {
@@ -282,15 +251,8 @@ export function generateDockerCompose(settings: ProjectSettings): string {
   })
 
   const swaggerApps = settings.apps.filter(app => (app.testingTools || []).includes('swagger-openapi'))
-  const usedPorts = new Set([
-    ...settings.apps.map(app => app.port),
-    ...settings.databases.filter(db => db.enabled).map(db => db.port),
-    settings.proxy.httpPort
-  ])
-  swaggerApps.forEach((app, index) => {
-    let uiPort = 8088 + index
-    while (usedPorts.has(uiPort)) uiPort++
-    usedPorts.add(uiPort)
+  swaggerApps.forEach(app => {
+    const uiPort = topology.swaggerPorts.get(app.id)
     const appRelPath = paths.getAppRelativePath(app.folderName, app.id, app.role)
     yaml += `  ${app.folderName}_swagger_ui:\n`
     yaml += `    image: swaggerapi/swagger-ui:latest\n`

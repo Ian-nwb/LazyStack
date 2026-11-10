@@ -44,3 +44,10 @@ export function resolveServiceConnectionUrl(
     : 'localhost'
   return `${scheme}://${targetHost}:${target.port}`
 }
+
+/**
+ * Route prefix without a trailing slash ('/' for the root app). Every proxy strips this prefix
+ * before forwarding, because the starters serve their routes from '/' (e.g. GET /health).
+ */
+export const getRoutePrefix = (app: Pick<CartApp, 'routePrefix' | 'folderName'>) =>
+  (app.routePrefix || `/${app.folderName}`).replace(/\/+$/, '') || '/'

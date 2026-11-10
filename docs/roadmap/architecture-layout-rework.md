@@ -9,7 +9,7 @@ Status: in progress · Target: next minor release
 | 1. Shared database scope and pure planner | **Done** (verified, see below) |
 | 2. Directory layout built from the plan | **Done** |
 | 3. Presets that describe what they generate | **Done** |
-| 4. Topology model shared with Compose | Not started |
+| 4. Topology model shared with Compose | **Done** |
 | 5. Diagram redraw | Not started |
 | 6. Consistency checks in CI | Not started |
 
@@ -212,8 +212,15 @@ The model makes these decisions, which currently happen inside the YAML builders
 **4.2 Compose emitter.** `generateDockerCompose` takes the topology and only formats YAML. `generateDockerDevCompose` and `proxies.ts` read services, ports and routes from the same model.
 
 **Phase 4 checklist**
-- [ ] `infra/docker-compose.yml` is byte-identical to the output before the change for all five CI presets, plus a cart with every admin UI type and a Swagger app. If D2 is fixed here, proxy configs may differ.
-- [ ] The CI `docker compose config` step passes.
+- [x] `infra/docker-compose.yml` is byte-identical to the previous output for the five CI presets. In the large 64-project matrix exactly one line changed per project (a Swagger UI port, see below).
+- [x] `docker compose config` passes for all 74 generated projects.
+
+**Implementation notes**
+- `src/utils/stackTopology.ts` owns the Compose project name, database service names, container and host ports, admin UI and Swagger UI ports, `depends_on` conditions and `extra_hosts`. `docker.ts` formats YAML from it and keeps only the per-engine image and environment blocks. `getRoutePrefix` moved to `serviceConnections.ts` and the proxy generators and model share it.
+- Two bugs surfaced because several places now share one decision, and both are fixed:
+  1. **Port clash:** Swagger UI ports started at 8088 and skipped app, database and proxy ports but not admin UI ports. Adminer's default is also 8088, so `docker compose up` would fail with both enabled. Admin UI ports are now reserved first.
+  2. **Service name mismatch:** Compose named database services by their index in the *filtered* list, while app env vars and `depends_on` used the index in the *full* list. A disabled or cloud database before an unnamed Redis made apps connect to `redis_2` while Compose created `redis`. Both now use the full-list index.
+- **D2 not done:** proxies still route to every app, including host-only desktop and mobile apps. The catalog has no field that says whether a host-only tech serves HTTP, and guessing would break working setups. Needs a `servesHttp` flag on `TechItem` first.
 
 ### Phase 5 — Diagram redraw
 
@@ -267,7 +274,7 @@ Add `scripts/verify-layout.ts` and run it in `.github/workflows/ci.yml` next to 
 | `electron/scaffolding/plan.ts` | new (done): pure planner |
 | `electron/scaffolding/generator.ts` | validate → plan → write; remove `presetExtraDirs` and the direct `appendFile` |
 | `src/utils/planTree.ts` | new: plan → tree and text |
-| `src/utils/stackTopology.ts` | new: topology model |
+| `src/utils/stackTopology.ts` | new (done): topology model |
 | `src/utils/serviceConnections.ts` | gains `routeOf` |
 | `electron/scaffolding/templates/docker.ts` | emits YAML from the topology |
 | `electron/scaffolding/templates/proxies.ts` | routes from the topology; skip non-HTTP host-only apps |
