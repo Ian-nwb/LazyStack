@@ -355,7 +355,7 @@ tr.pick td:first-child::before { display: inline-block; animation: nudgeX 1.6s e
 <div class="page">
 
   <header class="bar">
-    <a class="mark" href="#top"><span class="logo-sm" data-logo aria-hidden="true"></span>LAZYSTACK/1.2.1</a>
+    <a class="mark" href="#top"><span class="logo-sm" data-logo aria-hidden="true"></span>LAZYSTACK/1.2.2</a>
     <nav aria-label="Sections">
       <a href="#screens">Screens</a>
       <a href="#features">Features</a>
@@ -377,13 +377,13 @@ tr.pick td:first-child::before { display: inline-block; animation: nudgeX 1.6s e
         <div>
           <p class="lead">Pick frameworks, databases and an architecture layout. LazyStack writes the project: framework-native app folders, Docker Compose, <code>.env</code>, a reverse proxy, deployment files and one command that runs the whole stack. 87 frameworks, 25 databases and services, 16 layouts.</p>
           <div class="actions">
-            <a class="btn btn-solid" href="#download">Download v1.2.1 &#8595;</a>
+            <a class="btn btn-solid" href="#download">Download v1.2.2 &#8595;</a>
             <a class="btn btn-line" href="https://github.com/Ian-nwb/LazyStack">View source &#8599;</a>
           </div>
         </div>
         <dl class="spec">
-          <div><dt>Version</dt><dd>1.2.1</dd></div>
-          <div><dt>Status</dt><dd class="live">v1.2.1 Released</dd></div>
+          <div><dt>Version</dt><dd>1.2.2</dd></div>
+          <div><dt>Status</dt><dd class="live">v1.2.2 Released</dd></div>
           <div><dt>Platforms</dt><dd>Linux x64, Windows x64</dd></div>
           <div><dt>Builds</dt><dd>AppImage, portable EXE</dd></div>
           <div><dt>CLI</dt><dd>lazystack v1.2.1 (npm)</dd></div>
@@ -411,7 +411,7 @@ tr.pick td:first-child::before { display: inline-block; animation: nudgeX 1.6s e
       </div>
       <div>
         <h2>See the stack <span class="thin">before it exists.</span></h2>
-        <p>Build the stack on one screen, check the diagram, then scaffold. LazyStack lists anything it can't set up for you and installs every app's packages. Screens from v1.2.1.</p>
+        <p>Build the stack on one screen, check the diagram, then scaffold. LazyStack lists anything it can't set up for you and installs every app's packages. Screens from v1.2.2.</p>
         <figure class="shot shot-lead">
           <a href="assets/screens/stack.webp"><img src="assets/screens/stack.webp" width="1600" height="1000" alt="LazyStack app stack with a React client, a FastAPI service and an Expo app, each with role, run mode, port and prerequisite checks"></a>
           <figcaption><span class="k">App stack</span><span class="d">Add apps, then set each one's folder, role, run mode and port. Prerequisites are checked on your machine.</span></figcaption>
@@ -619,22 +619,22 @@ lazystack apply --dir ./my-project --config edited.json</pre>
     <section class="sec dl" id="download">
       <div class="sec-side">
         <span class="eyebrow">Download</span>
-        <span class="count">v1.2.1</span>
+        <span class="count">v1.2.2</span>
       </div>
       <div>
-        <h2>Get <span class="thin">v1.2.1.</span></h2>
+        <h2>Get <span class="thin">v1.2.2.</span></h2>
         <p>Portable builds for Linux and Windows. No installer: download, make it executable on Linux, and run.</p>
 
         <div class="dl-rows">
           <div class="dl-row">
             <span class="plat">Linux x64</span>
             <span class="pkg">AppImage</span>
-            <a class="btn btn-solid" href="https://github.com/Ian-nwb/LazyStack/releases/download/v1.2.1/LazyStack-1.2.1.AppImage">Download &#8595;</a>
+            <a class="btn btn-solid" href="https://github.com/Ian-nwb/LazyStack/releases/download/v1.2.2/LazyStack-1.2.2.AppImage">Download &#8595;</a>
           </div>
           <div class="dl-row">
             <span class="plat">Windows x64</span>
             <span class="pkg">Portable <span class="thin">EXE</span></span>
-            <a class="btn btn-solid" href="https://github.com/Ian-nwb/LazyStack/releases/download/v1.2.1/LazyStack.1.2.1.exe">Download &#8595;</a>
+            <a class="btn btn-solid" href="https://github.com/Ian-nwb/LazyStack/releases/download/v1.2.2/LazyStack.1.2.2.exe">Download &#8595;</a>
           </div>
           <div class="dl-row none">
             <span class="plat">macOS</span>
@@ -672,8 +672,8 @@ npm start</pre>
         <h3 style="margin-top:12px">Build the packages yourself</h3>
         <div class="code">
           <div class="code-head"><span class="eyebrow">Linux AppImage + Windows portable EXE</span><button class="copy" type="button" data-copy="c6">Copy</button></div>
-<pre id="c6">npm run dist:linux    <span class="c"># release/1.2.1/LazyStack-1.2.1.AppImage</span>
-npm run dist:win      <span class="c"># release/1.2.1/LazyStack 1.2.1.exe</span>
+<pre id="c6">npm run dist:linux    <span class="c"># release/1.2.2/LazyStack-1.2.2.AppImage</span>
+npm run dist:win      <span class="c"># release/1.2.2/LazyStack 1.2.2.exe</span>
 npm run dist:release  <span class="c"># build both targets</span></pre>
         </div>
       </div>
@@ -683,12 +683,13 @@ npm run dist:release  <span class="c"># build both targets</span></pre>
     <section class="sec" id="roadmap">
       <div class="sec-side">
         <span class="eyebrow">Changelog</span>
-        <span class="count">v1.2.1</span>
+        <span class="count">v1.2.2</span>
       </div>
       <div>
-        <h2>What shipped <span class="thin">in 1.2.1.</span></h2>
-        <p>v1.2.1 offers 15 architecture layouts and 5 stack presets. v1.2.0 makes the Blueprint match the generated project. v1.1.3 fixes the reverse proxy gateway in generated projects. v1.1.2 made generated projects easier to run and added Capacitor, .NET MAUI and an Expo SDK 58 starter.</p>
+        <h2>What shipped <span class="thin">in 1.2.2.</span></h2>
+        <p>v1.2.2 fixes the Directory Contract tab. v1.2.1 offers 15 architecture layouts and 5 stack presets. v1.2.0 makes the Blueprint match the generated project. v1.1.3 fixes the reverse proxy gateway in generated projects. v1.1.2 made generated projects easier to run and added Capacitor, .NET MAUI and an Expo SDK 58 starter.</p>
         <dl class="rows">
+          <div class="row"><dt>v1.2.2 · Released</dt><dd>Fixed: the desktop app's Directory Contract tab and the layout preview showed "process is not defined" instead of the project tree (1.2.0 and 1.2.1). A new CI check runs the Blueprint planner without Node globals for every framework, database, proxy and layout.</dd></div>
           <div class="row"><dt>v1.2.1 · Released</dt><dd>Changed: stack presets reduced to the five most common (T3 Next.js, FastAPI + React, Modern MERN, Go Echo + Vue 3, Rust Axum); 15 architecture layouts are offered (CLI and Tooling Monorepo was removed; blueprints that name it open as Custom and keep their folders). Fixed: the layout list in 1.2.0 was cut to 7 by mistake and the removed layouts are back.</dd></div>
           <div class="row"><dt>v1.2.0 · Released</dt><dd>Changed: the Blueprint tree, README tree, service diagram and network topology are computed from the files and Compose services the generator writes; the diagrams were redrawn (gateway routes, host vs. Docker network, container ports); the architecture picker shows where each app role goes plus a live layout preview, and Custom mode edits the folder per role; layouts reduced from 16 to 7 (older blueprints open as Custom and keep their folders). Fixed: Swagger UI and a database admin UI could share one host port; Compose and app <code>.env</code> could disagree on a database hostname; an update dry run no longer edits <code>.env</code>.</dd></div>
           <div class="row"><dt>v1.1.3 · Released</dt><dd>Fixed: generated Nginx, Apache, Caddy and Traefik gateways now start and route <code>/api/...</code> to the API without the prefix; each project gets its own Docker Compose name, so starting one no longer replaces another's containers; the gateway waits for the app containers. CI now boots a generated stack through all four proxies.</dd></div>
@@ -718,10 +719,10 @@ npm run dist:release  <span class="c"># build both targets</span></pre>
     <div class="flogo rv" data-logo aria-hidden="true"></div>
     <p class="wordmark rv" aria-hidden="true">Lazy<span class="thin">Stack</span></p>
     <div class="foot rv">
-      <span>MIT License &middot; v1.2.1 &middot; by Ian-nwb</span>
+      <span>MIT License &middot; v1.2.2 &middot; by Ian-nwb</span>
       <nav aria-label="Project links">
         <a href="https://github.com/Ian-nwb/LazyStack">Repository</a>
-        <a href="https://github.com/Ian-nwb/LazyStack/releases/tag/v1.2.1">Release v1.2.1</a>
+        <a href="https://github.com/Ian-nwb/LazyStack/releases/tag/v1.2.2">Release v1.2.2</a>
         <a href="https://github.com/Ian-nwb/LazyStack/blob/main/LICENSE">License</a>
         <a href="https://github.com/Ian-nwb">Ian-nwb</a>
       </nav>

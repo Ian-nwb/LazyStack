@@ -1,6 +1,6 @@
 {
   "name": "lazystack",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Desktop app and CLI that scaffolds polyglot projects: 87 frameworks, 25 databases, Docker Compose, reverse proxy and a dev orchestrator from one blueprint.",
   "type": "module",
   "main": "dist-electron/main.js",
@@ -14,6 +14,7 @@
     "preview": "vite preview",
     "precli": "npm run build:cli",
     "cli": "node ./bin/lazystack.js",
+    "verify:browser": "esbuild scripts/verify-browser.ts --bundle --platform=browser --format=iife --outfile=dist-scripts/verify-browser.js --log-level=warning && node scripts/run-in-browser-context.mjs dist-scripts/verify-browser.js",
     "verify:layout": "esbuild scripts/verify-layout.ts --bundle --platform=node --format=esm --packages=external --outfile=dist-scripts/verify-layout.mjs --log-level=warning && node dist-scripts/verify-layout.mjs",
     "verify:templates": "esbuild scripts/verify-templates.ts --bundle --platform=node --format=esm --packages=external --outfile=dist-scripts/verify-templates.mjs --log-level=warning && node dist-scripts/verify-templates.mjs",
     "start": "electron .",
@@ -47,7 +48,7 @@
     "productName": "LazyStack",
     "icon": "build/icon.png",
     "directories": {
-      "output": "release/1.2.1"
+      "output": "release/1.2.2"
     },
     "files": [
       "dist/**/*",

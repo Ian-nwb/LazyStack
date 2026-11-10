@@ -28,14 +28,14 @@
 
 LazyStack is a desktop app and a command-line tool for starting polyglot projects. Combine a React client, a FastAPI service, a Go worker and an Expo app with PostgreSQL and Redis, choose an architecture layout, and get a project where every app follows its framework's own conventions and the whole stack starts with `npm run dev`.
 
-**Current version: 1.2.1.** The architecture layout, Blueprint tree, service diagram and network topology are computed from what the generator writes, so they match the generated project. 1.2.1 offers 15 architecture layouts and 5 stack presets, and fixes two Docker Compose bugs (a Swagger UI and database admin UI port clash, and a mismatched database hostname). See the [changelog](CHANGELOG.md).
+**Current version: 1.2.2.** It fixes the desktop app's Directory Contract tab and layout preview, which failed with "process is not defined" in 1.2.0 and 1.2.1. It also has 15 architecture layouts, 5 stack presets, and Blueprint diagrams computed from what the generator writes. See the [changelog](CHANGELOG.md).
 
 ## Download
 
 | Platform | Package |
 | --- | --- |
-| Linux x64 | [`LazyStack-1.2.1.AppImage`](https://github.com/Ian-nwb/LazyStack/releases/download/v1.2.1/LazyStack-1.2.1.AppImage) |
-| Windows x64 | [`LazyStack.1.2.1.exe`](https://github.com/Ian-nwb/LazyStack/releases/download/v1.2.1/LazyStack.1.2.1.exe) (portable) |
+| Linux x64 | [`LazyStack-1.2.2.AppImage`](https://github.com/Ian-nwb/LazyStack/releases/download/v1.2.2/LazyStack-1.2.2.AppImage) |
+| Windows x64 | [`LazyStack.1.2.2.exe`](https://github.com/Ian-nwb/LazyStack/releases/download/v1.2.2/LazyStack.1.2.2.exe) (portable) |
 | macOS |package not yet available (sponsor me a Macbook for app signature) |
 
 The CLI is on npm: `npx lazystack --help`.
