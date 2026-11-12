@@ -421,6 +421,7 @@ export const CartBuilder: React.FC<CartBuilderProps> = ({ apps, setApps, databas
                         <option value="fullstack">Fullstack</option>
                         <option value="worker">Worker</option>
                         <option value="desktop-mobile">Client</option>
+                        <option value="static-site">Static site</option>
                         <option value="other">Other</option>
                       </select>
                     </div>

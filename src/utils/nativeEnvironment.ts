@@ -1,5 +1,11 @@
 export function getNativeEnvironmentDefaults(techId: string): string {
-  if (/^(ts-|fullstack-(nextjs|nuxt|remix|sveltekit|astro)|react-|vue-|angular-|solidjs-|qwik-|tanstack-|solid-start|lit-|vanilla-node|deno-|electron-app|tauri-app|capacitor-app|ionic-framework)/.test(techId)) return 'NODE_ENV=development\n'
+  if (/^(ts-|fullstack-(nextjs|nuxt|remix|sveltekit|astro)|react-|vue-|angular-|solidjs-|qwik-|tanstack-|solid-start|lit-|vanilla-node|deno-|electron-app|tauri-app|capacitor-app|ionic-framework|quasar-|svelte-|preact-|gatsby|vike|redwoodjs|blitz|nextjs-trpc|bun-native|eleventy|docusaurus|vitepress)/.test(techId)) return 'NODE_ENV=development\n'
+  if (techId === 'python-streamlit') return 'PYTHONUNBUFFERED=1\nSTREAMLIT_BROWSER_GATHER_USAGE_STATS=false\n'
+  if (techId === 'python-gradio') return 'PYTHONUNBUFFERED=1\nGRADIO_ANALYTICS_ENABLED=False\n'
+  if (techId === 'meteor') return 'ROOT_URL=http://localhost:3000\n'
+  if (techId === 'hugo') return 'HUGO_ENVIRONMENT=development\n'
+  if (techId === 'jekyll') return 'JEKYLL_ENV=development\n'
+  if (techId === 'dart-shelf' || techId === 'dart-serverpod') return 'APP_ENV=development\n'
   if (techId.startsWith('python-') || techId === 'vanilla-python') return 'PYTHONUNBUFFERED=1\n'
   if (techId === 'php-symfony') return 'APP_ENV=dev\n'
   if (techId.startsWith('php-') || techId === 'vanilla-php' || techId === 'fullstack-laravel' || techId === 'go-goravel') return 'APP_ENV=local\n'

@@ -37,6 +37,18 @@ type Rule = [RegExp, string]
 const firstMatch = (text: string, rules: Rule[]) => rules.find(([pattern]) => pattern.test(text))
 
 const NPM_RULES: Rule[] = [
+  [/"@redwoodjs\//, 'redwoodjs'],
+  [/"@blitzjs\//, 'blitz'],
+  [/"@docusaurus\/core"/, 'docusaurus'],
+  [/"vitepress"/, 'vitepress'],
+  [/"@11ty\/eleventy"/, 'eleventy'],
+  [/"gatsby"/, 'gatsby'],
+  [/"vike"/, 'vike'],
+  [/"@quasar\/app-vite"|"quasar"/, 'quasar-vite'],
+  [/"@adonisjs\/core"/, 'ts-adonis'],
+  [/"koa"/, 'ts-koa'],
+  [/"@types\/bun"/, 'bun-native'],
+  [/"@trpc\/server"[\s\S]*"next"|"next"[\s\S]*"@trpc\/server"/, 'nextjs-trpc'],
   [/"@tanstack\/(react-)?start"/, 'tanstack-start'],
   [/"@solidjs\/start"/, 'solid-start'],
   [/"next"/, 'fullstack-nextjs'],
@@ -60,6 +72,8 @@ const NPM_RULES: Rule[] = [
   [/"inferno"/, 'inferno-js'],
   [/"lit"/, 'lit-element'],
   [/"solid-js"/, 'solidjs-vite'],
+  [/"svelte"/, 'svelte-vite'],
+  [/"preact"/, 'preact-vite'],
   [/"vue"/, 'vue-vite'],
   [/"react"/, 'react-vite'],
   [/"htmx\.org"/, 'html-htmx'],
@@ -85,11 +99,18 @@ const GO_RULES: Rule[] = [
   [/go-chi\/chi/, 'go-chi']
 ]
 const PY_RULES: Rule[] = [
+  [/^\s*streamlit\b/im, 'python-streamlit'],
+  [/^\s*gradio\b/im, 'python-gradio'],
+  [/^\s*litestar\b/im, 'python-litestar'],
+  [/^\s*sanic\b/im, 'python-sanic'],
+  [/^\s*tornado\b/im, 'python-tornado'],
+  [/^\s*pyramid\b/im, 'python-pyramid'],
   [/^\s*django\b/im, 'python-django'],
   [/^\s*fastapi\b/im, 'python-fastapi'],
   [/^\s*flask\b/im, 'python-flask'],
   [/^\s*reflex\b/im, 'python-reflex'],
   [/^\s*nicegui\b/im, 'python-nicegui'],
+  [/^\s*starlette\b/im, 'python-starlette'],
   [/^\s*anvil-uplink\b/im, 'python-anvil']
 ]
 const JVM_RULES: Rule[] = [
@@ -114,6 +135,7 @@ const COMPOSE_IMAGES: Array<[RegExp, DatabaseType]> = [
   [/scylla/, 'scylladb'],
   [/rabbitmq/, 'rabbitmq'],
   [/kafka/, 'kafka'],
+  [/(^|\/)nats(:|$)/, 'nats'],
   [/pocketbase/, 'pocketbase']
 ]
 
@@ -123,6 +145,9 @@ async function detectApp(dir: string, entries: string[]): Promise<{ techId: stri
   const has = (name: string) => entries.includes(name)
   const file = (name: string) => read(path.join(dir, name))
 
+  if (has('redwood.toml')) return { techId: 'redwoodjs', confidence: 'high', evidence: 'redwood.toml' }
+  if (has('setup.sh') && /serverpod create/.test(await file('setup.sh'))) return { techId: 'dart-serverpod', confidence: 'medium', evidence: 'setup.sh creates a Serverpod project' }
+  if (has('.meteor')) return { techId: 'meteor', confidence: 'high', evidence: '.meteor/ directory' }
   if (has('package.json')) {
     const pkgText = await file('package.json')
     let pkg: Record<string, any> = {}
@@ -145,6 +170,9 @@ async function detectApp(dir: string, entries: string[]): Promise<{ techId: stri
     const rule = firstMatch(await file('go.mod'), GO_RULES)
     return rule ? { techId: rule[1], confidence: 'high', evidence: `go.mod requires ${rule[0].source.replace(/\\/g, '')}` } : { techId: 'vanilla-go', confidence: 'medium', evidence: 'go.mod without a known router' }
   }
+  if (has('hugo.toml') || ((has('hugo.yaml') || has('hugo.yml') || has('hugo.json')) && (has('content') || has('layouts')))) return { techId: 'hugo', confidence: 'high', evidence: 'Hugo config file' }
+  if (has('gleam.toml')) return /wisp/.test(await file('gleam.toml')) ? { techId: 'gleam-wisp', confidence: 'high', evidence: 'gleam.toml depends on Wisp' } : null
+  if (has('v.mod')) return { techId: 'v-vweb', confidence: 'medium', evidence: 'v.mod' }
   if (has('manage.py')) return { techId: 'python-django', confidence: 'high', evidence: 'manage.py' }
   if (has('rxconfig.py')) return { techId: 'python-reflex', confidence: 'high', evidence: 'rxconfig.py' }
   if (has('requirements.txt') || has('pyproject.toml')) {
@@ -168,6 +196,7 @@ async function detectApp(dir: string, entries: string[]): Promise<{ techId: stri
     if (/symfony\/framework-bundle/.test(composer)) return { techId: 'php-symfony', confidence: 'high', evidence: 'composer requires symfony/framework-bundle' }
     return { techId: 'vanilla-php', confidence: 'medium', evidence: 'composer.json without a known framework' }
   }
+  if (has('Gemfile') && /\bjekyll\b/.test(await file('Gemfile'))) return { techId: 'jekyll', confidence: 'high', evidence: 'Gemfile requires jekyll' }
   if (has('Gemfile')) return /\brails\b/.test(await file('Gemfile')) ? { techId: 'ruby-rails', confidence: 'high', evidence: 'Gemfile requires rails' } : null
   if (has('mix.exs')) return /phoenix|plug/.test(await file('mix.exs')) ? { techId: 'elixir-phoenix', confidence: 'high', evidence: 'mix.exs requires Phoenix/Plug' } : null
   const csproj = entries.find(entry => entry.endsWith('.csproj'))
@@ -179,7 +208,12 @@ async function detectApp(dir: string, entries: string[]): Promise<{ techId: stri
     return null
   }
   if (has('deno.json') || has('deno.jsonc')) return /\$fresh/.test(await file('deno.json') + await file('deno.jsonc')) ? { techId: 'deno-fresh', confidence: 'high', evidence: 'deno.json imports Fresh' } : { techId: 'deno-native', confidence: 'medium', evidence: 'deno.json' }
-  if (has('pubspec.yaml')) return /sdk:\s*flutter/.test(await file('pubspec.yaml')) ? { techId: 'dart-flutter', confidence: 'high', evidence: 'pubspec.yaml depends on Flutter' } : null
+  if (has('pubspec.yaml')) {
+    const pubspec = await file('pubspec.yaml')
+    if (/sdk:\s*flutter/.test(pubspec)) return { techId: 'dart-flutter', confidence: 'high', evidence: 'pubspec.yaml depends on Flutter' }
+    if (/serverpod/.test(pubspec)) return { techId: 'dart-serverpod', confidence: 'high', evidence: 'pubspec.yaml depends on Serverpod' }
+    return /\bshelf\b/.test(pubspec) ? { techId: 'dart-shelf', confidence: 'high', evidence: 'pubspec.yaml depends on Shelf' } : null
+  }
   if (has('Package.swift')) return /vapor/.test(await file('Package.swift')) ? { techId: 'swift-vapor', confidence: 'high', evidence: 'Package.swift depends on Vapor' } : { techId: 'swiftui-client', confidence: 'low', evidence: 'Swift package' }
   if (has('dune-project')) return { techId: 'ocaml-dream', confidence: /dream/.test(await read(path.join(dir, 'bin', 'dune'))) ? 'high' : 'low', evidence: 'dune-project' }
   if (has('Project.toml')) return /Genie/.test(await file('Project.toml')) ? { techId: 'julia-genie', confidence: 'high', evidence: 'Project.toml depends on Genie' } : null
@@ -196,7 +230,7 @@ async function detectApp(dir: string, entries: string[]): Promise<{ techId: stri
   return null
 }
 
-const MANIFESTS = /^(package\.json|Cargo\.toml|go\.mod|manage\.py|rxconfig\.py|requirements\.txt|pyproject\.toml|pom\.xml|build\.gradle(\.kts)?|Main\.java|build\.sbt|deps\.edn|project\.clj|composer\.json|Gemfile|mix\.exs|.+\.csproj|deno\.jsonc?|pubspec\.yaml|Package\.swift|dune-project|Project\.toml|rebar\.config|shard\.yml|.+\.nimble|main\.nim|.+\.cabal|build\.zig|CMakeLists\.txt|plumber\.R|appsscript\.json)$/
+const MANIFESTS = /^(package\.json|Cargo\.toml|go\.mod|manage\.py|rxconfig\.py|requirements\.txt|pyproject\.toml|pom\.xml|build\.gradle(\.kts)?|Main\.java|build\.sbt|deps\.edn|project\.clj|composer\.json|Gemfile|mix\.exs|.+\.csproj|deno\.jsonc?|pubspec\.yaml|Package\.swift|dune-project|Project\.toml|rebar\.config|shard\.yml|.+\.nimble|main\.nim|.+\.cabal|build\.zig|CMakeLists\.txt|plumber\.R|appsscript\.json|redwood\.toml|setup\.sh|gleam\.toml|v\.mod|hugo\.(toml|ya?ml|json)|\.meteor)$/
 
 async function containsInTree(dir: string, pattern: RegExp, depth: number): Promise<boolean> {
   if (depth < 0 || !(await fs.pathExists(dir))) return false

@@ -3,6 +3,8 @@ import fs from 'fs-extra'
 import { spawnSync } from 'child_process'
 import { createInterface } from 'readline/promises'
 import { scaffoldProject } from '../../electron/scaffolding/generator'
+import { probePorts } from '../../electron/environment/ports'
+import { collectPortUses, describePortConflict, findPortConflicts, findReservedPortWarnings } from '../utils/portCheck'
 import { planScaffold } from '../../electron/scaffolding/plan'
 import { createDatabaseCredentials } from '../../electron/scaffolding/templates/meta'
 import { buildPlanTree, renderPlanTreeText } from '../utils/planTree'
@@ -36,6 +38,7 @@ COMMANDS:
   list       List all supported frameworks, languages, and databases
   presets    List all available 1-click production stack presets
   doctor     Check local prerequisites for a blueprint
+  ports      Check a blueprint's ports for duplicates and for ports already in use on this machine
   validate   Check a blueprint without generating files
   plan       Preview the services and layout in a blueprint
   import     Inspect an existing project folder and export its blueprint
@@ -65,6 +68,7 @@ OPTIONS FOR 'scaffold':
   --unified-workspace   Enable root JS workspace files
   --dry-run             Preview the blueprint without writing files
   --force               Allow updating files in an existing target directory
+  --skip-port-check     Do not probe this machine for ports that are already in use
 
 OPTIONS FOR 'import':
   --dir, -d <dir>       Existing project folder (default: current working directory)
@@ -159,6 +163,18 @@ async function readBlueprint(fileArg: string | undefined): Promise<{ settings?: 
     console.error(`Error reading blueprint ${file}: ${(error as Error).message}`)
     process.exit(1)
   }
+}
+
+/** Warns about blueprint ports that something on this machine already listens on. Returns true when any are busy. */
+async function reportMachinePorts(settings: ProjectSettings): Promise<boolean> {
+  const uses = collectPortUses(settings)
+  const probes = await probePorts(uses.map(use => use.port))
+  const busy = probes.filter(probe => probe.inUse)
+  for (const probe of busy) {
+    const owners = uses.filter(use => use.port === probe.port).map(use => use.owner).join(', ')
+    console.warn(`Warning: port ${probe.port} (${owners}) is already in use on this machine${probe.process ? ` by ${probe.process}` : ''}.`)
+  }
+  return busy.length > 0
 }
 
 function validateBlueprint(settings: ProjectSettings): string[] {
@@ -386,6 +402,19 @@ export async function runCli(args: string[] = process.argv.slice(2)) {
     return
   }
 
+  if (command === 'ports') {
+    const { settings } = await readBlueprint(parseConfigArg(args))
+    const errors = validateBlueprint(settings!)
+    if (errors.length) { console.error(`Cannot check an invalid blueprint:\n${errors.map(error => `  - ${error}`).join('\n')}`); process.exit(1) }
+    const conflicts = findPortConflicts(settings!)
+    for (const conflict of conflicts) console.error(`Conflict: ${describePortConflict(conflict)}`)
+    for (const warning of findReservedPortWarnings(settings!)) console.warn(`Warning: ${warning}`)
+    const busy = await reportMachinePorts(settings!)
+    if (conflicts.length) process.exit(1)
+    if (!busy) console.log('No port conflicts found.')
+    return
+  }
+
   if (command === 'validate' || command === 'plan' || command === 'doctor') {
     const { settings, file } = await readBlueprint(parseConfigArg(args))
     const errors = validateBlueprint(settings!)
@@ -494,6 +523,7 @@ export async function runCli(args: string[] = process.argv.slice(2)) {
     let workspaceOverride: boolean | undefined
     let dryRun = false
     let force = false
+    let skipPortCheck = false
 
     for (let i = 1; i < args.length; i++) {
       if ((args[i] === '--config' || args[i] === '-c') && args[i + 1]) {
@@ -512,6 +542,8 @@ export async function runCli(args: string[] = process.argv.slice(2)) {
         dryRun = true
       } else if (args[i] === '--force') {
         force = true
+      } else if (args[i] === '--skip-port-check') {
+        skipPortCheck = true
       }
     }
 
@@ -572,6 +604,7 @@ export async function runCli(args: string[] = process.argv.slice(2)) {
       process.exit(1)
     }
 
+    if (!skipPortCheck) await reportMachinePorts(settings)
     console.log(`Scaffolding '${settings.projectName}' into ${settings.parentDir}...`)
     const result = await scaffoldProject(settings)
 
@@ -579,6 +612,7 @@ export async function runCli(args: string[] = process.argv.slice(2)) {
       console.log(`\nSuccessfully scaffolded monorepo:`)
       console.log(`  Target Directory: ${result.targetDir}`)
       console.log(`  Files Created:    ${result.filesCreated}`)
+      for (const warning of result.warnings || []) console.log(`  Warning: ${warning}`)
       console.log(`\nNext Steps:`)
       console.log(`  1. cd ${result.targetDir}`)
       console.log(`  2. lazystack dev  (or 'npm run dev' to boot DBs & apps concurrently)`)

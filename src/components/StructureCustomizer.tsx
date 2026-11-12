@@ -5,7 +5,7 @@ import { ARCHITECTURE_PRESETS, getDefaultStructureConfig, getRoleFolders, resolv
 import { validateFolderName, validateRelativeProjectPath } from '../utils/pathValidation'
 import { PlanTree } from './PlanTree'
 
-const APP_ROLES: AppRole[] = ['frontend', 'backend', 'fullstack', 'worker', 'desktop-mobile', 'other']
+const APP_ROLES: AppRole[] = ['frontend', 'backend', 'fullstack', 'worker', 'desktop-mobile', 'static-site', 'other']
 
 /** Stand-in apps so the layout preview is useful before anything is in the cart. */
 const SAMPLE_APPS: CartApp[] = [

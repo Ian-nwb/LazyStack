@@ -5,7 +5,7 @@ import { resolveStructurePaths } from '../data/structurePresets'
 /** Caches and message brokers are shared infrastructure even when data stores are per service. */
 export function isSharedInfrastructure(db: SelectedDatabase): boolean {
   const category = DATABASE_CATALOG.find(item => item.id === db.type)?.category
-  return category === 'key-value' || category === 'message-broker'
+  return category === 'key-value' || category === 'cache' || category === 'message-broker'
 }
 
 /** True when the database is unassigned, global, or assigned to this app. */

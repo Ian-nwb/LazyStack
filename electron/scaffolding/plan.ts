@@ -49,6 +49,8 @@ const path = {
  * the file system. The generator replays the plan through the scaffold writer; the Blueprint
  * tree, README and consistency checks read it directly.
  */
+const MESSAGING_VARIABLES: Record<string, true> = { redis: true, valkey: true, rabbitmq: true, kafka: true, nats: true }
+
 export function planScaffold(settings: ProjectSettings, databaseCredentials: Record<string, GeneratedDatabaseCredential>, options: PlanOptions = {}): ScaffoldPlan {
   const existingAppDirs = options.existingAppDirs ?? new Set<string>()
   const paths = resolveStructurePaths(settings)
@@ -242,11 +244,24 @@ export function planScaffold(settings: ProjectSettings, databaseCredentials: Rec
           const scheme = db.type === 'valkey' ? 'redis' : 'redis'
           connectionUrl = `${scheme}://${host}:${port}`
           exampleUrl = connectionUrl
+        } else if (db.type === 'nats') {
+          connectionUrl = `nats://${host}:${port}`
+          exampleUrl = connectionUrl
+        } else if (db.type === 'kafka') {
+          connectionUrl = `${host}:${port}`
+          exampleUrl = connectionUrl
         } else if (db.type === 'rabbitmq' && credentials) {
           connectionUrl = `amqp://${encodeURIComponent(credentials.username)}:${encodeURIComponent(credentials.password)}@${host}:${port}`
           exampleUrl = `amqp://${encodeURIComponent(credentials.username)}:replace_me@${host}:${port}`
         }
-        const variable = idx === 0 ? 'DATABASE_URL' : `${serviceName.toUpperCase()}_URL`
+        const messagingVariable = ({ redis: 'REDIS_URL', valkey: 'REDIS_URL', rabbitmq: 'RABBITMQ_URL', kafka: 'KAFKA_BROKERS', nats: 'NATS_URL' } as Record<string, string>)[db.type]
+        const usedVariable = (name: string) => appEnv.split('\n').some(line => line.startsWith(`${name}=`))
+        // Caches and brokers get their own well-known variable; DATABASE_URL stays with the first data store.
+        const isFirstDataStore = !messagingVariable && appDbs.findIndex(item => !(item.type in MESSAGING_VARIABLES)) === idx
+        let variable = messagingVariable && !usedVariable(messagingVariable)
+          ? messagingVariable
+          : isFirstDataStore ? 'DATABASE_URL' : `${serviceName.toUpperCase()}_URL`
+        if (usedVariable(variable)) variable = `${serviceName.toUpperCase()}_URL`
         if (connectionUrl) {
           appEnv += `${variable}=${connectionUrl}\n`
           appEnvExample += `${variable}=${exampleUrl}\n`

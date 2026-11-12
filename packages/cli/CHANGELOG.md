@@ -1,5 +1,12 @@
 # LazyStack CLI changelog
 
+## 1.3.0
+
+- 28 new frameworks (115 total): Quasar, Svelte, Preact, Gatsby, Vike, RedwoodJS, Blitz, Meteor, Next.js + tRPC, AdonisJS, Koa, Bun, Litestar, Sanic, Starlette, Tornado, Pyramid, Streamlit, Gradio, Hugo, Jekyll, Eleventy, Docusaurus, VitePress, Gleam, V, Dart Shelf and Serverpod. Static site generators use the new `static-site` role.
+- New `lazystack ports --config <file>` command: reports duplicate ports (including databases' fixed extra ports and the proxy) and ports already in use on this machine. `scaffold` probes the machine first; pass `--skip-port-check` to skip it.
+- `scaffold` stops on duplicate ports across apps, databases, admin UIs and the proxy, and prints warnings for privileged ports.
+- NATS (JetStream) database/service; app `.env` files use `REDIS_URL`, `RABBITMQ_URL`, `KAFKA_BROKERS` and `NATS_URL` for caches and brokers.
+
 ## 1.2.1
 
 - `lazystack presets` lists five stack presets: `t3-stack`, `fastapi-react`, `modern-mern`, `go-vue` and `rust-axum`. The other seven were removed.

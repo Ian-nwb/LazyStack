@@ -1,16 +1,21 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { AlertCircle, CheckCircle2 } from 'lucide-react'
 import { ProjectSettings } from '../types'
 import { validateFolderName, validatePath } from '../utils/pathValidation'
+import { applyPortSuggestions, collectPortUses, describePortConflict, findPortConflicts, findReservedPortWarnings } from '../utils/portCheck'
 
 interface ValidationBannerProps {
   settings: ProjectSettings
   onGenerate: () => void
   /** Overrides the action label (e.g. when applying changes to an existing project). */
   generateLabel?: string
+  /** Receives the blueprint with each conflicting port moved to the suggested free port. */
+  onApplyPortFixes?: (next: ProjectSettings) => void
 }
 
-export const ValidationBanner: React.FC<ValidationBannerProps> = ({ settings, onGenerate, generateLabel }) => {
+export const ValidationBanner: React.FC<ValidationBannerProps> = ({ settings, onGenerate, generateLabel, onApplyPortFixes }) => {
+  const [machineWarnings, setMachineWarnings] = useState<string[]>([])
+  const [probing, setProbing] = useState(false)
   const errors: string[] = []
   const warnings: string[] = []
 
@@ -46,28 +51,29 @@ export const ValidationBanner: React.FC<ValidationBannerProps> = ({ settings, on
     errors.push(`Duplicate app folder name: ${Array.from(new Set(duplicateFolders)).join(', ')}`)
   }
 
-  // 6. Check port collisions
-  const usedPorts: { [port: number]: string[] } = {}
-  settings.apps.forEach(a => {
-    if (a.port > 0) {
-      usedPorts[a.port] = usedPorts[a.port] || []
-      usedPorts[a.port].push(`app '${a.folderName}'`)
-    }
-  })
-  settings.databases.filter(d => d.enabled && d.port > 0).forEach(d => {
-    usedPorts[d.port] = usedPorts[d.port] || []
-    usedPorts[d.port].push(`database '${d.type}'`)
-  })
-  if (settings.proxy.type !== 'none' && settings.proxy.httpPort > 0) {
-    usedPorts[settings.proxy.httpPort] = usedPorts[settings.proxy.httpPort] || []
-    usedPorts[settings.proxy.httpPort].push(`proxy gateway`)
-  }
+  // 6. Port collisions across apps, databases (and their fixed extra ports), admin UIs and the proxy
+  const portConflicts = findPortConflicts(settings)
+  portConflicts.forEach(conflict => errors.push(describePortConflict(conflict)))
+  findReservedPortWarnings(settings).forEach(warning => warnings.push(warning))
+  if (machineWarnings.length > 0) warnings.push(...machineWarnings)
 
-  Object.entries(usedPorts).forEach(([port, names]) => {
-    if (names.length > 1) {
-      errors.push(`Port ${port} collision between ${names.join(' and ')}`)
+  const checkMachine = async () => {
+    setProbing(true)
+    try {
+      const uses = collectPortUses(settings)
+      const ports = uses.map(use => use.port)
+      const probes: Array<{ port: number; inUse: boolean; process?: string }> = window.electronAPI?.checkPorts
+        ? await window.electronAPI.checkPorts(ports)
+        : await (await fetch('/api/ports', { method: 'POST', body: JSON.stringify(ports) })).json()
+      const busy = probes.filter(probe => probe.inUse)
+      setMachineWarnings(busy.map(probe => `Port ${probe.port} (${uses.filter(use => use.port === probe.port).map(use => use.owner).join(', ')}) is already in use on this machine${probe.process ? ` by ${probe.process}` : ''}.`))
+      if (busy.length === 0) setMachineWarnings(['All blueprint ports are free on this machine.'])
+    } catch {
+      setMachineWarnings(['Could not check ports on this machine.'])
+    } finally {
+      setProbing(false)
     }
-  })
+  }
 
   const isValid = errors.length === 0 && settings.apps.length > 0
 
@@ -98,6 +104,22 @@ export const ValidationBanner: React.FC<ValidationBannerProps> = ({ settings, on
       </div>
 
       <div className="flex items-center gap-3">
+        {portConflicts.length > 0 && onApplyPortFixes && (
+          <button
+            onClick={() => onApplyPortFixes(applyPortSuggestions(settings, portConflicts))}
+            className="px-3 py-2 rounded-lg font-semibold text-xs border border-surface-600 text-zinc-200 hover:bg-surface-800 transition cursor-pointer"
+          >
+            Auto-fix ports
+          </button>
+        )}
+        <button
+          onClick={checkMachine}
+          disabled={probing}
+          className="px-3 py-2 rounded-lg font-semibold text-xs border border-surface-600 text-zinc-300 hover:bg-surface-800 transition cursor-pointer disabled:opacity-60"
+          title="Check whether the ports in this blueprint are free on this machine"
+        >
+          {probing ? 'Checking...' : 'Check ports'}
+        </button>
         <button
           onClick={onGenerate}
           disabled={!isValid}

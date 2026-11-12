@@ -404,14 +404,19 @@ export const ARCHITECTURE_PRESETS: ArchitecturePresetMeta[] = [
   }
 ]
 
-const APP_ROLES: AppRole[] = ['frontend', 'backend', 'fullstack', 'worker', 'desktop-mobile', 'other']
+const APP_ROLES: AppRole[] = ['frontend', 'backend', 'fullstack', 'worker', 'desktop-mobile', 'static-site', 'other']
+
+/** Roles without their own folder in a layout land with the role named here. */
+const ROLE_FALLBACK: Partial<Record<AppRole, AppRole>> = { 'static-site': 'frontend' }
+const roleRoot = (config: FolderStructureConfig, role: AppRole): string | undefined =>
+  config.appDirectories?.[role] || (ROLE_FALLBACK[role] ? config.appDirectories?.[ROLE_FALLBACK[role]!] : undefined)
 const trimSlashes = (value: string) => value.replace(/^\/+|\/+$/g, '')
 
 /** Where each app role lands under a structure config, with roles that share a folder grouped. */
 export function getRoleFolders(config: FolderStructureConfig): Array<{ folder: string; roles: AppRole[] }> {
   const groups = new Map<string, AppRole[]>()
   for (const role of APP_ROLES) {
-    const folder = trimSlashes(config.appDirectories?.[role] || config.appsDir || 'apps')
+    const folder = trimSlashes(roleRoot(config, role) || config.appsDir || 'apps')
     groups.set(folder, [...(groups.get(folder) || []), role])
   }
   return [...groups].map(([folder, roles]) => ({ folder, roles }))
@@ -465,8 +470,8 @@ export function resolveStructurePaths(settings: ProjectSettings) {
       if (config.customAppPaths && appId && config.customAppPaths[appId]) {
         return config.customAppPaths[appId].replace(/^\/+|\/+$/g, '')
       }
-      const roleRoot = role ? config.appDirectories?.[role] : undefined
-      if (roleRoot) return `${roleRoot.replace(/^\/+|\/+$/g, '')}/${folderName}`
+      const dir = role ? roleRoot(config, role) : undefined
+      if (dir) return `${dir.replace(/^\/+|\/+$/g, '')}/${folderName}`
       const base = (config.appsDir || 'apps').replace(/^\/+|\/+$/g, '')
       return `${base}/${folderName}`
     }

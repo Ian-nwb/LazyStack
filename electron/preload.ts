@@ -41,6 +41,7 @@ export interface IElectronAPI {
   startStack: (targetPath: string) => Promise<{ success: boolean, output?: string, error?: string }>
   stopStack: (targetPath: string) => Promise<{ success: boolean, output?: string, error?: string }>
   auditEnvironment: () => Promise<BinaryAudit[]>
+  checkPorts: (ports: number[]) => Promise<Array<{ port: number; inUse: boolean; process?: string }>>
   installBinary: (binaryId: string) => Promise<InstallResult>
   addToPath: (dirPath: string) => Promise<boolean>
 }
@@ -65,6 +66,7 @@ const api: IElectronAPI = {
   startStack: (targetPath: string) => ipcRenderer.invoke('start-stack', targetPath),
   stopStack: (targetPath: string) => ipcRenderer.invoke('stop-stack', targetPath),
   auditEnvironment: () => ipcRenderer.invoke('audit-environment'),
+  checkPorts: (ports: number[]) => ipcRenderer.invoke('check-ports', ports),
   installBinary: (binaryId: string) => ipcRenderer.invoke('install-binary', binaryId),
   addToPath: (dirPath: string) => ipcRenderer.invoke('add-to-path', dirPath),
 }

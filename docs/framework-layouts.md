@@ -43,6 +43,25 @@ The architecture root does not turn every service into a JavaScript package. A G
 | React / Vue / Angular / Solid / Qwik | ecosystem package manifest and each framework's `src/` or route entrypoints |
 | Next.js / Nuxt / Remix / SvelteKit / Astro | framework-specific `app/`, `pages/`, `src/routes/`, or `src/pages/` entrypoints |
 | Deno / Zig / C++ / Haskell / OCaml / Scala / Clojure / Erlang / Crystal / Nim | native runtime/build manifests and language-specific source paths |
+| Svelte / Preact + Vite | `package.json`, `vite.config.js`, `index.html`, `src/` (`main`, `App`, `components/`), `public/` |
+| Quasar | `quasar.config.ts`, `index.html`, `src/{boot,components,layouts,pages,router,stores,css}`, `public/` |
+| Gatsby | `gatsby-config.js`, `gatsby-node.js`, `gatsby-browser.js`, `src/pages/`, `static/` |
+| Vike | `vite.config.js`, `pages/+config.js`, `pages/+Layout.jsx`, `pages/<route>/+Page.jsx` (pre-rendered) |
+| RedwoodJS | `redwood.toml`, `api/` (`db/schema.prisma`, `src/{functions,graphql,services,directives,lib}`), `web/` (`src/{pages,layouts,components}`, `Routes.jsx`) |
+| Blitz.js | `blitz.config.ts`, `db/` (Prisma), `src/{app,pages,queries,mutations}`, `src/pages/api/rpc/[[...blitz]].ts` |
+| Meteor | `.meteor/` (packages, platforms, release), `client/`, `server/`, `imports/`, `tests/`; host only |
+| Next.js + tRPC | `src/app/` (App Router, `api/trpc/[trpc]/route.ts`), `src/server/` (`trpc.ts`, `routers/_app.ts`), `src/trpc/client.tsx` |
+| AdonisJS | `adonisrc.ts`, `ace.js`, `bin/server.ts`, `start/{env,kernel,routes}.ts`, `app/{controllers,exceptions,models,middleware}/`, `config/` |
+| Koa / Bun | `src/index.ts`, `src/app.ts` + `src/routes/` (Koa); `src/index.ts` + `src/routes.ts` with `bun test` (Bun) |
+| Litestar / Starlette / Sanic / Tornado / Pyramid | `main.py` entry, `app/` package, `tests/`; Litestar adds `app/controllers/` |
+| Streamlit / Gradio | `app.py`, `lib/`, `tests/`; Streamlit adds `pages/` and `.streamlit/config.toml` |
+| Hugo | `hugo.toml`, `content/`, `layouts/`, `static/`, `assets/`, `data/`, `archetypes/`; Docker builds then serves with nginx |
+| Jekyll | `Gemfile`, `_config.yml`, `_layouts/`, `_posts/`, `_includes/`, `_data/`, `assets/` |
+| Eleventy / Docusaurus / VitePress | `eleventy.config.js` + `src/`; `docusaurus.config.js` + `docs/` + `src/pages/`; `.vitepress/config.mjs` + Markdown pages |
+| Gleam (Wisp) | `gleam.toml`, `src/<app>.gleam`, `src/<app>/router.gleam`, `test/` |
+| V (veb) | `v.mod`, `main.v`, `main_test.v` |
+| Dart Shelf | `pubspec.yaml`, `bin/server.dart`, `lib/app.dart`, `test/` |
+| Serverpod | `setup.sh` + README that runs `serverpod create`; host only |
 | Vanilla HTML, Node, Go, Python, Java | simple runtime entrypoints without a framework-imposed workspace |
 
 Desktop, mobile and hosted apps (GPUI, Slint, Bevy, Dioxus, JavaFX, Swing, Electron, Tauri, Flutter, SwiftUI, Anvil, Apps Script) always run on the host and never get a Docker service.

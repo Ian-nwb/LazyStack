@@ -161,6 +161,13 @@ export function generateDockerCompose(settings: ProjectSettings): string {
         yaml += `    volumes:\n      - ${sName}_data:/var/lib/kafka/data\n`
         yaml += `    healthcheck:\n      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 || exit 1"]\n      interval: 10s\n      timeout: 5s\n      retries: 5\n`
         break
+      case 'nats':
+        yaml += `    image: nats:2-alpine\n`
+        yaml += `    command: ["-js", "-sd", "/data", "-m", "8222"]\n`
+        yaml += `    ports:\n      - "\${${sName.toUpperCase()}_PORT:-${db.port}}:4222"\n      - "8222:8222"\n`
+        yaml += `    volumes:\n      - ${sName}_data:/data\n`
+        yaml += `    healthcheck:\n      test: ["CMD-SHELL", "wget -q --spider http://localhost:8222/healthz || exit 1"]\n      interval: 5s\n      timeout: 5s\n      retries: 5\n`
+        break
       case 'pocketbase':
         yaml += `    image: ghcr.io/muchobien/pocketbase:latest\n`
         yaml += `    ports:\n      - "\${${sName.toUpperCase()}_PORT:-${db.port}}:8090"\n`
@@ -300,6 +307,43 @@ export function generateDockerDevCompose(settings: ProjectSettings): string {
   })
   // Compose requires `services` to be a mapping even when every app runs on the host.
   return yaml.endsWith('services:\n') ? yaml.replace(/services:\n$/, 'services: {}\n') : yaml
+}
+
+interface StaticSiteBuild {
+  /** Toolchain image used to build the site. */
+  image: string
+  /** Steps run in /app after the sources are copied (include dependency install). */
+  setup: string
+  /** Manifest files copied first so dependency layers cache. */
+  manifests?: string
+  /** Build output directory inside /app. */
+  output: string
+}
+
+/** Static site generators build in a toolchain image and are served by nginx on the app port. */
+const STATIC_SITE_BUILDS: Record<string, StaticSiteBuild> = {
+  hugo: { image: 'hugomods/hugo:exts', setup: 'RUN hugo --minify', output: 'public' },
+  jekyll: { image: 'ruby:3.3-slim', manifests: 'Gemfile Gemfile.lock* ./', setup: 'RUN apt-get update && apt-get install -y --no-install-recommends build-essential && rm -rf /var/lib/apt/lists/*\nRUN bundle install\nCOPY . .\nRUN bundle exec jekyll build -d _site', output: '_site' },
+  eleventy: { image: 'node:22-alpine', manifests: 'package*.json ./', setup: 'RUN npm install\nCOPY . .\nRUN npm run build', output: '_site' },
+  docusaurus: { image: 'node:22-alpine', manifests: 'package*.json ./', setup: 'RUN npm install\nCOPY . .\nRUN npm run build', output: 'build' },
+  vitepress: { image: 'node:22-alpine', manifests: 'package*.json ./', setup: 'RUN npm install\nCOPY . .\nRUN npm run build', output: '.vitepress/dist' }
+}
+
+function buildThenServeDockerfile(build: StaticSiteBuild, port: number): string {
+  const lines = [`FROM ${build.image} AS builder`, 'WORKDIR /app']
+  if (build.manifests) lines.push(`COPY ${build.manifests}`)
+  else lines.push('COPY . .')
+  lines.push(build.setup)
+  lines.push(
+    '',
+    'FROM nginx:1.27-alpine',
+    `RUN printf 'server {\\n  listen ${port};\\n  root /usr/share/nginx/html;\\n  index index.html;\\n  location / { try_files $uri $uri/ =404; }\\n}\\n' > /etc/nginx/conf.d/default.conf`,
+    `COPY --from=builder /app/${build.output} /usr/share/nginx/html`,
+    `EXPOSE ${port}`,
+    'CMD ["nginx", "-g", "daemon off;"]',
+    ''
+  )
+  return lines.join('\n')
 }
 
 export function getDockerfileForTech(techId: string, port: number, folderName = 'app', starterProfile?: string): { dockerfile: string, dockerignore: string } {
@@ -521,6 +565,66 @@ EXPOSE ${port}
 CMD ["./server", "-p", "${port}"]
 `,
       dockerignore: `lib\n.git\n`
+    }
+  }
+
+  // --- 1.3.0 additions ---------------------------------------------------------------------
+
+  // Static site generators: build in a toolchain image, then serve the output with nginx on the app port.
+  const staticSite = STATIC_SITE_BUILDS[techId]
+  if (staticSite) {
+    return {
+      dockerfile: buildThenServeDockerfile(staticSite, port),
+      dockerignore: `node_modules\n.git\n.env\n*.log\n_site\npublic\n.jekyll-cache\n.docusaurus\n.vitepress/cache\n.vitepress/dist\n`
+    }
+  }
+
+  if (techId === 'bun-native') {
+    return {
+      dockerfile: `FROM oven/bun:1-alpine\nWORKDIR /app\nCOPY package.json bun.lock* ./\nRUN bun install\nCOPY . .\nEXPOSE ${port}\nENV PORT=${port}\nCMD ["bun", "run", "start"]\n`,
+      dockerignore
+    }
+  }
+
+  if (techId === 'python-streamlit') {
+    return {
+      dockerfile: `FROM python:3.12-slim\nWORKDIR /app\nCOPY requirements.txt .\nRUN pip install --no-cache-dir -r requirements.txt\nCOPY . .\nEXPOSE ${port}\nCMD ["streamlit", "run", "app.py", "--server.port=${port}", "--server.address=0.0.0.0", "--server.headless=true"]\n`,
+      dockerignore: `.git\n.venv\n__pycache__\n`
+    }
+  }
+
+  if (techId === 'python-gradio') {
+    return {
+      dockerfile: `FROM python:3.12-slim\nWORKDIR /app\nCOPY requirements.txt .\nRUN pip install --no-cache-dir -r requirements.txt\nCOPY . .\nEXPOSE ${port}\nENV PORT=${port}\nENV GRADIO_SERVER_NAME=0.0.0.0\nCMD ["python", "app.py"]\n`,
+      dockerignore: `.git\n.venv\n__pycache__\n`
+    }
+  }
+
+  if (['python-litestar', 'python-starlette', 'python-sanic', 'python-tornado', 'python-pyramid'].includes(techId)) {
+    return {
+      dockerfile: `FROM python:3.12-slim\nWORKDIR /app\nCOPY requirements.txt .\nRUN pip install --no-cache-dir -r requirements.txt\nCOPY . .\nEXPOSE ${port}\nENV PORT=${port}\nENV PYTHONUNBUFFERED=1\nCMD ["python", "main.py"]\n`,
+      dockerignore: `.git\n.venv\n__pycache__\n`
+    }
+  }
+
+  if (techId === 'gleam-wisp') {
+    return {
+      dockerfile: `FROM ghcr.io/gleam-lang/gleam:v1.6.3-erlang-alpine\nCOPY . /build/\nRUN cd /build && gleam export erlang-shipment && mv build/erlang-shipment /app && rm -r /build\nWORKDIR /app\nEXPOSE ${port}\nENTRYPOINT ["/app/entrypoint.sh"]\nCMD ["run"]\n`,
+      dockerignore: `build\n.git\n`
+    }
+  }
+
+  if (techId === 'v-vweb') {
+    return {
+      dockerfile: `FROM thevlang/vlang:alpine-build AS builder\nWORKDIR /app\nCOPY . .\nRUN v -prod -o server .\n\nFROM alpine:3.20\nRUN apk add --no-cache libgcc\nWORKDIR /app\nCOPY --from=builder /app/server .\nEXPOSE ${port}\nENV PORT=${port}\nCMD ["./server"]\n`,
+      dockerignore: `.git\nserver\n`
+    }
+  }
+
+  if (techId === 'dart-shelf') {
+    return {
+      dockerfile: `FROM dart:stable AS build\nWORKDIR /app\nCOPY pubspec.* ./\nRUN dart pub get\nCOPY . .\nRUN dart pub get --offline\nRUN dart compile exe bin/server.dart -o bin/server\n\nFROM scratch\nCOPY --from=build /runtime/ /\nCOPY --from=build /app/bin/server /app/bin/\nEXPOSE ${port}\nENV PORT=${port}\nCMD ["/app/bin/server"]\n`,
+      dockerignore: `.dart_tool\n.git\nbin/server\n`
     }
   }
 

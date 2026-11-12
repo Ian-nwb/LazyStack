@@ -10,6 +10,7 @@ import { importProject } from './project/importer'
 import { installDependencies } from './environment/dependencies'
 import { runStack } from './environment/stack'
 import { auditEnvironment } from './environment/auditor'
+import { probePorts } from './environment/ports'
 import { installBinary, addDirectoryToPath } from './environment/installer'
 import { ProjectSettings } from '../src/types'
 
@@ -262,6 +263,10 @@ app.whenReady().then(() => {
   // Environment & Installer IPC
   ipcMain.handle('audit-environment', async () => {
     return await auditEnvironment()
+  })
+
+  ipcMain.handle('check-ports', async (_event, ports: number[]) => {
+    return await probePorts(Array.isArray(ports) ? ports : [])
   })
 
   ipcMain.handle('install-binary', async (_event, binaryId: string) => {

@@ -4,6 +4,7 @@ Planning notes written before each release. They record what was planned and, wh
 
 | Version | Plan |
 | --- | --- |
+| 1.3.0 | [Massive update: new frameworks, port-conflict check, first-class brokers and caches](v1.3.0.md) (released; broker client snippets, admin UIs and orchestrator readiness deferred) |
 | 1.2.2 | Fix Directory Contract tab (`process` in the renderer) |
 | 1.2.1 | Stack presets reduced to five; 15 layouts offered |
 | 1.2.0 | [Architecture layout and diagram rework](architecture-layout-rework.md) |

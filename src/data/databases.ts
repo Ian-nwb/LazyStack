@@ -1,5 +1,7 @@
 import { DatabaseOption } from '../types'
 
+export const MESSAGING_CATEGORIES = ['cache', 'message-broker'] as const
+
 export const DATABASE_CATALOG: DatabaseOption[] = [
   {
     id: 'sqlite',
@@ -56,7 +58,7 @@ export const DATABASE_CATALOG: DatabaseOption[] = [
     id: 'redis',
     name: 'Redis 7 (Alpine)',
     defaultPort: 6379,
-    category: 'key-value',
+    category: 'cache',
     description: 'In-memory data store for ultra-fast caching, pub/sub messaging, and sessions.',
     imageTag: 'redis:7.2-alpine',
     healthcheckCmd: 'redis-cli ping',
@@ -66,7 +68,7 @@ export const DATABASE_CATALOG: DatabaseOption[] = [
     id: 'valkey',
     name: 'Valkey 8 (Linux Foundation)',
     defaultPort: 6380,
-    category: 'key-value',
+    category: 'cache',
     description: 'High-performance, community-driven open source key-value datastore & drop-in Redis alternative backed by Linux Foundation.',
     imageTag: 'valkey/valkey:8.0-alpine',
     healthcheckCmd: 'valkey-cli ping',
@@ -164,6 +166,17 @@ export const DATABASE_CATALOG: DatabaseOption[] = [
     imageTag: 'apache/kafka:3.7.0',
     healthcheckCmd: '/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092',
     badgeColor: 'bg-indigo-600/20 text-indigo-300 border-indigo-600/40'
+  },
+
+  {
+    id: 'nats',
+    name: 'NATS (JetStream Messaging)',
+    defaultPort: 4222,
+    category: 'message-broker',
+    description: 'Lightweight, high-performance messaging system with JetStream persistence and a monitoring endpoint on :8222.',
+    imageTag: 'nats:2-alpine',
+    healthcheckCmd: 'wget -q --spider http://localhost:8222/healthz',
+    badgeColor: 'bg-green-600/20 text-green-300 border-green-600/40'
   },
 
   // ─── Cloud & BaaS Providers ────────────────────────────────────────

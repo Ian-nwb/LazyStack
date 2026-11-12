@@ -589,6 +589,11 @@ export const App: React.FC = () => {
         settings={projectSettings}
         onGenerate={handleGenerate}
         generateLabel={existingProject ? 'Review & Apply Changes' : undefined}
+        onApplyPortFixes={next => {
+          setApps(next.apps)
+          setDatabases(next.databases)
+          setProxy(next.proxy)
+        }}
       />
 
       {readmeReminderOpen && scaffoldResult?.success && (

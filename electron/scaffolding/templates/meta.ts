@@ -42,6 +42,15 @@ export function generateMetaFiles(settings: ProjectSettings, credentials: Record
     if (app.techId === 'python-fastapi') return `python -m venv .venv && source .venv/bin/activate\npip install -r requirements.txt${app.starterProfile === 'api-service' ? '\nalembic upgrade head' : ''}\nuvicorn main:app --reload --port ${app.port}`
     if (app.techId === 'python-django') return `python -m venv .venv && source .venv/bin/activate\npip install -r requirements.txt\npython manage.py migrate\npython manage.py runserver 0.0.0.0:${app.port}`
     if (app.techId === 'python-flask') return `python -m venv .venv && source .venv/bin/activate\npip install -r requirements.txt\ngunicorn --bind 0.0.0.0:${app.port} app:app`
+    if (app.techId === 'python-streamlit') return `python -m venv .venv && source .venv/bin/activate\npip install -r requirements.txt\nstreamlit run app.py --server.port ${app.port}`
+    if (app.techId === 'hugo') return `hugo server --bind 0.0.0.0 --port ${app.port}`
+    if (app.techId === 'jekyll') return `bundle install\nbundle exec jekyll serve --host 0.0.0.0 --port ${app.port}`
+    if (app.techId === 'gleam-wisp') return 'gleam run'
+    if (app.techId === 'v-vweb') return 'v run .'
+    if (app.techId === 'dart-shelf') return 'dart pub get\ndart run bin/server.dart'
+    if (app.techId === 'dart-serverpod') return './setup.sh'
+    if (app.techId === 'bun-native') return 'bun install\nbun run dev'
+    if (app.techId === 'meteor') return `npm install\nmeteor run --port ${app.port}`
     if (app.techId.startsWith('python-')) return `python -m venv .venv && source .venv/bin/activate\npip install -r requirements.txt\npython main.py`
     if (app.techId.startsWith('go-')) return 'go mod tidy\ngo run .'
     if (app.techId === 'rust-dioxus') return `cargo install dioxus-cli\ndx serve --port ${app.port}`
@@ -162,6 +171,8 @@ mongo_data/
     if (app.techId === 'python-django') return `${pyBin} manage.py runserver 0.0.0.0:${app.port}`
     if (app.techId === 'python-flask') return `${pyBin} app.py`
     if (app.techId === 'python-reflex') return `reflex run --port ${app.port}`
+    if (app.techId === 'python-streamlit') return `${pyBin} -m streamlit run app.py --server.port ${app.port} --server.address 0.0.0.0 --server.headless true`
+    if (app.techId === 'python-gradio') return `${pyBin} app.py`
     if (app.techId === 'python-nicegui' || app.techId === 'python-anvil' || app.techId.startsWith('python-') || app.techId === 'vanilla-python') {
       return `${pyBin} main.py`
     }
@@ -202,6 +213,15 @@ mongo_data/
     if (app.techId === 'c-microhttpd') return 'make run'
     if (app.techId === 'cpp-drogon') return 'cmake -B build && cmake --build build && ./build/drogon_service'
     if (app.techId === 'assembly-nasm') return 'make run'
+
+    // 9b. Static site generators and newer languages (1.3.0)
+    if (app.techId === 'hugo') return `hugo server --bind 0.0.0.0 --port ${app.port}`
+    if (app.techId === 'jekyll') return `bundle exec jekyll serve --host 0.0.0.0 --port ${app.port}`
+    if (app.techId === 'gleam-wisp') return 'gleam run'
+    if (app.techId === 'v-vweb') return 'v run .'
+    if (app.techId === 'dart-shelf') return 'dart run bin/server.dart'
+    if (app.techId === 'dart-serverpod') return 'echo "Serverpod: run ./setup.sh once, then see README.md"'
+    if (app.techId === 'bun-native') return 'bun run dev'
 
     // 10. Haskell
     if (app.techId === 'haskell-scotty') return 'cabal run'

@@ -11,14 +11,14 @@ export interface TestingToolOption {
   runtimePackages?: string[]
   scriptName?: string
   scriptCommand?: string
-  roles: Array<'frontend' | 'backend' | 'fullstack' | 'worker' | 'desktop-mobile' | 'other'>
+  roles: Array<'frontend' | 'backend' | 'fullstack' | 'worker' | 'desktop-mobile' | 'static-site' | 'other'>
   techIds?: string[]
   devDependencies?: boolean
 }
 
-const web = ['frontend', 'fullstack'] as TestingToolOption['roles']
+const web = ['frontend', 'fullstack', 'static-site'] as TestingToolOption['roles']
 const services = ['backend', 'worker', 'fullstack'] as TestingToolOption['roles']
-const any = ['frontend', 'backend', 'fullstack', 'worker', 'desktop-mobile', 'other'] as TestingToolOption['roles']
+const any = ['frontend', 'backend', 'fullstack', 'worker', 'desktop-mobile', 'static-site', 'other'] as TestingToolOption['roles']
 
 export const TESTING_TOOLS: TestingToolOption[] = [
   { id: 'jest', name: 'Jest', category: 'unit', ecosystem: 'npm', description: 'JavaScript and TypeScript unit tests.', installPackages: ['jest'], scriptName: 'test', scriptCommand: 'jest', roles: any, devDependencies: true },

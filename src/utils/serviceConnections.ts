@@ -5,7 +5,7 @@ export function getDefaultConnectionEnvVar(source: CartApp, target: CartApp): st
   // Mobile clients only see variables with their bundler's public prefix.
   if (source.techId === 'react-native-expo') return `EXPO_PUBLIC_${targetName}_API_URL`
   if (source.techId === 'capacitor-app' || source.techId === 'ionic-framework') return `VITE_${targetName}_API_URL`
-  if (source.role === 'frontend' || source.role === 'fullstack') {
+  if (source.role === 'frontend' || source.role === 'fullstack' || source.role === 'static-site') {
     const publicPrefix = source.techId.includes('nextjs')
       ? 'NEXT_PUBLIC'
       : source.techId.includes('svelte') || source.techId.includes('astro')
@@ -31,7 +31,7 @@ export function resolveServiceConnectionUrl(
 
   const scheme = connection.protocol
   // Browser and WebView clients call the API from the user's device, so they need a host-reachable URL.
-  if (source.role === 'frontend' || source.role === 'fullstack' || CLIENT_SIDE_APPS.has(source.techId)) {
+  if (source.role === 'frontend' || source.role === 'fullstack' || source.role === 'static-site' || CLIENT_SIDE_APPS.has(source.techId)) {
     const route = proxy.type !== 'none' && proxy.httpPort > 0
       ? (target.routePrefix && target.routePrefix !== '/' ? `/${target.routePrefix.replace(/^\/+|\/+$/g, '')}` : '')
       : ''

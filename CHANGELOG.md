@@ -5,6 +5,21 @@ All notable changes to LazyStack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-11-12
+
+### Added
+- **28 frameworks** (87 to 115). JS/TS frontends and fullstack: Quasar (Vite), Svelte + Vite, Preact + Vite, Gatsby, Vike, RedwoodJS, Blitz.js, Meteor (host only), Next.js + tRPC. Node backends: AdonisJS, Koa, Bun (`Bun.serve`). Python: Litestar, Sanic, Starlette, Tornado, Pyramid, Streamlit, Gradio. Static site generators: Hugo, Jekyll, Eleventy, Docusaurus, VitePress. Other languages: Gleam (Wisp), V (veb), Dart Shelf, Serverpod (host only).
+- **`static-site` app role.** Static site generators use it; it lands in the frontend folder of every architecture layout unless a layout sets its own. Their Dockerfiles build the site, then serve it with nginx on the app port.
+- **Port-conflict check.** Ports must be unique across apps, databases, the fixed extra ports some databases publish (RabbitMQ management 15672, MinIO console 9001, ClickHouse 9000, Neo4j bolt 7687, Qdrant gRPC 6334, NATS monitoring 8222), database admin UIs and the proxy; duplicates block scaffolding and name every owner with a suggested free port. Privileged and commonly OS-owned ports produce warnings. The footer banner shows conflicts live with an **Auto-fix ports** button and a **Check ports** button that probes this machine (IPC `check-ports`, Vite `/api/ports`). New `lazystack ports --config <file>`; `scaffold` runs the machine probe unless `--skip-port-check` is passed.
+- **NATS (JetStream)** as a database/service, and a **Messaging & caching** group in the database picker. Redis and Valkey are now the `cache` category. Importer recognizes the `nats` image.
+
+### Changed
+- App `.env` files give caches and brokers their own variable (`REDIS_URL`, `RABBITMQ_URL`, `KAFKA_BROKERS`, `NATS_URL`). `DATABASE_URL` now always belongs to the first data store rather than the first service of any kind.
+- The importer detects the new frameworks, including Next.js + tRPC before plain Next.js, Quasar before Vue, and Streamlit/Gradio before generic Python.
+
+### Not included
+- Per-language broker client snippets, Kafka UI / NATS dashboard admin UIs, and dev-orchestrator wait-for-readiness for brokers from the 1.3.0 plan are not part of this release.
+
 ## [1.2.2] - 2026-11-10
 
 ### Fixed

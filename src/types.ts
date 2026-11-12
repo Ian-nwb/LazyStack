@@ -1,4 +1,4 @@
-export type AppRole = 'frontend' | 'backend' | 'fullstack' | 'worker' | 'desktop-mobile' | 'other'
+export type AppRole = 'frontend' | 'backend' | 'fullstack' | 'worker' | 'desktop-mobile' | 'static-site' | 'other'
 
 export type RunMode = 'docker' | 'host'
 
@@ -97,6 +97,7 @@ export type DatabaseType =
   | 'scylladb'
   | 'rabbitmq'
   | 'kafka'
+  | 'nats'
   // Cloud & BaaS providers
   | 'supabase'
   | 'firebase'
@@ -114,7 +115,7 @@ export interface DatabaseOption {
   id: DatabaseType
   name: string
   defaultPort: number
-  category: 'relational' | 'document' | 'key-value' | 'olap' | 'graph' | 'embedded' | 'vector' | 'search' | 'storage' | 'message-broker' | 'baas' | 'cloud-db'
+  category: 'relational' | 'document' | 'key-value' | 'cache' | 'olap' | 'graph' | 'embedded' | 'vector' | 'search' | 'storage' | 'message-broker' | 'baas' | 'cloud-db'
   description: string
   isHeavyMemory?: boolean
   imageTag?: string

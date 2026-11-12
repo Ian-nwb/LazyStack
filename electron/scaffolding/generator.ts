@@ -12,6 +12,7 @@ import { getDatabaseAdminUiOption } from '../../src/data/databaseAdminUis'
 import { TECH_CATALOG, isHostOnlyTech } from '../../src/data/frameworks'
 import { createScaffoldWriter, ScaffoldChanges, ScaffoldMode } from './writer'
 import { getAppDatabases } from '../../src/utils/databaseScope'
+import { describePortConflict, findPortConflicts, findReservedPortWarnings } from '../../src/utils/portCheck'
 
 export interface ScaffoldResult {
   success: boolean
@@ -20,6 +21,8 @@ export interface ScaffoldResult {
   error?: string
   /** Per-file outcome; always reported, and the only output of a dry run. */
   changes?: ScaffoldChanges
+  /** Non-blocking notes, such as privileged or commonly claimed ports. */
+  warnings?: string[]
 }
 
 export { BLUEPRINT_VERSION } from './plan'
@@ -178,23 +181,12 @@ export async function scaffoldProject(inputSettings: ProjectSettings, options: S
     }
   }
 
-  const declaredPorts = [
-    ...settings.apps.filter(app => app.port > 0).map(app => ({ port: app.port, name: app.folderName })),
-    ...settings.databases.filter(db => {
-      if (!db.enabled || db.port <= 0) return false
-      const definition = DATABASE_CATALOG.find(item => item.id === db.type)
-      return !definition?.isCloud || Boolean(definition.imageTag)
-    }).map(db => ({ port: db.port, name: db.customName || db.type })),
-    ...settings.databases.filter(db => db.enabled && db.adminUi && db.adminUiPort).map(db => ({ port: db.adminUiPort!, name: `${db.customName || db.type} admin UI` }))
-  ]
-  const occupiedPorts = new Map<number, string>()
-  for (const item of declaredPorts) {
-    const existing = occupiedPorts.get(item.port)
-    if (existing) {
-      return { success: false, targetDir: '', filesCreated: 0, error: `Port ${item.port} is used by both '${existing}' and '${item.name}'. Choose different ports.` }
-    }
-    occupiedPorts.set(item.port, item.name)
+  // Host ports must be unique across apps, databases (including their fixed extra ports), admin UIs and the proxy.
+  const portConflicts = findPortConflicts(settings)
+  if (portConflicts.length > 0) {
+    return { success: false, targetDir: '', filesCreated: 0, error: portConflicts.map(describePortConflict).join(' ') }
   }
+  const warnings = findReservedPortWarnings(settings)
 
   const targetDir = path.normalize(joinPaths(settings.parentDir, settings.projectName))
   const paths = resolveStructurePaths(settings)
@@ -264,7 +256,8 @@ export async function scaffoldProject(inputSettings: ProjectSettings, options: S
       success: true,
       targetDir,
       filesCreated: options.dryRun || mode === 'augment' ? out.changes.created.length + out.changes.updated.length + out.changes.merged.length : filesCreated,
-      changes: out.changes
+      changes: out.changes,
+      ...(warnings.length ? { warnings } : {})
     }
   } catch (error: any) {
     let errorMsg = error.message || 'Scaffolding failed'

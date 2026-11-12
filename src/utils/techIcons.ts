@@ -115,6 +115,17 @@ const FRAMEWORK_ICON_OVERRIDES: Record<string, string> = {
   'capacitor-app':      `${DEVICON_BASE}/capacitor/capacitor-original.svg`,
   'csharp-maui':        `${DEVICON_BASE}/dotnetcore/dotnetcore-original.svg`,
   'inferno-js':         `${DEVICON_BASE}/react/react-original.svg`,
+  'svelte-vite':        `${DEVICON_BASE}/svelte/svelte-original.svg`,
+  'gatsby':             `${DEVICON_BASE}/gatsby/gatsby-original.svg`,
+  'quasar-vite':        `${DEVICON_BASE}/quasar/quasar-original.svg`,
+  'meteor':             `${DEVICON_BASE}/meteor/meteor-original.svg`,
+  'nextjs-trpc':        `${DEVICON_BASE}/nextjs/nextjs-original.svg`,
+  'ts-adonis':          `${DEVICON_BASE}/adonisjs/adonisjs-original.svg`,
+  'bun-native':         `${DEVICON_BASE}/bun/bun-original.svg`,
+  'hugo':               `${DEVICON_BASE}/hugo/hugo-original.svg`,
+  'jekyll':             `${DEVICON_BASE}/jekyll/jekyll-original.svg`,
+  'vitepress':          `${DEVICON_BASE}/vitejs/vitejs-original.svg`,
+  'python-streamlit':   `${DEVICON_BASE}/streamlit/streamlit-original.svg`,
 }
 
 /**

@@ -156,6 +156,36 @@ export function getAppManualSetup(app: Pick<CartApp, 'techId' | 'folderName' | '
       return app.starterProfile === 'api-service'
         ? { reason: 'The API service profile uses a database schema and a bearer token.', steps: ['Set `API_TOKEN` in the app\'s `.env`.', 'Run `alembic upgrade head` inside the virtualenv before starting the API.'] }
         : null
+    case 'meteor':
+      return {
+        reason: 'Meteor runs on the host: it bundles its own Node.js and MongoDB, so LazyStack adds no Docker service for it.',
+        steps: ['Install Meteor with `npx meteor` (or `curl https://install.meteor.com/ | sh`).', `In the app folder run \`npm install\`, then \`meteor run --port ${app.port}\`.`],
+        docs: 'https://docs.meteor.com/about/install'
+      }
+    case 'dart-serverpod':
+      return {
+        reason: 'Serverpod generates its own three-package project with the `serverpod` CLI and uses Docker for Postgres and Redis. LazyStack adds no Compose service for it.',
+        steps: ['Install the Dart SDK and Docker.', 'Run `dart pub global activate serverpod_cli` and add `~/.pub-cache/bin` to PATH.', `In the app folder run \`./setup.sh\` (it calls \`serverpod create ${snake}\`).`, `Start its database with \`docker compose up --build --detach\` inside \`${snake}/${snake}_server\`, then run \`dart bin/main.dart --apply-migrations\`.`],
+        docs: 'https://docs.serverpod.dev/get-started'
+      }
+    case 'hugo':
+      return {
+        reason: 'Hugo is a single binary that must be on your PATH to build or preview the site on the host (Docker builds it for you).',
+        steps: ['Install Hugo (extended edition if you use Sass): see the install guide.', `Run \`hugo server --bind 0.0.0.0 --port ${app.port}\` in the app folder.`],
+        docs: 'https://gohugo.io/installation/'
+      }
+    case 'gleam-wisp':
+      return {
+        reason: 'Gleam compiles to Erlang, so both Gleam and Erlang/OTP must be installed on the host.',
+        steps: ['Install Gleam and Erlang/OTP (and `rebar3`).', 'Run `gleam run` in the app folder.'],
+        docs: 'https://gleam.run/getting-started/installing/'
+      }
+    case 'v-vweb':
+      return {
+        reason: 'V is built from source and is not in most package managers.',
+        steps: ['Install V from https://github.com/vlang/v and run `sudo ./v symlink`.', 'Run `v run .` in the app folder.'],
+        docs: 'https://docs.vlang.io/introduction.html#install-from-source'
+      }
     case 'sql-migrations':
       return {
         reason: 'Migrations run against a database you point them at.',

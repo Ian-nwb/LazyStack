@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Database, AlertTriangle, HardDrive, ShieldCheck, Cloud, Server, ExternalLink, Package, Key, Plus, Trash2, Box } from 'lucide-react'
 import { SelectedDatabase, DatabaseType, CartApp, DatabaseAdminUi } from '../types'
-import { DATABASE_CATALOG } from '../data/databases'
+import { DATABASE_CATALOG, MESSAGING_CATEGORIES } from '../data/databases'
 import { getDatabaseAdminUiCommandName, getDatabaseAdminUiOption, getDatabaseAdminUiOptions } from '../data/databaseAdminUis'
 
 interface DatabasePickerProps {
@@ -10,7 +10,9 @@ interface DatabasePickerProps {
   apps: CartApp[]
 }
 
-type FilterTab = 'all' | 'self-hosted' | 'cloud'
+type FilterTab = 'all' | 'self-hosted' | 'messaging' | 'cloud'
+
+const isMessaging = (category: string) => (MESSAGING_CATEGORIES as readonly string[]).includes(category)
 
 export const DatabasePicker: React.FC<DatabasePickerProps> = ({ databases, setDatabases, apps }) => {
   const [activeFilter, setActiveFilter] = useState<FilterTab>('all')
@@ -97,11 +99,14 @@ export const DatabasePicker: React.FC<DatabasePickerProps> = ({ databases, setDa
   const filteredCatalog = DATABASE_CATALOG.filter(db => {
     if (activeFilter === 'all') return true
     if (activeFilter === 'self-hosted') return !db.isCloud
+    if (activeFilter === 'messaging') return isMessaging(db.category)
     if (activeFilter === 'cloud') return db.isCloud
     return true
   })
 
   const selfHostedCount = DATABASE_CATALOG.filter(d => !d.isCloud).length
+  const messagingCount = DATABASE_CATALOG.filter(d => isMessaging(d.category)).length
+  const enabledMessagingCount = databases.filter(d => d.enabled && isMessaging(DATABASE_CATALOG.find(c => c.id === d.type)?.category || '')).length
   const cloudCount = DATABASE_CATALOG.filter(d => d.isCloud).length
   const enabledInstances = databases.filter(d => d.enabled)
   const enabledCloudCount = enabledInstances.filter(d => {
@@ -177,6 +182,28 @@ export const DatabasePicker: React.FC<DatabasePickerProps> = ({ databases, setDa
             {selfHostedCount}
           </span>
           {enabledSelfHostedCount > 0 && (
+            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+          )}
+        </button>
+
+        <button
+          onClick={() => setActiveFilter('messaging')}
+          className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition flex items-center gap-1.5 cursor-pointer ${
+            activeFilter === 'messaging'
+              ? 'bg-zinc-100 text-zinc-950 font-bold'
+              : 'text-zinc-400 hover:text-white hover:bg-surface-800'
+          }`}
+        >
+          <Box className="w-3.5 h-3.5" />
+          Messaging & caching
+          <span className={`px-1.5 py-0.2 rounded text-[10px] font-mono border ${
+            activeFilter === 'messaging'
+              ? 'bg-zinc-300/80 text-zinc-950 border-zinc-400/60 font-bold'
+              : 'bg-surface-950 text-zinc-400 border-surface-700'
+          }`}>
+            {messagingCount}
+          </span>
+          {enabledMessagingCount > 0 && (
             <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
           )}
         </button>

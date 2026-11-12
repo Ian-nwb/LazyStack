@@ -126,6 +126,22 @@ export default defineConfig({
           }
         })
 
+        server.middlewares.use('/api/ports', async (req, res) => {
+          let body = ''
+          req.on('data', chunk => { body += chunk })
+          req.on('end', async () => {
+            res.setHeader('Content-Type', 'application/json')
+            try {
+              const { probePorts } = await import('./electron/environment/ports')
+              const ports = body ? JSON.parse(body) : []
+              res.end(JSON.stringify(await probePorts(Array.isArray(ports) ? ports : [])))
+            } catch (err: any) {
+              res.statusCode = 500
+              res.end(JSON.stringify({ error: err.message }))
+            }
+          })
+        })
+
         server.middlewares.use('/api/install', async (req, res) => {
           let body = ''
           req.on('data', chunk => { body += chunk })
