@@ -495,7 +495,7 @@ ${settings.apps.map(a => `          - service: ${a.folderName}
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-surface-950">
       {/* Tab Selector */}
-      <div className="px-6 py-3 border-b border-surface-700 bg-surface-900 flex items-center justify-between gap-3 shrink-0">
+      <div className="px-3 sm:px-6 py-3 border-b border-surface-700 bg-surface-900 flex flex-wrap items-center justify-between gap-3 shrink-0">
         <div className="flex items-center gap-1 bg-surface-950 p-1 rounded-lg border border-surface-700 text-xs overflow-x-auto">
           <button
             onClick={() => setActiveTab('structure')}

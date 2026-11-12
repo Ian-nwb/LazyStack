@@ -156,10 +156,10 @@ export function generateDockerCompose(settings: ProjectSettings): string {
         break
       case 'kafka':
         yaml += `    image: apache/kafka:3.7.0\n`
-        yaml += `    environment:\n      KAFKA_NODE_ID: 1\n      KAFKA_PROCESS_ROLES: 'broker,controller'\n      KAFKA_LISTENERS: 'PLAINTEXT://:9092,CONTROLLER://:9093'\n      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://localhost:\${${sName.toUpperCase()}_PORT:-${db.port}}'\n      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'\n      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT'\n      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@localhost:9093'\n      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1\n      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1\n      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1\n      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0\n      KAFKA_NUM_PARTITIONS: 3\n`
+        yaml += `    environment:\n      KAFKA_NODE_ID: 1\n      KAFKA_PROCESS_ROLES: 'broker,controller'\n      KAFKA_LISTENERS: 'INTERNAL://:29092,EXTERNAL://:9092,CONTROLLER://:9093'\n      KAFKA_ADVERTISED_LISTENERS: 'INTERNAL://${sName}:29092,EXTERNAL://localhost:\${${sName.toUpperCase()}_PORT:-${db.port}}'\n      KAFKA_INTER_BROKER_LISTENER_NAME: 'INTERNAL'\n      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'\n      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT'\n      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@localhost:9093'\n      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1\n      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1\n      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1\n      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0\n      KAFKA_NUM_PARTITIONS: 3\n`
         yaml += `    ports:\n      - "\${${sName.toUpperCase()}_PORT:-${db.port}}:9092"\n`
         yaml += `    volumes:\n      - ${sName}_data:/var/lib/kafka/data\n`
-        yaml += `    healthcheck:\n      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 || exit 1"]\n      interval: 10s\n      timeout: 5s\n      retries: 5\n`
+        yaml += `    healthcheck:\n      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:29092 || exit 1"]\n      interval: 10s\n      timeout: 5s\n      retries: 5\n`
         break
       case 'nats':
         yaml += `    image: nats:2-alpine\n`
@@ -216,6 +216,10 @@ export function generateDockerCompose(settings: ProjectSettings): string {
       case 'redis-commander':
         yaml += `    image: rediscommander/redis-commander:latest\n`
         yaml += `    environment:\n      REDIS_HOSTS: local:${sName}:6379\n`
+        break
+      case 'kafka-ui':
+        yaml += `    image: provectuslabs/kafka-ui:latest\n`
+        yaml += `    environment:\n      KAFKA_CLUSTERS_0_NAME: ${sName}\n      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: ${sName}:29092\n      DYNAMIC_CONFIG_ENABLED: "true"\n`
         break
       case 'prisma-studio':
         break
@@ -609,14 +613,14 @@ CMD ["./server", "-p", "${port}"]
 
   if (techId === 'gleam-wisp') {
     return {
-      dockerfile: `FROM ghcr.io/gleam-lang/gleam:v1.6.3-erlang-alpine\nCOPY . /build/\nRUN cd /build && gleam export erlang-shipment && mv build/erlang-shipment /app && rm -r /build\nWORKDIR /app\nEXPOSE ${port}\nENTRYPOINT ["/app/entrypoint.sh"]\nCMD ["run"]\n`,
+      dockerfile: `FROM ghcr.io/gleam-lang/gleam:v1.14.0-erlang-alpine\nCOPY . /build/\nRUN cd /build && gleam export erlang-shipment && mv build/erlang-shipment /app && rm -r /build\nWORKDIR /app\nEXPOSE ${port}\nENTRYPOINT ["/app/entrypoint.sh"]\nCMD ["run"]\n`,
       dockerignore: `build\n.git\n`
     }
   }
 
   if (techId === 'v-vweb') {
     return {
-      dockerfile: `FROM thevlang/vlang:alpine-build AS builder\nWORKDIR /app\nCOPY . .\nRUN v -prod -o server .\n\nFROM alpine:3.20\nRUN apk add --no-cache libgcc\nWORKDIR /app\nCOPY --from=builder /app/server .\nEXPOSE ${port}\nENV PORT=${port}\nCMD ["./server"]\n`,
+      dockerfile: `FROM thevlang/vlang:alpine AS builder\nWORKDIR /app\nCOPY . .\nRUN v -prod -o server .\n\nFROM alpine:3.20\nRUN apk add --no-cache libgcc\nWORKDIR /app\nCOPY --from=builder /app/server .\nEXPOSE ${port}\nENV PORT=${port}\nCMD ["./server"]\n`,
       dockerignore: `.git\nserver\n`
     }
   }

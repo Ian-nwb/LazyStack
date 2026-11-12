@@ -268,6 +268,8 @@ mongo_data/
   }))
 
   const hasInfrastructureContainers = selfHostedDbs.length > 0
+  // Brokers and caches must be ready before host apps start connecting, so compose waits for their healthchecks.
+  const hasBrokerContainers = selfHostedDbs.some(db => ['redis', 'valkey', 'rabbitmq', 'kafka', 'nats'].includes(db.type))
 
   // 4. scripts/dev-orchestrator.mjs (Unified Dev Orchestrator)
   files[`${paths.scriptsDir}/dev-orchestrator.mjs`] = `#!/usr/bin/env node
@@ -324,7 +326,7 @@ async function main() {
     console.log(\`[orchestrator] 🐳 Booting background databases & infrastructure via Docker...\`);
     try {
       const dockerCmd = process.platform === 'win32' ? 'docker.exe' : 'docker';
-      const composeArgs = ['compose', '--env-file', '.env', '-f', '${paths.infraDir}/docker-compose.yml', 'up', '-d'];
+      const composeArgs = ['compose', '--env-file', '.env', '-f', '${paths.infraDir}/docker-compose.yml', 'up', '-d'${hasBrokerContainers ? ", '--wait'" : ''}];
       const dbProc = spawn(dockerCmd, composeArgs, { cwd: rootDir, stdio: 'inherit' });
       await new Promise((resolve) => {
         dbProc.on('close', (code) => {

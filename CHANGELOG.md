@@ -5,6 +5,27 @@ All notable changes to LazyStack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- **Gleam (Wisp) starter did not build**: dependency ranges resolved to a newer `gleam_stdlib` than the Docker image's compiler, and Wisp 2 / Mist 6 renamed APIs. The starter now targets Wisp 2, Mist 6 and Gleam 1.14 (verified: `gleam test` passes, the Docker image builds and `/health` answers).
+- **V (veb) Dockerfile used an image without the V compiler**; it now builds from `thevlang/vlang:alpine` (verified).
+- **Blitz starter failed `blitz build`**: removed an invalid `blitz.config.ts`, render the index page on the server (it reads data through an RPC query) and run `prisma generate` with an explicit schema path (verified: build passes).
+- **Kafka was unreachable from Docker apps**: the broker only advertised `localhost`. It now has an in-network listener (`<service>:29092`, used by Docker apps and `KAFKA_BROKERS`) and the host listener (`localhost:<port>`). Verified live with kafkajs.
+
+### Added
+- **Per-language broker examples**: Node, Python and Go services get a connect/publish/subscribe module for each Redis, Valkey, RabbitMQ, Kafka or NATS they use, and the client library is added to `package.json`, `requirements.txt` or `go.mod`. Other ecosystems still get the connection variable in `.env`.
+- **Kafka UI** admin UI option for Kafka.
+- **Dev orchestrator waits for brokers**: when a cache or broker is in the stack, `docker compose up` runs with `--wait` so host apps start after their healthchecks pass.
+- **CI**: a `new_frameworks_matrix` job scaffolds, builds and tests each of the 1.3.0 frameworks (Node build, Python pytest, or Docker build).
+
+### Changed
+- **The desktop UI adapts to screen size**: header, tab bar, section headers, filter tabs and the footer wrap or scroll on narrow windows, paddings shrink, and the app fills the dynamic viewport height.
+
+### Still not included
+- NATS dashboard admin UI, and broker examples for Rust, JVM and .NET services.
+- Meteor starter has not been run (the Meteor toolchain is not installed on the release machine).
+
 ## [1.3.0] - 2026-11-12
 
 ### Added

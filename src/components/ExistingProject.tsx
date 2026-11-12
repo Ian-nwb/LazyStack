@@ -15,7 +15,7 @@ export interface ExistingProjectInfo {
 export const ExistingProjectBanner: React.FC<{ info: ExistingProjectInfo; onClose: () => void }> = ({ info, onClose }) => {
   const techName = (id: string) => TECH_CATALOG.find(tech => tech.id === id)?.name || id
   return (
-    <div className="px-6 py-2.5 border-b border-surface-700 bg-surface-950 text-xs flex items-start gap-3">
+    <div className="px-3 sm:px-6 py-2.5 border-b border-surface-700 bg-surface-950 text-xs flex items-start gap-3">
       <FolderOpen className="w-4 h-4 text-zinc-300 shrink-0 mt-0.5" />
       <div className="flex-1 min-w-0 space-y-1">
         <div className="text-zinc-200">

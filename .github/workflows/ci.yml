@@ -439,3 +439,99 @@ jobs:
       - name: Test generated .NET MAUI view models
         if: matrix.tech_id == 'csharp-maui'
         run: dotnet test ./native-output/native-${{ matrix.language }}/apps/service/tests/Service.Tests
+
+  new_frameworks_matrix:
+    name: Frameworks 1.3 (${{ matrix.tech }})
+    needs: build_and_typecheck
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Node apps: install, build (and test where the starter defines tests)
+          - { tech: svelte-vite, kind: node, role: frontend, port: 5173 }
+          - { tech: preact-vite, kind: node, role: frontend, port: 5174 }
+          - { tech: quasar-vite, kind: node, role: frontend, port: 9000 }
+          - { tech: gatsby, kind: node, role: frontend, port: 8000 }
+          - { tech: vike, kind: node, role: frontend, port: 3001 }
+          - { tech: redwoodjs, kind: node, role: fullstack, port: 8910 }
+          - { tech: blitz, kind: node, role: fullstack, port: 3002 }
+          - { tech: nextjs-trpc, kind: node, role: fullstack, port: 3003 }
+          - { tech: ts-adonis, kind: node, role: backend, port: 3333 }
+          - { tech: ts-koa, kind: node, role: backend, port: 3004 }
+          - { tech: eleventy, kind: node, role: static-site, port: 8080 }
+          - { tech: docusaurus, kind: node, role: static-site, port: 3005 }
+          - { tech: vitepress, kind: node, role: static-site, port: 5175 }
+          # Python apps: install and pytest
+          - { tech: python-litestar, kind: python, role: backend, port: 8000 }
+          - { tech: python-starlette, kind: python, role: backend, port: 8001 }
+          - { tech: python-sanic, kind: python, role: backend, port: 8002 }
+          - { tech: python-tornado, kind: python, role: backend, port: 8888 }
+          - { tech: python-pyramid, kind: python, role: backend, port: 6543 }
+          - { tech: python-streamlit, kind: python, role: fullstack, port: 8501 }
+          - { tech: python-gradio, kind: python, role: fullstack, port: 7860 }
+          # Toolchain-heavy apps: build the generated Dockerfile
+          - { tech: hugo, kind: docker, role: static-site, port: 1313 }
+          - { tech: jekyll, kind: docker, role: static-site, port: 4000 }
+          - { tech: gleam-wisp, kind: docker, role: backend, port: 8003 }
+          - { tech: v-vweb, kind: docker, role: backend, port: 8081 }
+          - { tech: dart-shelf, kind: docker, role: backend, port: 8082 }
+          - { tech: bun-native, kind: docker, role: backend, port: 3006 }
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Setup Python 3.12
+        if: matrix.kind == 'python'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies and build the CLI
+        run: |
+          npm ci
+          npm run build:cli
+
+      - name: Scaffold a single-app project (native mode)
+        run: |
+          mkdir -p ./out
+          cat > ./app.json <<JSON
+          {
+            "projectName": "ci-${{ matrix.tech }}",
+            "parentDir": "$PWD/out",
+            "apps": [{ "id": "a1", "folderName": "app", "role": "${{ matrix.role }}", "techId": "${{ matrix.tech }}", "port": ${{ matrix.port }}, "runMode": "docker", "routePrefix": "/" }],
+            "databases": [],
+            "proxy": { "type": "none", "httpPort": 0 },
+            "useUnifiedWorkspace": false
+          }
+          JSON
+          node ./bin/lazystack.js scaffold --config ./app.json --out ./out --skip-port-check
+
+      - name: Install, build and test (Node)
+        if: matrix.kind == 'node'
+        working-directory: out/ci-${{ matrix.tech }}/apps/app
+        run: |
+          npm install --no-audit --no-fund
+          npm run build
+          npm test --if-present
+
+      - name: Install and test (Python)
+        if: matrix.kind == 'python'
+        working-directory: out/ci-${{ matrix.tech }}/apps/app
+        run: |
+          python -m venv .venv
+          . .venv/bin/activate
+          pip install -r requirements.txt
+          python -m pytest -q
+
+      - name: Build the generated Dockerfile
+        if: matrix.kind == 'docker'
+        working-directory: out/ci-${{ matrix.tech }}/apps/app
+        run: docker build -t ci-${{ matrix.tech }} .

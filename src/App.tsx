@@ -430,7 +430,7 @@ export const App: React.FC = () => {
   }
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-surface-950 text-zinc-100 overflow-hidden font-sans">
+    <div className="h-dvh w-full min-w-0 flex flex-col bg-surface-950 text-zinc-100 overflow-hidden font-sans">
       {/* Top Header */}
       <Header onClearAll={handleClearAll} onOpenExisting={handleOpenExisting} theme={theme} onToggleTheme={handleToggleTheme} />
 
@@ -446,18 +446,18 @@ export const App: React.FC = () => {
 
       {existingProject && <ExistingProjectBanner info={existingProject} onClose={handleCloseExisting} />}
       {importError && (
-        <div className="px-6 py-2 border-b border-red-800 bg-red-950/60 text-red-200 text-xs flex items-center justify-between">
+        <div className="px-3 sm:px-6 py-2 border-b border-red-800 bg-red-950/60 text-red-200 text-xs flex items-center justify-between">
           <span>Could not open project: {importError}</span>
           <button onClick={() => setImportError(null)} className="text-red-300 hover:text-white cursor-pointer">✕</button>
         </div>
       )}
 
       {/* Navigation Sub-header / Tabs */}
-      <div className="h-11 px-6 border-b border-surface-700 bg-surface-900 flex items-center justify-between shrink-0">
-        <div className="flex items-center space-x-1">
+      <div className="h-11 px-2 sm:px-6 border-b border-surface-700 bg-surface-900 flex items-center justify-between gap-2 shrink-0 overflow-x-auto">
+        <div className="flex items-center space-x-1 shrink-0">
           <button
             onClick={() => setActiveTab('cart')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition flex items-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap ${
               activeTab === 'cart'
                 ? 'bg-zinc-100 text-zinc-950 font-bold'
                 : 'text-zinc-400 hover:text-white hover:bg-surface-800'
@@ -476,7 +476,7 @@ export const App: React.FC = () => {
 
           <button
             onClick={() => setActiveTab('databases')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition flex items-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap ${
               activeTab === 'databases'
                 ? 'bg-zinc-100 text-zinc-950 font-bold'
                 : 'text-zinc-400 hover:text-white hover:bg-surface-800'
@@ -495,7 +495,7 @@ export const App: React.FC = () => {
 
           <button
             onClick={() => setActiveTab('proxy')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition flex items-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap ${
               activeTab === 'proxy'
                 ? 'bg-zinc-100 text-zinc-950 font-bold'
                 : 'text-zinc-400 hover:text-white hover:bg-surface-800'
@@ -514,7 +514,7 @@ export const App: React.FC = () => {
 
           <button
             onClick={() => setActiveTab('inspector')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition flex items-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap ${
               activeTab === 'inspector'
                 ? 'bg-zinc-100 text-zinc-950 font-bold'
                 : 'text-zinc-400 hover:text-white hover:bg-surface-800'
@@ -526,7 +526,7 @@ export const App: React.FC = () => {
 
           <button
             onClick={() => setActiveTab('environment')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition flex items-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap ${
               activeTab === 'environment'
                 ? 'bg-zinc-100 text-zinc-950 font-bold'
                 : 'text-zinc-400 hover:text-white hover:bg-surface-800'
@@ -537,7 +537,7 @@ export const App: React.FC = () => {
           </button>
         </div>
 
-        <div className="text-[11px] font-mono text-zinc-500 uppercase">
+        <div className="hidden lg:block text-[11px] font-mono text-zinc-500 uppercase shrink-0">
           Contract: Ready
         </div>
       </div>

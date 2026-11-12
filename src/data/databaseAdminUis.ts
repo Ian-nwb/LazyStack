@@ -32,6 +32,9 @@ const ADMIN_UI_OPTIONS: Partial<Record<DatabaseType, DatabaseAdminUiOption[]>> =
   ],
   valkey: [
     { id: 'redis-commander', name: 'Redis Commander', defaultPort: 8089, containerPort: 8081 }
+  ],
+  kafka: [
+    { id: 'kafka-ui', name: 'Kafka UI', defaultPort: 8090, containerPort: 8080 }
   ]
 }
 

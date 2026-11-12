@@ -204,7 +204,7 @@ export const CartBuilder: React.FC<CartBuilderProps> = ({ apps, setApps, databas
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-surface-950">
       {/* Action Header */}
-      <div className="px-6 py-4 flex items-center justify-between border-b border-surface-700 bg-surface-900">
+      <div className="px-3 sm:px-6 py-3 sm:py-4 gap-3 flex-wrap flex items-center justify-between border-b border-surface-700 bg-surface-900">
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-sm font-bold text-white uppercase tracking-wider">Application Services</h2>
@@ -248,7 +248,7 @@ export const CartBuilder: React.FC<CartBuilderProps> = ({ apps, setApps, databas
 
       {/* Prerequisite Install Toast / Notification */}
       {installNotification && (
-        <div className={`mx-6 mt-3 p-3 rounded-xl border text-xs flex items-center justify-between transition-all ${
+        <div className={`mx-3 sm:mx-6 mt-3 p-3 rounded-xl border text-xs flex items-center justify-between transition-all ${
           installNotification.type === 'success'
             ? 'bg-emerald-950/80 border-emerald-700 text-emerald-200'
             : 'bg-amber-950/80 border-amber-700 text-amber-200'

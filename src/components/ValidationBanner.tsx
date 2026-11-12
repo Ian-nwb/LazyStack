@@ -78,13 +78,13 @@ export const ValidationBanner: React.FC<ValidationBannerProps> = ({ settings, on
   const isValid = errors.length === 0 && settings.apps.length > 0
 
   return (
-    <div className="h-14 px-6 border-t border-surface-700 bg-surface-900 flex items-center justify-between shrink-0">
+    <div className="min-h-14 px-3 sm:px-6 py-2 gap-2 flex-wrap border-t border-surface-700 bg-surface-900 flex items-center justify-between shrink-0">
       <div className="flex items-center gap-3">
         {errors.length > 0 ? (
           <div className="flex items-center gap-2 text-rose-300 text-xs font-mono">
             <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
             <span className="font-bold text-rose-200">{errors.length} Issue{errors.length > 1 ? 's' : ''}:</span>
-            <span className="truncate max-w-xl text-rose-300" title={errors.join(' | ')}>{errors[0]}</span>
+            <span className="truncate max-w-[60vw] sm:max-w-xl text-rose-300" title={errors.join(' | ')}>{errors[0]}</span>
           </div>
         ) : warnings.length > 0 ? (
           <div className="flex items-center gap-2 text-zinc-300 text-xs font-mono">
@@ -103,7 +103,7 @@ export const ValidationBanner: React.FC<ValidationBannerProps> = ({ settings, on
         )}
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
         {portConflicts.length > 0 && onApplyPortFixes && (
           <button
             onClick={() => onApplyPortFixes(applyPortSuggestions(settings, portConflicts))}

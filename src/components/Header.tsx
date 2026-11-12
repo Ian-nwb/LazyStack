@@ -10,7 +10,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ onClearAll, onOpenExisting, theme, onToggleTheme }) => {
   return (
-    <header className="h-14 px-6 border-b border-surface-700 bg-surface-900 flex items-center justify-between shrink-0">
+    <header className="min-h-14 px-3 sm:px-6 py-2 gap-2 border-b border-surface-700 bg-surface-900 flex items-center justify-between shrink-0">
       <div className="flex items-center space-x-3">
         <div className="w-8 h-8 rounded-lg bg-white text-zinc-950 flex items-center justify-center font-bold shadow-sm dark:bg-white dark:text-zinc-950">
           <Layers className="w-4 h-4" />
@@ -20,7 +20,7 @@ export const Header: React.FC<HeaderProps> = ({ onClearAll, onOpenExisting, them
         </div>
       </div>
 
-      <div className="flex items-center space-x-3">
+      <div className="flex flex-wrap items-center justify-end gap-2">
         {onOpenExisting && (
           <button
             onClick={onOpenExisting}

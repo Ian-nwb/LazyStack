@@ -121,7 +121,7 @@ export const DatabasePicker: React.FC<DatabasePickerProps> = ({ databases, setDa
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-surface-950">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-surface-700 bg-surface-900 flex items-center justify-between">
+      <div className="px-3 sm:px-6 py-3 sm:py-4 gap-3 flex-wrap border-b border-surface-700 bg-surface-900 flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-sm font-bold text-white uppercase tracking-wider">Database Infrastructure</h2>
@@ -142,7 +142,7 @@ export const DatabasePicker: React.FC<DatabasePickerProps> = ({ databases, setDa
       </div>
 
       {/* Category Filter Tabs */}
-      <div className="px-6 py-2.5 border-b border-surface-700 bg-surface-900/50 flex items-center gap-1.5">
+      <div className="px-3 sm:px-6 py-2.5 border-b border-surface-700 bg-surface-900/50 flex items-center gap-1.5 overflow-x-auto [&>button]:shrink-0 [&>button]:whitespace-nowrap">
         <button
           onClick={() => setActiveFilter('all')}
           className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition flex items-center gap-1.5 cursor-pointer ${
@@ -243,7 +243,7 @@ export const DatabasePicker: React.FC<DatabasePickerProps> = ({ databases, setDa
       )}
 
       {/* Database Grid */}
-      <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="flex-1 overflow-y-auto p-3 sm:p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredCatalog.map(db => {
           const instances = databases.filter(d => d.type === db.id && d.enabled)
           const isEnabled = instances.length > 0

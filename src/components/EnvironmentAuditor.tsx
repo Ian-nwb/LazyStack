@@ -70,7 +70,7 @@ export const EnvironmentAuditor: React.FC = () => {
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-surface-950">
       {/* Action Header */}
-      <div className="px-6 py-4 border-b border-surface-700 bg-surface-900 flex items-center justify-between shrink-0">
+      <div className="px-3 sm:px-6 py-3 sm:py-4 gap-3 flex-wrap border-b border-surface-700 bg-surface-900 flex items-center justify-between shrink-0">
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-sm font-bold text-white uppercase tracking-wider">Host Environment Diagnostics</h2>
@@ -106,7 +106,7 @@ export const EnvironmentAuditor: React.FC = () => {
       )}
 
       {/* Auditor Grid */}
-      <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 md:grid-cols-2 gap-3.5">
+      <div className="flex-1 overflow-y-auto p-3 sm:p-6 grid grid-cols-1 md:grid-cols-2 gap-3.5">
         {audits.map(item => (
           <div
             key={item.id}

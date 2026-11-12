@@ -22,7 +22,7 @@ export const ProxyConfigurator: React.FC<ProxyConfiguratorProps> = ({
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-surface-950">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-surface-700 bg-surface-900 flex items-center justify-between">
+      <div className="px-3 sm:px-6 py-3 sm:py-4 gap-3 flex-wrap border-b border-surface-700 bg-surface-900 flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-sm font-bold text-white uppercase tracking-wider">Reverse Proxy & Gateway Routing</h2>

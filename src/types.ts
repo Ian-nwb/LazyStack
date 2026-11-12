@@ -109,7 +109,7 @@ export type DatabaseType =
   | 'convex'
   | 'pocketbase'
 
-export type DatabaseAdminUi = 'adminer' | 'pgadmin' | 'phpmyadmin' | 'mongo-express' | 'redis-commander' | 'prisma-studio'
+export type DatabaseAdminUi = 'adminer' | 'pgadmin' | 'phpmyadmin' | 'mongo-express' | 'redis-commander' | 'kafka-ui' | 'prisma-studio'
 
 export interface DatabaseOption {
   id: DatabaseType

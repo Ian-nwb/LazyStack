@@ -1,3 +1,4 @@
+import { applyBrokerClients, isBrokerType } from './templates/brokerClients'
 import { ProjectSettings } from '../../src/types'
 import { generateDockerCompose, generateDockerDevCompose, getDockerfileForTech, getDbServiceName } from './templates/docker'
 import { generateNginxConfig, generateApacheConfig, generateCaddyConfig, generateTraefikConfig } from './templates/proxies'
@@ -228,7 +229,8 @@ export function planScaffold(settings: ProjectSettings, databaseCredentials: Rec
         const serviceName = getDbServiceName(db, settings.databases.indexOf(db), settings.apps)
         const credentials = databaseCredentials[serviceName]
         const catalogEntry = DATABASE_CATALOG.find(item => item.id === db.type)
-        const containerPort = catalogEntry?.defaultPort || db.port
+        // Kafka's in-network listener (29092) differs from the host-published one (9092).
+        const containerPort = db.type === 'kafka' ? 29092 : catalogEntry?.defaultPort || db.port
         const host = app.runMode === 'docker' ? serviceName : 'localhost'
         const port = app.runMode === 'docker' ? containerPort : db.port
         let connectionUrl = ''
@@ -296,6 +298,10 @@ export function planScaffold(settings: ProjectSettings, databaseCredentials: Rec
 
     // Starter code files
     const starterFiles = getStarterFilesForTech(app.techId, app.folderName, app.port, app.flavor, app.starterProfile)
+    // Services (not UI-only apps) get a connect/publish/subscribe example for each cache or broker they use.
+    if (app.role === 'backend' || app.role === 'worker' || app.role === 'fullstack') {
+      applyBrokerClients(starterFiles, appDbs.map(db => db.type).filter(isBrokerType), (app.flavor || 'typescript') === 'typescript')
+    }
     for (const [fileName, fileContent] of Object.entries(starterFiles)) {
       const filePath = path.join(appDir, fileName)
       out.ensureDir(path.dirname(filePath))

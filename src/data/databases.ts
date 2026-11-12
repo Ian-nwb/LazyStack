@@ -164,7 +164,7 @@ export const DATABASE_CATALOG: DatabaseOption[] = [
     category: 'message-broker',
     description: 'Distributed event streaming platform for high-throughput pub/sub, real-time analytics, and event-driven microservices.',
     imageTag: 'apache/kafka:3.7.0',
-    healthcheckCmd: '/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092',
+    healthcheckCmd: '/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:29092',
     badgeColor: 'bg-indigo-600/20 text-indigo-300 border-indigo-600/40'
   },
 
