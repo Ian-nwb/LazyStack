@@ -35,7 +35,10 @@ export const DATABASE_EXTRA_PORTS: Partial<Record<DatabaseType, Array<{ port: nu
   neo4j: [{ port: 7687, label: 'bolt' }],
   qdrant: [{ port: 6334, label: 'gRPC' }],
   minio: [{ port: 9001, label: 'console' }],
-  nats: [{ port: 8222, label: 'monitoring' }]
+  nats: [{ port: 8222, label: 'monitoring' }],
+  mosquitto: [{ port: 9001, label: 'WebSockets' }],
+  redpanda: [{ port: 9644, label: 'admin API' }],
+  cockroachdb: [{ port: 8180, label: 'console' }]
 }
 
 const databaseLabel = (db: ProjectSettings['databases'][number]) => db.customName || db.type

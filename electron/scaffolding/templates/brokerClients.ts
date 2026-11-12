@@ -2,13 +2,13 @@ import { DatabaseType } from '../../../src/types'
 import { patchPackageJson } from './native/context'
 
 type Files = Record<string, string>
-export type BrokerType = Extract<DatabaseType, 'redis' | 'valkey' | 'rabbitmq' | 'kafka' | 'nats'>
+export type BrokerType = Extract<DatabaseType, 'redis' | 'valkey' | 'rabbitmq' | 'kafka' | 'nats' | 'redpanda'>
 
-export const BROKER_TYPES: BrokerType[] = ['redis', 'valkey', 'rabbitmq', 'kafka', 'nats']
+export const BROKER_TYPES: BrokerType[] = ['redis', 'valkey', 'rabbitmq', 'kafka', 'nats', 'redpanda']
 export const isBrokerType = (type: DatabaseType): type is BrokerType => (BROKER_TYPES as string[]).includes(type)
 
 /** Environment variable each broker's connection string is written to in the app's .env. */
-export const BROKER_ENV: Record<BrokerType, string> = { redis: 'REDIS_URL', valkey: 'REDIS_URL', rabbitmq: 'RABBITMQ_URL', kafka: 'KAFKA_BROKERS', nats: 'NATS_URL' }
+export const BROKER_ENV: Record<BrokerType, string> = { redis: 'REDIS_URL', valkey: 'REDIS_URL', rabbitmq: 'RABBITMQ_URL', kafka: 'KAFKA_BROKERS', nats: 'NATS_URL', redpanda: 'KAFKA_BROKERS' }
 
 const NODE_DEPS: Record<string, { deps: Record<string, string>; devDeps?: Record<string, string> }> = {
   redis: { deps: { ioredis: '^5.4.0' } },
@@ -314,13 +314,177 @@ func publishNats(subject, message string) error {
   }
 }
 
+
+// --- Rust ------------------------------------------------------------------------------------
+
+const RUST_DEPS: Record<string, string> = {
+  redis: 'redis = "0.27"',
+  rabbitmq: 'lapin = "2.5"',
+  kafka: 'kafka = "0.10"',
+  nats: 'async-nats = "0.38"'
+}
+
+function rustClient(broker: string): string {
+  switch (broker) {
+    case 'redis':
+      return `use redis::Commands;
+
+fn client() -> redis::RedisResult<redis::Client> {
+    redis::Client::open(std::env::var("REDIS_URL").unwrap_or_else(|_| "redis://localhost:6379".into()))
+}
+
+pub fn ping() -> redis::RedisResult<String> {
+    let mut connection = client()?.get_connection()?;
+    redis::cmd("PING").query(&mut connection)
+}
+
+pub fn publish(channel: &str, message: &str) -> redis::RedisResult<i64> {
+    let mut connection = client()?.get_connection()?;
+    connection.publish(channel, message)
+}
+`
+    case 'rabbitmq':
+      return `use lapin::{options::*, types::FieldTable, BasicProperties, Connection, ConnectionProperties};
+
+pub async fn publish(queue: &str, message: &str) -> lapin::Result<()> {
+    let url = std::env::var("RABBITMQ_URL").unwrap_or_else(|_| "amqp://localhost:5672".into());
+    let connection = Connection::connect(&url, ConnectionProperties::default()).await?;
+    let channel = connection.create_channel().await?;
+    channel
+        .queue_declare(queue.into(), QueueDeclareOptions { durable: true, ..Default::default() }, FieldTable::default())
+        .await?;
+    channel
+        .basic_publish("".into(), queue.into(), BasicPublishOptions::default(), message.as_bytes(), BasicProperties::default())
+        .await?
+        .await?;
+    connection.close(200, "done".into()).await
+}
+`
+    case 'kafka':
+      return `use std::time::Duration;
+
+use kafka::producer::{Producer, Record, RequiredAcks};
+
+pub fn publish(topic: &str, message: &str) -> Result<(), kafka::error::Error> {
+    let brokers: Vec<String> = std::env::var("KAFKA_BROKERS")
+        .unwrap_or_else(|_| "localhost:9092".into())
+        .split(',')
+        .map(String::from)
+        .collect();
+    let mut producer = Producer::from_hosts(brokers)
+        .with_ack_timeout(Duration::from_secs(1))
+        .with_required_acks(RequiredAcks::One)
+        .create()?;
+    producer.send(&Record::from_value(topic, message.as_bytes()))
+}
+`
+    default:
+      return `pub async fn publish(subject: &str, message: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let url = std::env::var("NATS_URL").unwrap_or_else(|_| "nats://localhost:4222".into());
+    let client = async_nats::connect(url).await?;
+    client.publish(subject.to_string(), message.to_owned().into()).await?;
+    client.flush().await?;
+    Ok(())
+}
+`
+  }
+}
+
+// --- .NET ------------------------------------------------------------------------------------
+
+const DOTNET_PACKAGES: Record<string, string> = {
+  redis: '<PackageReference Include="StackExchange.Redis" Version="2.8.16" />',
+  rabbitmq: '<PackageReference Include="RabbitMQ.Client" Version="7.0.0" />',
+  kafka: '<PackageReference Include="Confluent.Kafka" Version="2.6.1" />',
+  nats: '<PackageReference Include="NATS.Net" Version="2.5.0" />'
+}
+
+function dotnetClient(broker: string, ns: string): string {
+  switch (broker) {
+    case 'redis':
+      return `using StackExchange.Redis;
+
+namespace ${ns}.Messaging;
+
+public static class RedisClient
+{
+    private static async Task<ConnectionMultiplexer> ConnectAsync()
+    {
+        var uri = new Uri(Environment.GetEnvironmentVariable("REDIS_URL") ?? "redis://localhost:6379");
+        return await ConnectionMultiplexer.ConnectAsync($"{uri.Host}:{uri.Port}");
+    }
+
+    public static async Task<TimeSpan> PingAsync()
+    {
+        await using var connection = await ConnectAsync();
+        return await connection.GetDatabase().PingAsync();
+    }
+
+    public static async Task PublishAsync(string channel, string message)
+    {
+        await using var connection = await ConnectAsync();
+        await connection.GetSubscriber().PublishAsync(RedisChannel.Literal(channel), message);
+    }
+}
+`
+    case 'rabbitmq':
+      return `using System.Text;
+using RabbitMQ.Client;
+
+namespace ${ns}.Messaging;
+
+public static class RabbitMqClient
+{
+    public static async Task PublishAsync(string queue, string message)
+    {
+        var factory = new ConnectionFactory { Uri = new Uri(Environment.GetEnvironmentVariable("RABBITMQ_URL") ?? "amqp://localhost:5672") };
+        await using var connection = await factory.CreateConnectionAsync();
+        await using var channel = await connection.CreateChannelAsync();
+        await channel.QueueDeclareAsync(queue, durable: true, exclusive: false, autoDelete: false);
+        await channel.BasicPublishAsync(exchange: "", routingKey: queue, body: Encoding.UTF8.GetBytes(message));
+    }
+}
+`
+    case 'kafka':
+      return `using Confluent.Kafka;
+
+namespace ${ns}.Messaging;
+
+public static class KafkaClient
+{
+    public static async Task PublishAsync(string topic, string message)
+    {
+        var config = new ProducerConfig { BootstrapServers = Environment.GetEnvironmentVariable("KAFKA_BROKERS") ?? "localhost:9092" };
+        using var producer = new ProducerBuilder<Null, string>(config).Build();
+        await producer.ProduceAsync(topic, new Message<Null, string> { Value = message });
+        producer.Flush(TimeSpan.FromSeconds(5));
+    }
+}
+`
+    default:
+      return `using NATS.Net;
+
+namespace ${ns}.Messaging;
+
+public static class NatsClientExample
+{
+    public static async Task PublishAsync(string subject, string message)
+    {
+        await using var client = new NatsClient(Environment.GetEnvironmentVariable("NATS_URL") ?? "nats://localhost:4222");
+        await client.PublishAsync(subject, message);
+    }
+}
+`
+  }
+}
+
 /**
  * Adds one connect/publish/subscribe example per broker to a service's starter files, in the
  * service's own language, and registers the client library in its manifest. Only Node, Python and
  * Go services get examples; other ecosystems only receive the connection variable in `.env`.
  */
 export function applyBrokerClients(files: Files, brokers: BrokerType[], isTS: boolean): void {
-  const kinds = [...new Set(brokers.map(broker => (broker === 'valkey' ? 'redis' : broker)))]
+  const kinds = [...new Set(brokers.map(broker => (broker === 'valkey' ? 'redis' : broker === 'redpanda' ? 'kafka' : broker)))]
   if (kinds.length === 0) return
 
   if (files['package.json']) {
@@ -349,5 +513,27 @@ export function applyBrokerClients(files: Files, brokers: BrokerType[], isTS: bo
     for (const kind of kinds) files[`messaging_${kind}.go`] = goClient(kind)
     const requires = kinds.map(kind => `\t${GO_MODULES[kind]}`).join('\n')
     files['go.mod'] = files['go.mod'].replace(/\n*$/, '\n') + `\nrequire (\n${requires}\n)\n`
+    return
+  }
+
+  if (files['Cargo.toml'] && files['src/main.rs'] !== undefined) {
+    files['src/messaging/mod.rs'] = '#![allow(dead_code)]\n\n' + kinds.map(kind => `pub mod ${kind};`).join('\n') + '\n'
+    for (const kind of kinds) files[`src/messaging/${kind}.rs`] = rustClient(kind)
+    const missing = kinds.map(kind => RUST_DEPS[kind])
+    if (kinds.includes('nats') && !/^\s*tokio\s*=/m.test(files['Cargo.toml'])) missing.push('tokio = { version = "1", features = ["rt-multi-thread", "macros"] }')
+    files['Cargo.toml'] = /\[dependencies\]/.test(files['Cargo.toml'])
+      ? files['Cargo.toml'].replace('[dependencies]\n', `[dependencies]\n${missing.join('\n')}\n`)
+      : files['Cargo.toml'].replace(/\n*$/, '\n') + `\n[dependencies]\n${missing.join('\n')}\n`
+    if (!files['src/main.rs'].includes('mod messaging;')) files['src/main.rs'] = 'mod messaging;\n' + files['src/main.rs']
+    return
+  }
+
+  const csproj = Object.keys(files).find(file => file.endsWith('.csproj'))
+  if (csproj) {
+    const ns = files[csproj].match(/<RootNamespace>([^<]+)</)?.[1] || 'App'
+    const names: Record<string, string> = { redis: 'RedisClient', rabbitmq: 'RabbitMqClient', kafka: 'KafkaClient', nats: 'NatsClient' }
+    for (const kind of kinds) files[`Messaging/${names[kind]}.cs`] = dotnetClient(kind, ns)
+    const group = `  <ItemGroup>\n${kinds.map(kind => `    ${DOTNET_PACKAGES[kind]}`).join('\n')}\n  </ItemGroup>\n\n`
+    files[csproj] = files[csproj].replace('</Project>', group + '</Project>')
   }
 }

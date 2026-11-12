@@ -136,6 +136,12 @@ const COMPOSE_IMAGES: Array<[RegExp, DatabaseType]> = [
   [/rabbitmq/, 'rabbitmq'],
   [/kafka/, 'kafka'],
   [/(^|\/)nats(:|$)/, 'nats'],
+  [/memcached/, 'memcached'],
+  [/mosquitto/, 'mosquitto'],
+  [/redpanda/, 'redpanda'],
+  [/cockroach/, 'cockroachdb'],
+  [/opensearch/, 'opensearch'],
+  [/influxdb/, 'influxdb'],
   [/pocketbase/, 'pocketbase']
 ]
 

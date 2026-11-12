@@ -5,7 +5,7 @@ All notable changes to LazyStack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.4.0] - 2026-11-12
 
 ### Fixed
 - **Gleam (Wisp) starter did not build**: dependency ranges resolved to a newer `gleam_stdlib` than the Docker image's compiler, and Wisp 2 / Mist 6 renamed APIs. The starter now targets Wisp 2, Mist 6 and Gleam 1.14 (verified: `gleam test` passes, the Docker image builds and `/health` answers).
@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Kafka was unreachable from Docker apps**: the broker only advertised `localhost`. It now has an in-network listener (`<service>:29092`, used by Docker apps and `KAFKA_BROKERS`) and the host listener (`localhost:<port>`). Verified live with kafkajs.
 
 ### Added
+- **6 databases and services (26 to 32):** Memcached, Eclipse Mosquitto (MQTT), Redpanda (Kafka API), CockroachDB, OpenSearch and InfluxDB 2. Each has a Compose service with a healthcheck, an env variable in app `.env` files (`MEMCACHED_URL`, `MQTT_URL`, `KAFKA_BROKERS`, `DATABASE_URL`, ...), importer detection and port-check coverage (Mosquitto WebSockets 9001, Redpanda admin 9644, CockroachDB console 8180). Memcached is a cache; Mosquitto and Redpanda appear under Messaging & caching.
+- **NATS NUI** dashboard admin UI for NATS, and Kafka UI for Redpanda as well as Kafka.
+- **Broker examples for Rust and ASP.NET services** (Redis, RabbitMQ, Kafka, NATS), on top of Node, Python and Go. Verified: `cargo check` and `dotnet build` pass.
 - **Per-language broker examples**: Node, Python and Go services get a connect/publish/subscribe module for each Redis, Valkey, RabbitMQ, Kafka or NATS they use, and the client library is added to `package.json`, `requirements.txt` or `go.mod`. Other ecosystems still get the connection variable in `.env`.
 - **Kafka UI** admin UI option for Kafka.
 - **Dev orchestrator waits for brokers**: when a cache or broker is in the stack, `docker compose up` runs with `--wait` so host apps start after their healthchecks pass.
@@ -23,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **The desktop UI adapts to screen size**: header, tab bar, section headers, filter tabs and the footer wrap or scroll on narrow windows, paddings shrink, and the app fills the dynamic viewport height.
 
 ### Still not included
-- NATS dashboard admin UI, and broker examples for Rust, JVM and .NET services.
+- Broker examples for JVM services (Spring Boot, Ktor, Play, Ring): they only get the connection variable in `.env`.
 - Meteor starter has not been run (the Meteor toolchain is not installed on the release machine).
 
 ## [1.3.0] - 2026-11-12

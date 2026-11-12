@@ -50,7 +50,7 @@ const path = {
  * the file system. The generator replays the plan through the scaffold writer; the Blueprint
  * tree, README and consistency checks read it directly.
  */
-const MESSAGING_VARIABLES: Record<string, true> = { redis: true, valkey: true, rabbitmq: true, kafka: true, nats: true }
+const MESSAGING_VARIABLES: Record<string, true> = { redis: true, valkey: true, rabbitmq: true, kafka: true, nats: true, memcached: true, mosquitto: true, redpanda: true }
 
 export function planScaffold(settings: ProjectSettings, databaseCredentials: Record<string, GeneratedDatabaseCredential>, options: PlanOptions = {}): ScaffoldPlan {
   const existingAppDirs = options.existingAppDirs ?? new Set<string>()
@@ -230,7 +230,7 @@ export function planScaffold(settings: ProjectSettings, databaseCredentials: Rec
         const credentials = databaseCredentials[serviceName]
         const catalogEntry = DATABASE_CATALOG.find(item => item.id === db.type)
         // Kafka's in-network listener (29092) differs from the host-published one (9092).
-        const containerPort = db.type === 'kafka' ? 29092 : catalogEntry?.defaultPort || db.port
+        const containerPort = db.type === 'kafka' || db.type === 'redpanda' ? 29092 : catalogEntry?.defaultPort || db.port
         const host = app.runMode === 'docker' ? serviceName : 'localhost'
         const port = app.runMode === 'docker' ? containerPort : db.port
         let connectionUrl = ''
@@ -249,14 +249,29 @@ export function planScaffold(settings: ProjectSettings, databaseCredentials: Rec
         } else if (db.type === 'nats') {
           connectionUrl = `nats://${host}:${port}`
           exampleUrl = connectionUrl
-        } else if (db.type === 'kafka') {
+        } else if (db.type === 'memcached') {
+          connectionUrl = `${host}:${port}`
+          exampleUrl = connectionUrl
+        } else if (db.type === 'mosquitto') {
+          connectionUrl = `mqtt://${host}:${port}`
+          exampleUrl = connectionUrl
+        } else if (db.type === 'cockroachdb') {
+          connectionUrl = `postgresql://root@${host}:${port}/defaultdb?sslmode=disable`
+          exampleUrl = connectionUrl
+        } else if (db.type === 'opensearch') {
+          connectionUrl = `http://${host}:${port}`
+          exampleUrl = connectionUrl
+        } else if (db.type === 'influxdb') {
+          connectionUrl = `http://${host}:${port}`
+          exampleUrl = connectionUrl
+        } else if (db.type === 'kafka' || db.type === 'redpanda') {
           connectionUrl = `${host}:${port}`
           exampleUrl = connectionUrl
         } else if (db.type === 'rabbitmq' && credentials) {
           connectionUrl = `amqp://${encodeURIComponent(credentials.username)}:${encodeURIComponent(credentials.password)}@${host}:${port}`
           exampleUrl = `amqp://${encodeURIComponent(credentials.username)}:replace_me@${host}:${port}`
         }
-        const messagingVariable = ({ redis: 'REDIS_URL', valkey: 'REDIS_URL', rabbitmq: 'RABBITMQ_URL', kafka: 'KAFKA_BROKERS', nats: 'NATS_URL' } as Record<string, string>)[db.type]
+        const messagingVariable = ({ redis: 'REDIS_URL', valkey: 'REDIS_URL', rabbitmq: 'RABBITMQ_URL', kafka: 'KAFKA_BROKERS', nats: 'NATS_URL', memcached: 'MEMCACHED_URL', mosquitto: 'MQTT_URL', redpanda: 'KAFKA_BROKERS' } as Record<string, string>)[db.type]
         const usedVariable = (name: string) => appEnv.split('\n').some(line => line.startsWith(`${name}=`))
         // Caches and brokers get their own well-known variable; DATABASE_URL stays with the first data store.
         const isFirstDataStore = !messagingVariable && appDbs.findIndex(item => !(item.type in MESSAGING_VARIABLES)) === idx

@@ -1,5 +1,11 @@
 # LazyStack CLI changelog
 
+## 1.4.0
+
+- 6 new databases and services (32 total): Memcached, Mosquitto, Redpanda, CockroachDB, OpenSearch and InfluxDB.
+- Node, Python, Go, Rust and ASP.NET services get a broker example per cache or broker they use; Kafka is reachable from Docker apps; `docker compose up --wait` runs when a broker is present.
+- Fixes for the Gleam, V and Blitz starters.
+
 ## 1.3.0
 
 - 28 new frameworks (115 total): Quasar, Svelte, Preact, Gatsby, Vike, RedwoodJS, Blitz, Meteor, Next.js + tRPC, AdonisJS, Koa, Bun, Litestar, Sanic, Starlette, Tornado, Pyramid, Streamlit, Gradio, Hugo, Jekyll, Eleventy, Docusaurus, VitePress, Gleam, V, Dart Shelf and Serverpod. Static site generators use the new `static-site` role.

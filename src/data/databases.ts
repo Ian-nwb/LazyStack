@@ -169,6 +169,68 @@ export const DATABASE_CATALOG: DatabaseOption[] = [
   },
 
   {
+    id: 'memcached',
+    name: 'Memcached (Distributed Cache)',
+    defaultPort: 11211,
+    category: 'cache',
+    description: 'Simple, very fast in-memory key-value cache for session and query caching.',
+    imageTag: 'memcached:1.6-alpine',
+    healthcheckCmd: 'echo stats | nc -w 1 localhost 11211',
+    badgeColor: 'bg-lime-500/20 text-lime-300 border-lime-500/40'
+  },
+  {
+    id: 'mosquitto',
+    name: 'Eclipse Mosquitto (MQTT Broker)',
+    defaultPort: 1883,
+    category: 'message-broker',
+    description: 'Lightweight MQTT broker for IoT devices and telemetry, with WebSockets on :9001.',
+    imageTag: 'eclipse-mosquitto:2',
+    healthcheckCmd: 'mosquitto_sub -t $SYS/# -C 1 -W 3',
+    badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40'
+  },
+  {
+    id: 'redpanda',
+    name: 'Redpanda (Kafka API, no JVM)',
+    defaultPort: 19092,
+    category: 'message-broker',
+    description: 'Kafka-compatible streaming platform in a single binary, with the Kafka API on :19092 and an admin API on :9644.',
+    imageTag: 'redpandadata/redpanda:v24.2.7',
+    healthcheckCmd: 'rpk cluster health',
+    badgeColor: 'bg-red-600/20 text-red-300 border-red-600/40'
+  },
+  {
+    id: 'cockroachdb',
+    name: 'CockroachDB (Distributed SQL)',
+    defaultPort: 26257,
+    category: 'relational',
+    description: 'PostgreSQL-compatible distributed SQL database, single insecure node for development, with a console on :8080.',
+    isHeavyMemory: true,
+    imageTag: 'cockroachdb/cockroach:v24.2.4',
+    healthcheckCmd: 'curl -f http://localhost:8080/health?ready=1',
+    badgeColor: 'bg-violet-500/20 text-violet-300 border-violet-500/40'
+  },
+  {
+    id: 'opensearch',
+    name: 'OpenSearch (Search & Analytics)',
+    defaultPort: 9200,
+    category: 'search',
+    description: 'Open source fork of Elasticsearch for full-text search, logs and analytics. Single node, security plugin disabled for development.',
+    isHeavyMemory: true,
+    imageTag: 'opensearchproject/opensearch:2.17.1',
+    healthcheckCmd: 'curl -f http://localhost:9200/_cluster/health',
+    badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/40'
+  },
+  {
+    id: 'influxdb',
+    name: 'InfluxDB 2 (Time Series)',
+    defaultPort: 8086,
+    category: 'olap',
+    description: 'Time series database for metrics, sensor data and events, with a built-in UI and token auth.',
+    imageTag: 'influxdb:2.7-alpine',
+    healthcheckCmd: 'curl -f http://127.0.0.1:8086/health',
+    badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40'
+  },
+  {
     id: 'nats',
     name: 'NATS (JetStream Messaging)',
     defaultPort: 4222,

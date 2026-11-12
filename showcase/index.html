@@ -355,7 +355,7 @@ tr.pick td:first-child::before { display: inline-block; animation: nudgeX 1.6s e
 <div class="page">
 
   <header class="bar">
-    <a class="mark" href="#top"><span class="logo-sm" data-logo aria-hidden="true"></span>LAZYSTACK/1.3.0</a>
+    <a class="mark" href="#top"><span class="logo-sm" data-logo aria-hidden="true"></span>LAZYSTACK/1.4.0</a>
     <nav aria-label="Sections">
       <a href="#screens">Screens</a>
       <a href="#features">Features</a>
@@ -375,19 +375,19 @@ tr.pick td:first-child::before { display: inline-block; animation: nudgeX 1.6s e
 
       <div class="hero-grid">
         <div>
-          <p class="lead">Pick frameworks, databases and an architecture layout. LazyStack writes the project: framework-native app folders, Docker Compose, <code>.env</code>, a reverse proxy, deployment files and one command that runs the whole stack. 115 frameworks, 26 databases and services, 15 layouts.</p>
+          <p class="lead">Pick frameworks, databases and an architecture layout. LazyStack writes the project: framework-native app folders, Docker Compose, <code>.env</code>, a reverse proxy, deployment files and one command that runs the whole stack. 115 frameworks, 32 databases and services, 15 layouts.</p>
           <div class="actions">
-            <a class="btn btn-solid" href="#download">Download v1.3.0 &#8595;</a>
+            <a class="btn btn-solid" href="#download">Download v1.4.0 &#8595;</a>
             <a class="btn btn-line" href="https://github.com/Ian-nwb/LazyStack">View source &#8599;</a>
           </div>
         </div>
         <dl class="spec">
-          <div><dt>Version</dt><dd>1.3.0</dd></div>
-          <div><dt>Status</dt><dd class="live">v1.3.0 Released</dd></div>
+          <div><dt>Version</dt><dd>1.4.0</dd></div>
+          <div><dt>Status</dt><dd class="live">v1.4.0 Released</dd></div>
           <div><dt>Platforms</dt><dd>Linux x64, Windows x64</dd></div>
           <div><dt>Builds</dt><dd>AppImage, portable EXE</dd></div>
           <div><dt>CLI</dt><dd>lazystack v1.2.1 (npm)</dd></div>
-          <div><dt>Catalog</dt><dd>115 frameworks · 26 DBs · 15 layouts</dd></div>
+          <div><dt>Catalog</dt><dd>115 frameworks · 32 DBs · 15 layouts</dd></div>
           <div><dt>From source</dt><dd>Node.js 20+, npm 10+</dd></div>
           <div><dt>License</dt><dd>MIT</dd></div>
         </dl>
@@ -514,7 +514,7 @@ tr.pick td:first-child::before { display: inline-block; animation: nudgeX 1.6s e
     <section class="sec" id="catalog">
       <div class="sec-side">
         <span class="eyebrow">Catalog</span>
-        <span class="count">115 frameworks + 26 databases</span>
+        <span class="count">115 frameworks + 32 databases</span>
       </div>
       <div>
         <h2>Frameworks, databases, <span class="thin">test tools.</span></h2>
@@ -619,22 +619,22 @@ lazystack apply --dir ./my-project --config edited.json</pre>
     <section class="sec dl" id="download">
       <div class="sec-side">
         <span class="eyebrow">Download</span>
-        <span class="count">v1.3.0</span>
+        <span class="count">v1.4.0</span>
       </div>
       <div>
-        <h2>Get <span class="thin">v1.3.0.</span></h2>
+        <h2>Get <span class="thin">v1.4.0.</span></h2>
         <p>Portable builds for Linux and Windows. No installer: download, make it executable on Linux, and run.</p>
 
         <div class="dl-rows">
           <div class="dl-row">
             <span class="plat">Linux x64</span>
             <span class="pkg">AppImage</span>
-            <a class="btn btn-solid" href="https://github.com/Ian-nwb/LazyStack/releases/download/v1.3.0/LazyStack-1.3.0.AppImage">Download &#8595;</a>
+            <a class="btn btn-solid" href="https://github.com/Ian-nwb/LazyStack/releases/download/v1.4.0/LazyStack-1.4.0.AppImage">Download &#8595;</a>
           </div>
           <div class="dl-row">
             <span class="plat">Windows x64</span>
             <span class="pkg">Portable <span class="thin">EXE</span></span>
-            <a class="btn btn-solid" href="https://github.com/Ian-nwb/LazyStack/releases/download/v1.3.0/LazyStack.1.3.0.exe">Download &#8595;</a>
+            <a class="btn btn-solid" href="https://github.com/Ian-nwb/LazyStack/releases/download/v1.4.0/LazyStack.1.4.0.exe">Download &#8595;</a>
           </div>
           <div class="dl-row none">
             <span class="plat">macOS</span>
@@ -672,8 +672,8 @@ npm start</pre>
         <h3 style="margin-top:12px">Build the packages yourself</h3>
         <div class="code">
           <div class="code-head"><span class="eyebrow">Linux AppImage + Windows portable EXE</span><button class="copy" type="button" data-copy="c6">Copy</button></div>
-<pre id="c6">npm run dist:linux    <span class="c"># release/1.3.0/LazyStack-1.3.0.AppImage</span>
-npm run dist:win      <span class="c"># release/1.3.0/LazyStack 1.3.0.exe</span>
+<pre id="c6">npm run dist:linux    <span class="c"># release/1.4.0/LazyStack-1.4.0.AppImage</span>
+npm run dist:win      <span class="c"># release/1.4.0/LazyStack 1.4.0.exe</span>
 npm run dist:release  <span class="c"># build both targets</span></pre>
         </div>
       </div>
@@ -683,12 +683,13 @@ npm run dist:release  <span class="c"># build both targets</span></pre>
     <section class="sec" id="roadmap">
       <div class="sec-side">
         <span class="eyebrow">Changelog</span>
-        <span class="count">v1.3.0</span>
+        <span class="count">v1.4.0</span>
       </div>
       <div>
-        <h2>What shipped <span class="thin">in 1.3.0.</span></h2>
-        <p>v1.3.0 adds 28 frameworks, a port-conflict check and NATS. v1.2.2 fixes the Directory Contract tab. v1.2.1 offers 15 architecture layouts and 5 stack presets. v1.2.0 makes the Blueprint match the generated project. v1.1.3 fixes the reverse proxy gateway in generated projects. v1.1.2 made generated projects easier to run and added Capacitor, .NET MAUI and an Expo SDK 58 starter.</p>
+        <h2>What shipped <span class="thin">in 1.4.0.</span></h2>
+        <p>v1.4.0 adds 6 databases and fixes three starters. v1.3.0 adds 28 frameworks, a port-conflict check and NATS. v1.2.2 fixes the Directory Contract tab. v1.2.1 offers 15 architecture layouts and 5 stack presets. v1.2.0 makes the Blueprint match the generated project. v1.1.3 fixes the reverse proxy gateway in generated projects. v1.1.2 made generated projects easier to run and added Capacitor, .NET MAUI and an Expo SDK 58 starter.</p>
         <dl class="rows">
+          <div class="row"><dt>v1.4.0 · Released</dt><dd>Added: 6 databases (Memcached, Mosquitto, Redpanda, CockroachDB, OpenSearch, InfluxDB), NATS NUI and Kafka UI dashboards, broker examples for Rust and ASP.NET, a desktop UI that adapts to narrow windows, and a CI job that builds the 1.3 frameworks. Fixed: the Gleam, V and Blitz starters, and Kafka from Docker apps.</dd></div>
           <div class="row"><dt>v1.3.0 · Released</dt><dd>Added: 28 frameworks (Svelte, Preact, Quasar, Gatsby, Vike, RedwoodJS, Blitz, Meteor, Next.js + tRPC, AdonisJS, Koa, Bun, Litestar, Sanic, Starlette, Tornado, Pyramid, Streamlit, Gradio, Hugo, Jekyll, Eleventy, Docusaurus, VitePress, Gleam, V, Dart Shelf, Serverpod), a static-site role with a build-then-nginx Docker pattern, a port-conflict check (<code>lazystack ports</code>, live banner with Auto-fix), NATS, and a Messaging &amp; caching group in the database picker.</dd></div>
           <div class="row"><dt>v1.2.2 · Released</dt><dd>Fixed: the desktop app's Directory Contract tab and the layout preview showed "process is not defined" instead of the project tree (1.2.0 and 1.2.1). A new CI check runs the Blueprint planner without Node globals for every framework, database, proxy and layout.</dd></div>
           <div class="row"><dt>v1.2.1 · Released</dt><dd>Changed: stack presets reduced to the five most common (T3 Next.js, FastAPI + React, Modern MERN, Go Echo + Vue 3, Rust Axum); 15 architecture layouts are offered (CLI and Tooling Monorepo was removed; blueprints that name it open as Custom and keep their folders). Fixed: the layout list in 1.2.0 was cut to 7 by mistake and the removed layouts are back.</dd></div>
@@ -720,10 +721,10 @@ npm run dist:release  <span class="c"># build both targets</span></pre>
     <div class="flogo rv" data-logo aria-hidden="true"></div>
     <p class="wordmark rv" aria-hidden="true">Lazy<span class="thin">Stack</span></p>
     <div class="foot rv">
-      <span>MIT License &middot; v1.3.0 &middot; by Ian-nwb</span>
+      <span>MIT License &middot; v1.4.0 &middot; by Ian-nwb</span>
       <nav aria-label="Project links">
         <a href="https://github.com/Ian-nwb/LazyStack">Repository</a>
-        <a href="https://github.com/Ian-nwb/LazyStack/releases/tag/v1.3.0">Release v1.3.0</a>
+        <a href="https://github.com/Ian-nwb/LazyStack/releases/tag/v1.4.0">Release v1.4.0</a>
         <a href="https://github.com/Ian-nwb/LazyStack/blob/main/LICENSE">License</a>
         <a href="https://github.com/Ian-nwb">Ian-nwb</a>
       </nav>

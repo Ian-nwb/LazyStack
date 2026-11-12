@@ -98,6 +98,12 @@ export type DatabaseType =
   | 'rabbitmq'
   | 'kafka'
   | 'nats'
+  | 'memcached'
+  | 'mosquitto'
+  | 'redpanda'
+  | 'cockroachdb'
+  | 'opensearch'
+  | 'influxdb'
   // Cloud & BaaS providers
   | 'supabase'
   | 'firebase'
@@ -109,7 +115,7 @@ export type DatabaseType =
   | 'convex'
   | 'pocketbase'
 
-export type DatabaseAdminUi = 'adminer' | 'pgadmin' | 'phpmyadmin' | 'mongo-express' | 'redis-commander' | 'kafka-ui' | 'prisma-studio'
+export type DatabaseAdminUi = 'adminer' | 'pgadmin' | 'phpmyadmin' | 'mongo-express' | 'redis-commander' | 'kafka-ui' | 'nats-nui' | 'prisma-studio'
 
 export interface DatabaseOption {
   id: DatabaseType

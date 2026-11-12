@@ -161,6 +161,46 @@ export function generateDockerCompose(settings: ProjectSettings): string {
         yaml += `    volumes:\n      - ${sName}_data:/var/lib/kafka/data\n`
         yaml += `    healthcheck:\n      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:29092 || exit 1"]\n      interval: 10s\n      timeout: 5s\n      retries: 5\n`
         break
+      case 'memcached':
+        yaml += `    image: memcached:1.6-alpine\n`
+        yaml += `    ports:\n      - "\${${sName.toUpperCase()}_PORT:-${db.port}}:11211"\n`
+        yaml += `    healthcheck:\n      test: ["CMD-SHELL", "echo stats | nc -w 1 localhost 11211 | grep -q uptime"]\n      interval: 5s\n      timeout: 5s\n      retries: 5\n`
+        break
+      case 'mosquitto':
+        yaml += `    image: eclipse-mosquitto:2\n`
+        yaml += `    command: sh -c 'printf "listener 1883\\nallow_anonymous true\\nlistener 9001\\nprotocol websockets\\nallow_anonymous true\\n" > /tmp/mosquitto.conf && exec mosquitto -c /tmp/mosquitto.conf'\n`
+        yaml += `    ports:\n      - "\${${sName.toUpperCase()}_PORT:-${db.port}}:1883"\n      - "9001:9001"\n`
+        yaml += `    volumes:\n      - ${sName}_data:/mosquitto/data\n`
+        yaml += `    healthcheck:\n      test: ["CMD-SHELL", "mosquitto_sub -t '$$SYS/#' -C 1 -W 3 || exit 1"]\n      interval: 10s\n      timeout: 5s\n      retries: 5\n`
+        break
+      case 'redpanda':
+        yaml += `    image: redpandadata/redpanda:v24.2.7\n`
+        yaml += `    command:\n      - redpanda\n      - start\n      - --mode=dev-container\n      - --smp=1\n      - --memory=512M\n      - --kafka-addr=internal://0.0.0.0:29092,external://0.0.0.0:19092\n      - --advertise-kafka-addr=internal://${sName}:29092,external://localhost:\${${sName.toUpperCase()}_PORT:-${db.port}}\n`
+        yaml += `    ports:\n      - "\${${sName.toUpperCase()}_PORT:-${db.port}}:19092"\n      - "9644:9644"\n`
+        yaml += `    volumes:\n      - ${sName}_data:/var/lib/redpanda/data\n`
+        yaml += `    healthcheck:\n      test: ["CMD-SHELL", "rpk cluster health | grep -q 'Healthy:.*true'"]\n      interval: 10s\n      timeout: 5s\n      retries: 10\n`
+        break
+      case 'cockroachdb':
+        yaml += `    image: cockroachdb/cockroach:v24.2.4\n`
+        yaml += `    command: start-single-node --insecure\n`
+        yaml += `    ports:\n      - "\${${sName.toUpperCase()}_PORT:-${db.port}}:26257"\n      - "8180:8080"\n`
+        yaml += `    volumes:\n      - ${sName}_data:/cockroach/cockroach-data\n`
+        yaml += `    healthcheck:\n      test: ["CMD", "curl", "-f", "http://localhost:8080/health?ready=1"]\n      interval: 10s\n      timeout: 5s\n      retries: 10\n`
+        break
+      case 'opensearch':
+        yaml += `    image: opensearchproject/opensearch:2.17.1\n`
+        yaml += `    environment:\n      discovery.type: single-node\n      DISABLE_SECURITY_PLUGIN: "true"\n      DISABLE_INSTALL_DEMO_CONFIG: "true"\n      OPENSEARCH_JAVA_OPTS: "-Xms512m -Xmx512m"\n`
+        yaml += `    ports:\n      - "\${${sName.toUpperCase()}_PORT:-${db.port}}:9200"\n`
+        yaml += `    volumes:\n      - ${sName}_data:/usr/share/opensearch/data\n`
+        yaml += `    healthcheck:\n      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]\n      interval: 10s\n      timeout: 5s\n      retries: 12\n`
+        break
+      case 'influxdb':
+        yaml += `    image: influxdb:2.7-alpine\n`
+        yaml += `    environment:\n      DOCKER_INFLUXDB_INIT_MODE: setup\n      DOCKER_INFLUXDB_INIT_USERNAME: \${${sName.toUpperCase()}_USER:-lazystack}\n      DOCKER_INFLUXDB_INIT_PASSWORD: \${${sName.toUpperCase()}_PASSWORD:-lazystack_secret}\n      DOCKER_INFLUXDB_INIT_ORG: lazystack\n      DOCKER_INFLUXDB_INIT_BUCKET: ${db.databaseName || 'lazystack'}\n      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: \${${sName.toUpperCase()}_TOKEN:-lazystack-dev-token}\n`
+        yaml += `    ports:\n      - "\${${sName.toUpperCase()}_PORT:-${db.port}}:8086"\n`
+        yaml += `    volumes:\n      - ${sName}_data:/var/lib/influxdb2\n`
+        yaml += `    healthcheck:\n      test: ["CMD", "curl", "-f", "http://127.0.0.1:8086/health"]\n      interval: 5s\n      timeout: 5s\n      retries: 10\n`
+        break
       case 'nats':
         yaml += `    image: nats:2-alpine\n`
         yaml += `    command: ["-js", "-sd", "/data", "-m", "8222"]\n`
@@ -216,6 +256,10 @@ export function generateDockerCompose(settings: ProjectSettings): string {
       case 'redis-commander':
         yaml += `    image: rediscommander/redis-commander:latest\n`
         yaml += `    environment:\n      REDIS_HOSTS: local:${sName}:6379\n`
+        break
+      case 'nats-nui':
+        yaml += `    image: ghcr.io/nats-nui/nui:latest\n`
+        yaml += `    environment:\n      NATS_URL: nats://${sName}:4222\n`
         break
       case 'kafka-ui':
         yaml += `    image: provectuslabs/kafka-ui:latest\n`
