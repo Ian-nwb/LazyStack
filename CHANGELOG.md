@@ -5,6 +5,11 @@ All notable changes to LazyStack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.1] - 2026-11-23
+
+### Fixed
+- **Host Auditor showed installed tools as missing until "Re-Audit Host" was pressed.** On load, the App Stack and Host Auditor tabs each started an audit, so 104 version checks ran at once on cold caches and fast tools like npm, Go and Cargo missed the 4-second limit. Now concurrent callers share one audit, at most 8 checks run at a time, the default timeout is 10 seconds, and a tool found on PATH whose version check only timed out counts as installed. The first audit on a cold start went from 14 to 31 of 52 found on the release machine, in 7 seconds instead of 22.
+
 ## [1.5.0] - 2026-11-23
 
 ### Fixed

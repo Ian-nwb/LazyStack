@@ -863,38 +863,69 @@ export const MONITORED_BINARIES: Array<{
   }
 ]
 
-export async function auditEnvironment(): Promise<BinaryAudit[]> {
-  ensureUserPathsInEnv()
-
-  const results = await Promise.all(
-    MONITORED_BINARIES.map(async (item) => {
+/** Finds an executable on PATH without spawning a process (PATHEXT-aware on Windows). */
+export function findOnPath(binary: string): string | null {
+  const dirs = (process.env.PATH || '').split(path.delimiter).filter(Boolean)
+  const exts = process.platform === 'win32'
+    ? ['', ...(process.env.PATHEXT || '.EXE;.CMD;.BAT;.COM').split(';').map(ext => ext.toLowerCase())]
+    : ['']
+  for (const dir of dirs) {
+    for (const ext of exts) {
+      const candidate = path.join(dir, binary + ext)
       try {
-        const { stdout, stderr } = await execAsync(`${item.binary} ${item.versionFlag}`, { 
-          timeout: item.timeoutMs ?? 4000,
-          env: process.env
-        })
-        const output = (stdout || stderr || '').trim().split('\n')[0]
-        return {
-          id: item.id,
-          name: item.name,
-          binary: item.binary,
-          category: item.category,
-          installed: true,
-          version: output,
-          installCommand: item.installCommand
-        }
+        if (!fs.statSync(candidate).isFile()) continue
+        if (process.platform !== 'win32') fs.accessSync(candidate, fs.constants.X_OK)
+        return candidate
       } catch {
-        return {
-          id: item.id,
-          name: item.name,
-          binary: item.binary,
-          category: item.category,
-          installed: false,
-          installCommand: item.installCommand
-        }
+        // not here
       }
-    })
-  )
+    }
+  }
+  return null
+}
 
-  return results
+const AUDIT_CONCURRENCY = 8
+let auditInFlight: Promise<BinaryAudit[]> | null = null
+
+async function auditOne(item: (typeof MONITORED_BINARIES)[number]): Promise<BinaryAudit> {
+  const base = { id: item.id, name: item.name, binary: item.binary, category: item.category, installCommand: item.installCommand }
+  const location = findOnPath(item.binary)
+  try {
+    const { stdout, stderr } = await execAsync(`${item.binary} ${item.versionFlag}`, {
+      timeout: item.timeoutMs ?? 10000,
+      env: process.env
+    })
+    return { ...base, installed: true, version: (stdout || stderr || '').trim().split('\n')[0] }
+  } catch (err: any) {
+    // A slow first run (cold JVM/BEAM/Flutter caches, many probes at once) is not a missing tool:
+    // if the binary is on PATH and the probe only timed out, it is installed.
+    const timedOut = err?.killed === true || err?.signal === 'SIGTERM'
+    if (location && timedOut) return { ...base, installed: true, version: `${location} (version check timed out)` }
+    return { ...base, installed: false }
+  }
+}
+
+/**
+ * Audits every monitored binary. Concurrent callers (the App Stack and Host Auditor tabs both
+ * audit on load) share one run, and at most AUDIT_CONCURRENCY version probes run at a time so
+ * a cold start doesn't push fast tools past their timeout.
+ */
+export function auditEnvironment(): Promise<BinaryAudit[]> {
+  if (auditInFlight) return auditInFlight
+  auditInFlight = (async () => {
+    ensureUserPathsInEnv()
+    const results: BinaryAudit[] = new Array(MONITORED_BINARIES.length)
+    let next = 0
+    const worker = async () => {
+      while (next < MONITORED_BINARIES.length) {
+        const index = next++
+        results[index] = await auditOne(MONITORED_BINARIES[index])
+      }
+    }
+    await Promise.all(Array.from({ length: AUDIT_CONCURRENCY }, worker))
+    return results
+  })().finally(() => {
+    auditInFlight = null
+  })
+  return auditInFlight
 }
