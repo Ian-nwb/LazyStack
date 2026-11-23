@@ -1,5 +1,14 @@
 # LazyStack CLI changelog
 
+## 1.5.1
+
+- `lazystack doctor` and the host audit share one audit across concurrent callers, run at most 8 version checks at a time with a 10-second default timeout, and count a tool found on PATH as installed when only its version check timed out.
+
+## 1.5.0
+
+- New frameworks: Goose (Vanilla), Goose (HTTP, experimental) and Dart Jaspr (118 total). `import` recognizes Jaspr and Goose projects.
+- `lazystack doctor` reads the login shell's PATH, checks common Flutter/Dart install locations, and covers every toolchain the catalog requires (Goose, Jaspr CLI, Serverpod CLI, Dart, CMake, Ruby, Elixir, Gleam, Gradle, V, Hugo, Meteor and more).
+
 ## 1.4.0
 
 - 6 new databases and services (32 total): Memcached, Mosquitto, Redpanda, CockroachDB, OpenSearch and InfluxDB.
