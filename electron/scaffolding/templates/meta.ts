@@ -49,6 +49,9 @@ export function generateMetaFiles(settings: ProjectSettings, credentials: Record
     if (app.techId === 'v-vweb') return 'v run .'
     if (app.techId === 'dart-shelf') return 'dart pub get\ndart run bin/server.dart'
     if (app.techId === 'dart-serverpod') return './setup.sh'
+    if (app.techId === 'dart-jaspr') return 'dart pub get\ndart run bin/main.dart'
+    if (app.techId === 'goose-app') return 'goose src/main.goose'
+    if (app.techId === 'goose-http') return 'goose build -o build/server src/main.goose\n./build/server'
     if (app.techId === 'bun-native') return 'bun install\nbun run dev'
     if (app.techId === 'meteor') return `npm install\nmeteor run --port ${app.port}`
     if (app.techId.startsWith('python-')) return `python -m venv .venv && source .venv/bin/activate\npip install -r requirements.txt\npython main.py`
@@ -221,6 +224,9 @@ mongo_data/
     if (app.techId === 'v-vweb') return 'v run .'
     if (app.techId === 'dart-shelf') return 'dart run bin/server.dart'
     if (app.techId === 'dart-serverpod') return 'echo "Serverpod: run ./setup.sh once, then see README.md"'
+    if (app.techId === 'dart-jaspr') return 'dart pub get && dart run bin/main.dart'
+    if (app.techId === 'goose-app') return 'goose src/main.goose'
+    if (app.techId === 'goose-http') return 'goose build -o build/server src/main.goose && ./build/server'
     if (app.techId === 'bun-native') return 'bun run dev'
 
     // 10. Haskell

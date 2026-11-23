@@ -62,6 +62,9 @@ The architecture root does not turn every service into a JavaScript package. A G
 | V (veb) | `v.mod`, `main.v`, `main_test.v` |
 | Dart Shelf | `pubspec.yaml`, `bin/server.dart`, `lib/app.dart`, `test/` |
 | Serverpod | `setup.sh` + README that runs `serverpod create`; host only |
+| Dart Jaspr | `pubspec.yaml`, `bin/main.dart`, `lib/app.dart`, `lib/components/`, `test/` |
+| Goose (vanilla) | `src/main.goose`; host only |
+| Goose HTTP | `src/main.goose`, `src/http.c`, `src/main.build` (sidecar) |
 | Vanilla HTML, Node, Go, Python, Java | simple runtime entrypoints without a framework-imposed workspace |
 
 Desktop, mobile and hosted apps (GPUI, Slint, Bevy, Dioxus, JavaFX, Swing, Electron, Tauri, Flutter, SwiftUI, Anvil, Apps Script) always run on the host and never get a Docker service.

@@ -6,6 +6,8 @@
  * technology icons. Falls back to a generic code icon when no match is found.
  */
 
+import gooseIconUrl from './gooseIcon.svg?url'
+
 const DEVICON_BASE = 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons'
 
 // Map of language/framework identifiers to their devicon paths
@@ -16,6 +18,8 @@ const ICON_MAP: Record<string, string> = {
   'c':            `${DEVICON_BASE}/c/c-original.svg`,
   'c++':          `${DEVICON_BASE}/cplusplus/cplusplus-original.svg`,
   'zig':          `${DEVICON_BASE}/zig/zig-original.svg`,
+  // Goose has no Devicon; local trace of the Goose logo
+  'goose':        gooseIconUrl,
   'rust':         `${DEVICON_BASE}/rust/rust-original.svg`,
 
   // Runtimes
@@ -100,6 +104,7 @@ const FRAMEWORK_ICON_OVERRIDES: Record<string, string> = {
   'php-symfony':       `${DEVICON_BASE}/symfony/symfony-original.svg`,
   'fullstack-astro':   `${DEVICON_BASE}/astro/astro-original.svg`,
   'fullstack-remix':   `${DEVICON_BASE}/react/react-original.svg`,
+  'dart-jaspr':        `${DEVICON_BASE}/dart/dart-original.svg`,
   'dart-flutter':      `${DEVICON_BASE}/flutter/flutter-original.svg`,
   'electron-app':      `${DEVICON_BASE}/electron/electron-original.svg`,
   'python-django':     `${DEVICON_BASE}/django/django-plain.svg`,

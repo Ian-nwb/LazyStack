@@ -28,14 +28,14 @@
 
 LazyStack is a desktop app and a command-line tool for starting polyglot projects. Combine a React client, a FastAPI service, a Go worker and an Expo app with PostgreSQL and Redis, choose an architecture layout, and get a project where every app follows its framework's own conventions and the whole stack starts with `npm run dev`.
 
-**Current version: 1.4.0.** Adds 6 databases (Memcached, Mosquitto, Redpanda, CockroachDB, OpenSearch, InfluxDB), broker examples for Rust and ASP.NET, a responsive desktop UI, and fixes for the Gleam, V and Blitz starters. 1.3.0 added 28 frameworks, a port-conflict check and NATS. See the [changelog](CHANGELOG.md).
+**Current version: 1.5.0.** Adds the Goose language (a plain Goose app and a Goose HTTP service), Dart Jaspr, and a host auditor that checks every toolchain the catalog needs, with Flutter and Dart now found when they're installed outside the default PATH. 1.4.0 added 6 databases and broker examples for Rust and ASP.NET. See the [changelog](CHANGELOG.md).
 
 ## Download
 
 | Platform | Package |
 | --- | --- |
-| Linux x64 | [`LazyStack-1.4.0.AppImage`](https://github.com/Ian-nwb/LazyStack/releases/download/v1.4.0/LazyStack-1.4.0.AppImage) |
-| Windows x64 | [`LazyStack.1.4.0.exe`](https://github.com/Ian-nwb/LazyStack/releases/download/v1.4.0/LazyStack.1.4.0.exe) (portable) |
+| Linux x64 | [`LazyStack-1.5.0.AppImage`](https://github.com/Ian-nwb/LazyStack/releases/download/v1.5.0/LazyStack-1.5.0.AppImage) |
+| Windows x64 | [`LazyStack.1.5.0.exe`](https://github.com/Ian-nwb/LazyStack/releases/download/v1.5.0/LazyStack.1.5.0.exe) (portable) |
 | macOS |package not yet available (sponsor me a Macbook for app signature) |
 
 The CLI is on npm: `npx lazystack --help`.
@@ -44,7 +44,7 @@ To run the projects LazyStack generates you need Docker with Compose, plus the t
 
 ## What it does
 
-- **115 frameworks across every role.** Frontends, backend services, full-stack apps, workers, desktop and mobile clients, and scripts, in JavaScript/TypeScript, Python, Go, Rust, Java, Kotlin, C#, PHP, Ruby, Elixir, Swift, Dart and a long tail of others.
+- **118 frameworks across every role.** Frontends, backend services, full-stack apps, workers, desktop and mobile clients, and scripts, in JavaScript/TypeScript, Python, Go, Rust, Java, Kotlin, C#, PHP, Ruby, Elixir, Swift, Dart, Goose and a long tail of others.
 - **Framework-native starters.** Each app gets what its own initializer would create (`create-expo-app`, `nest new`, `django-admin startproject`, `mix phx.new`, `dx new`, `dotnet new maui`, start.spring.io, and so on), with a passing test, a `.gitignore` and a README.
 - **32 databases and services.** PostgreSQL, MySQL, MongoDB, Redis, Kafka, NATS, CockroachDB, ClickHouse, Qdrant and more run in Compose with generated credentials; Supabase, Firebase, Neon, Turso and other cloud providers get SDK clients and environment variables. Optional admin UIs: Adminer, pgAdmin, Prisma Studio, phpMyAdmin, Mongo Express, Redis Commander.
 - **15 architecture layouts.** Standard monorepo, microservices, modular monolith, Polyglot, event-driven, serverless, DDD, hexagonal, clean architecture, CQRS, JAMstack and edge, mobile and cross-platform, data platform, AI/ML, or your own folder structure. The Blueprint shows the exact resulting tree.

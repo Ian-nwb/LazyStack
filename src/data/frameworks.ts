@@ -949,7 +949,7 @@ export const TECH_CATALOG: TechItem[] = [
     requires: [
       { binary: 'ruby', label: 'Ruby Runtime', installHint: 'https://www.ruby-lang.org/en/downloads/' },
       { binary: 'gem', label: 'RubyGems', installHint: 'Installed with Ruby' },
-      { binary: 'bundler', label: 'Bundler', installHint: 'gem install bundler' }
+      { binary: 'bundle', label: 'Bundler', installHint: 'gem install bundler' }
     ]
   },
 
@@ -1612,6 +1612,46 @@ export const TECH_CATALOG: TechItem[] = [
       { binary: 'dart', label: 'Dart SDK', installHint: 'https://dart.dev/get-dart' },
       { binary: 'serverpod', label: 'Serverpod CLI', installHint: 'dart pub global activate serverpod_cli' },
       { binary: 'docker', label: 'Docker Engine', installHint: 'https://docs.docker.com/get-docker/' }
+    ]
+  },
+  {
+    id: 'dart-jaspr',
+    name: 'Dart (Jaspr)',
+    language: 'Dart',
+    category: 'fullstack',
+    role: 'fullstack',
+    defaultPort: 8080,
+    description: 'Flutter-style Dart web framework: components rendered to HTML on the server, with optional client hydration.',
+    badgeColor: 'bg-sky-500/20 text-sky-300 border-sky-500/40',
+    requires: [{ binary: 'dart', label: 'Dart SDK', installHint: 'https://dart.dev/get-dart' }]
+  },
+
+  // --- Goose (memory-safe systems language that compiles to C) ---
+  {
+    id: 'goose-app',
+    hostOnly: true,
+    name: 'Goose (Vanilla)',
+    language: 'Goose',
+    category: 'systems',
+    role: 'worker',
+    defaultPort: 0,
+    description: 'Plain Goose program: a memory-safe systems language with no GC or lifetimes that compiles to C. Runs in-process or builds a native binary.',
+    badgeColor: 'bg-orange-500/20 text-orange-300 border-orange-500/40',
+    requires: [{ binary: 'goose', label: 'Goose Compiler', installHint: 'https://github.com/aardappel/goose/releases' }]
+  },
+  {
+    id: 'goose-http',
+    name: 'Goose (HTTP)',
+    language: 'Goose',
+    category: 'systems',
+    role: 'backend',
+    defaultPort: 8080,
+    description: 'Goose HTTP service: routing and JSON in Goose over a small POSIX socket layer in C, bound with extern fn.',
+    badgeColor: 'bg-orange-500/20 text-orange-300 border-orange-500/40',
+    experimental: true,
+    requires: [
+      { binary: 'goose', label: 'Goose Compiler', installHint: 'https://github.com/aardappel/goose/releases' },
+      { binary: 'gcc', label: 'GCC Compiler', installHint: 'apt install build-essential / brew install gcc' }
     ]
   }
 ]

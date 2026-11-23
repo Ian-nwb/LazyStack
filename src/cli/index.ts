@@ -4,6 +4,7 @@ import { spawnSync } from 'child_process'
 import { createInterface } from 'readline/promises'
 import { scaffoldProject } from '../../electron/scaffolding/generator'
 import { probePorts } from '../../electron/environment/ports'
+import { MONITORED_BINARIES, ensureUserPathsInEnv } from '../../electron/environment/auditor'
 import { collectPortUses, describePortConflict, findPortConflicts, findReservedPortWarnings } from '../utils/portCheck'
 import { planScaffold } from '../../electron/scaffolding/plan'
 import { createDatabaseCredentials } from '../../electron/scaffolding/templates/meta'
@@ -452,8 +453,11 @@ export async function runCli(args: string[] = process.argv.slice(2)) {
     }
     let missing = 0
     console.log(`Prerequisite check for ${settings!.projectName}:`)
+    ensureUserPathsInEnv()
     for (const [binary, req] of requirements) {
-      const result = spawnSync(binary, ['--version'], { stdio: 'ignore', shell: process.platform === 'win32' })
+      // Same probe as the host auditor: its version flag and timeout (erl, goose, hugo... don't take --version).
+      const monitored = MONITORED_BINARIES.find(item => item.binary === binary)
+      const result = spawnSync(`${binary} ${monitored?.versionFlag || '--version'}`, { stdio: 'ignore', shell: true, timeout: monitored?.timeoutMs ?? 10000 })
       const available = !result.error && result.status === 0
       console.log(`  ${available ? '✓' : '✗'} ${req.label}${available ? '' : req.hint ? ` — ${req.hint}` : ''}`)
       if (!available) missing++

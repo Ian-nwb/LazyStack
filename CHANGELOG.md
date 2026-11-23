@@ -5,6 +5,21 @@ All notable changes to LazyStack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-11-23
+
+### Fixed
+- **Host auditor said Flutter and Dart were missing when they were installed.** Desktop launches don't read the shell profile, so SDKs added to PATH in `/etc/profile.d` or `~/.zshrc` (such as `/opt/flutter/bin`) were invisible. The auditor now reads the login shell's PATH once and also checks common Flutter/Dart locations (`/opt/flutter`, `~/flutter`, `~/development/flutter`, snap, fvm, `~/.pub-cache/bin`, `/usr/lib/dart`). `flutter --version` can take over 4 seconds, so Flutter now has a 30-second probe timeout. Dart was never audited, so "Dart SDK" always showed as missing on Dart frameworks.
+- **Installer ran user-level installers under sudo.** Only `apt-get`, `pacman`, `dnf` and `snap` commands get `sudo` now; `dart pub global activate`, `cargo install`, `npm install -g`, `gem install` and `curl | sh` installers run as the user.
+
+### Added
+- **Goose language** ([aardappel/goose](https://aardappel.github.io/goose/)): **Goose (Vanilla)**, a host-only program (`src/main.goose`, `goose run` / `goose build`), and **Goose (HTTP)**, a JSON service (experimental). Goose has no networking module yet, so the HTTP starter carries a small POSIX socket layer in C (`src/http.c`, added to the build by the `src/main.build` sidecar) that `extern fn` binds; routing and responses are Goose. Its Dockerfile downloads the Goose v2026.4 release and builds with gcc.
+- **Dart Jaspr**: Flutter-style components rendered on the server and served through Shelf, so it runs with plain `dart run` (`/health` plus server-rendered pages, `jaspr_test` server test, `dart compile exe` Docker image). Verified: `dart analyze` and `dart test` pass, the Docker image builds and `/health` answers.
+- **Host auditor covers every toolchain the catalog requires**: added Goose, Jaspr CLI, Serverpod CLI, Dart, G++, CMake, Bash, rustc, Trunk, Dioxus CLI, Ruby, RubyGems, Bundler, Erlang/OTP, Elixir, Gleam, Cabal, Stack, OPAM, Gradle, R, LuaJIT, V, Hugo, Meteor and clasp, with install commands. `lazystack doctor` uses the same PATH lookup and version flags.
+- Importer recognizes Jaspr (`pubspec.yaml`) and Goose (`src/main.goose`) projects, and Goose apps get their own goose icon in the framework picker.
+
+### Not verified
+- The Goose starters were not compiled on the release machine (running the downloaded Goose binary was not permitted there). `src/http.c` compiles cleanly with `gcc -Wall -Wextra`; the Goose code follows the v2026.4 reference and bundled samples.
+
 ## [1.4.0] - 2026-11-12
 
 ### Fixed

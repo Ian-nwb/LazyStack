@@ -90,6 +90,12 @@ export async function addDirectoryToPath(dirPath: string): Promise<boolean> {
   }
 }
 
+/** Only system package managers need root; user-level installers (dart pub, cargo, npm -g, gem, curl | sh) must not run under sudo. */
+function withSudo(command?: string): string {
+  if (!command) return ''
+  return /^(apt-get|apt|pacman|dnf|snap)\b/.test(command) ? `sudo ${command}` : command
+}
+
 export async function installBinary(binaryOrId: string): Promise<InstallResult> {
   ensureUserPathsInEnv()
 
@@ -108,13 +114,13 @@ export async function installBinary(binaryOrId: string): Promise<InstallResult> 
 
   switch (pm) {
     case 'apt':
-      commandToRun = item.installCommand.linuxApt ? `sudo ${item.installCommand.linuxApt}` : ''
+      commandToRun = withSudo(item.installCommand.linuxApt)
       break
     case 'pacman':
-      commandToRun = item.installCommand.linuxPacman ? `sudo ${item.installCommand.linuxPacman}` : ''
+      commandToRun = withSudo(item.installCommand.linuxPacman)
       break
     case 'dnf':
-      commandToRun = item.installCommand.linuxDnf ? `sudo ${item.installCommand.linuxDnf}` : ''
+      commandToRun = withSudo(item.installCommand.linuxDnf)
       break
     case 'brew':
       // Homebrew MUST NOT run as root
@@ -154,6 +160,8 @@ export async function installBinary(binaryOrId: string): Promise<InstallResult> 
       addedPath = await addDirectoryToPath(path.join(home, '.cargo', 'bin'))
     } else if (item.id === 'deno') {
       addedPath = await addDirectoryToPath(path.join(home, '.deno', 'bin'))
+    } else if (item.id === 'serverpod' || item.id === 'jaspr') {
+      addedPath = await addDirectoryToPath(path.join(home, '.pub-cache', 'bin'))
     } else if (item.id === 'composer') {
       await addDirectoryToPath(path.join(home, '.config', 'composer', 'vendor', 'bin'))
     }

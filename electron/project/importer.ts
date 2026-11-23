@@ -214,9 +214,14 @@ async function detectApp(dir: string, entries: string[]): Promise<{ techId: stri
     return null
   }
   if (has('deno.json') || has('deno.jsonc')) return /\$fresh/.test(await file('deno.json') + await file('deno.jsonc')) ? { techId: 'deno-fresh', confidence: 'high', evidence: 'deno.json imports Fresh' } : { techId: 'deno-native', confidence: 'medium', evidence: 'deno.json' }
+  if (has('src')) {
+    const gooseMain = await read(path.join(dir, 'src', 'main.goose'))
+    if (gooseMain) return /extern fn gh_listen/.test(gooseMain) ? { techId: 'goose-http', confidence: 'high', evidence: 'src/main.goose binds a socket layer' } : { techId: 'goose-app', confidence: 'medium', evidence: 'src/main.goose' }
+  }
   if (has('pubspec.yaml')) {
     const pubspec = await file('pubspec.yaml')
     if (/sdk:\s*flutter/.test(pubspec)) return { techId: 'dart-flutter', confidence: 'high', evidence: 'pubspec.yaml depends on Flutter' }
+    if (/^\s*jaspr\s*:/m.test(pubspec)) return { techId: 'dart-jaspr', confidence: 'high', evidence: 'pubspec.yaml depends on Jaspr' }
     if (/serverpod/.test(pubspec)) return { techId: 'dart-serverpod', confidence: 'high', evidence: 'pubspec.yaml depends on Serverpod' }
     return /\bshelf\b/.test(pubspec) ? { techId: 'dart-shelf', confidence: 'high', evidence: 'pubspec.yaml depends on Shelf' } : null
   }

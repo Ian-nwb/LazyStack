@@ -5,7 +5,7 @@ export function getNativeEnvironmentDefaults(techId: string): string {
   if (techId === 'meteor') return 'ROOT_URL=http://localhost:3000\n'
   if (techId === 'hugo') return 'HUGO_ENVIRONMENT=development\n'
   if (techId === 'jekyll') return 'JEKYLL_ENV=development\n'
-  if (techId === 'dart-shelf' || techId === 'dart-serverpod') return 'APP_ENV=development\n'
+  if (techId === 'dart-shelf' || techId === 'dart-serverpod' || techId === 'dart-jaspr') return 'APP_ENV=development\n'
   if (techId.startsWith('python-') || techId === 'vanilla-python') return 'PYTHONUNBUFFERED=1\n'
   if (techId === 'php-symfony') return 'APP_ENV=dev\n'
   if (techId.startsWith('php-') || techId === 'vanilla-php' || techId === 'fullstack-laravel' || techId === 'go-goravel') return 'APP_ENV=local\n'

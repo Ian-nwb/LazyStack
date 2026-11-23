@@ -669,6 +669,36 @@ CMD ["./server", "-p", "${port}"]
     }
   }
 
+  if (techId === 'dart-jaspr') {
+    return {
+      dockerfile: `FROM dart:stable AS build\nWORKDIR /app\nCOPY pubspec.* ./\nRUN dart pub get\nCOPY . .\nRUN dart pub get --offline\nRUN dart compile exe bin/main.dart -o bin/server\n\nFROM scratch\nCOPY --from=build /runtime/ /\nCOPY --from=build /app/bin/server /app/bin/\nEXPOSE ${port}\nENV PORT=${port}\nCMD ["/app/bin/server"]\n`,
+      dockerignore: `.dart_tool\n.git\nbin/server\n`
+    }
+  }
+
+  if (techId === 'goose-http') {
+    // No official image: the builder downloads the Goose release and compiles with gcc (glibc 2.35+).
+    return {
+      dockerfile: `FROM debian:bookworm-slim AS builder
+ARG GOOSE_VERSION=v2026.4
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl gcc libc6-dev && rm -rf /var/lib/apt/lists/*
+RUN curl -fsSL https://github.com/aardappel/goose/releases/download/\${GOOSE_VERSION}/goose-\${GOOSE_VERSION}-linux-x64.tar.gz | tar -xz -C /opt && mv /opt/goose-\${GOOSE_VERSION}-linux-x64 /opt/goose
+ENV PATH=/opt/goose:$PATH
+WORKDIR /app
+COPY . .
+RUN goose build -o build/server src/main.goose
+
+FROM debian:bookworm-slim
+WORKDIR /app
+COPY --from=builder /app/build/server ./server
+EXPOSE ${port}
+ENV PORT=${port}
+CMD ["./server"]
+`,
+      dockerignore: `.git\nbuild\n`
+    }
+  }
+
   if (techId === 'dart-shelf') {
     return {
       dockerfile: `FROM dart:stable AS build\nWORKDIR /app\nCOPY pubspec.* ./\nRUN dart pub get\nCOPY . .\nRUN dart pub get --offline\nRUN dart compile exe bin/server.dart -o bin/server\n\nFROM scratch\nCOPY --from=build /runtime/ /\nCOPY --from=build /app/bin/server /app/bin/\nEXPOSE ${port}\nENV PORT=${port}\nCMD ["/app/bin/server"]\n`,

@@ -1,4 +1,5 @@
-import { exec } from 'child_process'
+import { exec, execFileSync } from 'child_process'
+import fs from 'fs'
 import { promisify } from 'util'
 import os from 'os'
 import path from 'path'
@@ -21,6 +22,31 @@ export interface BinaryAudit {
   }
 }
 
+let loginShellPath: string[] | null = null
+
+/**
+ * GUI launches (desktop entry, AppImage) don't source the user's shell profile, so SDKs added to
+ * PATH in /etc/profile.d or ~/.zshrc (Flutter, Dart, Go, ...) are invisible. Ask the login shell once.
+ */
+function readLoginShellPath(): string[] {
+  if (loginShellPath) return loginShellPath
+  loginShellPath = []
+  if (process.platform === 'win32') return loginShellPath
+  const shell = process.env.SHELL || '/bin/sh'
+  try {
+    const out = execFileSync(shell, ['-ilc', 'printf "__LS_PATH__%s__LS_PATH__" "$PATH"'], {
+      encoding: 'utf8',
+      timeout: 5000,
+      stdio: ['ignore', 'pipe', 'ignore']
+    })
+    const match = out.match(/__LS_PATH__(.*?)__LS_PATH__/s)
+    if (match) loginShellPath = match[1].split(path.delimiter).filter(Boolean)
+  } catch {
+    // A broken or slow profile must not break the audit; fall back to the static list.
+  }
+  return loginShellPath
+}
+
 // Ensure common user directories are in process.env.PATH
 export function ensureUserPathsInEnv(): void {
   const home = os.homedir()
@@ -35,6 +61,10 @@ export function ensureUserPathsInEnv(): void {
     userPaths.push(
       path.join(home, '.cargo', 'bin'),
       path.join(home, '.bun', 'bin'),
+      path.join(localAppData, 'Pub', 'Cache', 'bin'),
+      'C:\\src\\flutter\\bin',
+      path.join(home, 'flutter', 'bin'),
+      path.join(home, 'dev', 'flutter', 'bin'),
       path.join(home, '.deno', 'bin'),
       path.join(home, 'scoop', 'shims'),
       path.join(localAppData, 'Microsoft', 'WinGet', 'Links'),
@@ -55,6 +85,29 @@ export function ensureUserPathsInEnv(): void {
       path.join(home, '.cargo', 'bin'),
       path.join(home, '.deno', 'bin'),
       path.join(home, '.local', 'bin'),
+      path.join(home, 'go', 'bin'),
+      '/usr/local/go/bin',
+      // Flutter / Dart SDK locations (manual installs, snap, fvm, apt dart package)
+      '/opt/flutter/bin',
+      path.join(home, 'flutter', 'bin'),
+      path.join(home, 'development', 'flutter', 'bin'),
+      path.join(home, 'snap', 'flutter', 'common', 'flutter', 'bin'),
+      path.join(home, 'fvm', 'default', 'bin'),
+      path.join(home, '.pub-cache', 'bin'),
+      path.join(home, '.ghcup', 'bin'),
+      path.join(home, '.opam', 'default', 'bin'),
+      path.join(home, '.local', 'share', 'coursier', 'bin'),
+      path.join(home, '.config', 'composer', 'vendor', 'bin'),
+      path.join(home, '.dotnet', 'tools'),
+      path.join(home, '.meteor'),
+      path.join(home, '.nimble', 'bin'),
+      path.join(home, '.juliaup', 'bin'),
+      path.join(home, 'v'),
+      path.join(home, 'goose'),
+      '/opt/goose',
+      '/usr/lib/dart/bin',
+      '/snap/bin',
+      '/opt/homebrew/bin',
       '/usr/local/bin',
       '/usr/bin',
       '/bin',
@@ -72,6 +125,10 @@ export function ensureUserPathsInEnv(): void {
     }
   }
 
+  for (const p of readLoginShellPath()) {
+    if (!currentSegments.includes(p) && fs.existsSync(p)) currentSegments.push(p)
+  }
+
   process.env.PATH = currentSegments.join(path.delimiter)
 }
 
@@ -81,6 +138,8 @@ export const MONITORED_BINARIES: Array<{
   binary: string
   category: BinaryAudit['category']
   versionFlag: string
+  /** Version probe timeout in ms (default 4000). Flutter's first `--version` can take several seconds. */
+  timeoutMs?: number
   installCommand: BinaryAudit['installCommand']
 }> = [
   {
@@ -355,11 +414,378 @@ export const MONITORED_BINARIES: Array<{
     binary: 'flutter',
     category: 'runtime',
     versionFlag: '--version',
+    timeoutMs: 30000,
     installCommand: {
       linuxApt: 'snap install flutter --classic',
       linuxPacman: 'pacman -S --noconfirm flutter',
       macosBrew: 'brew install --cask flutter',
       windowsWinget: 'winget install Google.Flutter'
+    }
+  },
+  {
+    id: 'dart',
+    name: 'Dart SDK',
+    binary: 'dart',
+    category: 'runtime',
+    versionFlag: '--version',
+    timeoutMs: 10000,
+    installCommand: {
+      linuxApt: 'apt-get install -y dart',
+      linuxPacman: 'pacman -S --noconfirm dart',
+      macosBrew: 'brew install dart-sdk',
+      windowsWinget: 'winget install Google.DartSDK'
+    }
+  },
+  {
+    id: 'jaspr',
+    name: 'Jaspr CLI (optional)',
+    binary: 'jaspr',
+    category: 'package-manager',
+    versionFlag: '--version',
+    timeoutMs: 15000,
+    installCommand: {
+      linuxApt: 'dart pub global activate jaspr_cli',
+      linuxPacman: 'dart pub global activate jaspr_cli',
+      linuxDnf: 'dart pub global activate jaspr_cli',
+      macosBrew: 'dart pub global activate jaspr_cli',
+      windowsWinget: 'dart pub global activate jaspr_cli'
+    }
+  },
+  {
+    id: 'serverpod',
+    name: 'Serverpod CLI',
+    binary: 'serverpod',
+    category: 'package-manager',
+    versionFlag: 'version',
+    timeoutMs: 15000,
+    installCommand: {
+      linuxApt: 'dart pub global activate serverpod_cli',
+      linuxPacman: 'dart pub global activate serverpod_cli',
+      linuxDnf: 'dart pub global activate serverpod_cli',
+      macosBrew: 'dart pub global activate serverpod_cli',
+      windowsWinget: 'dart pub global activate serverpod_cli'
+    }
+  },
+  {
+    id: 'goose',
+    name: 'Goose Compiler',
+    binary: 'goose',
+    category: 'compiler',
+    versionFlag: 'version',
+    installCommand: {
+      macosBrew: 'brew install goose-lang'
+    }
+  },
+  {
+    id: 'gpp',
+    name: 'G++ Compiler',
+    binary: 'g++',
+    category: 'compiler',
+    versionFlag: '--version',
+    installCommand: {
+      linuxApt: 'apt-get install -y g++',
+      linuxPacman: 'pacman -S --noconfirm gcc',
+      linuxDnf: 'dnf install -y gcc-c++',
+      macosBrew: 'xcode-select --install',
+      windowsWinget: 'winget install MSYS2.MSYS2'
+    }
+  },
+  {
+    id: 'cmake',
+    name: 'CMake',
+    binary: 'cmake',
+    category: 'compiler',
+    versionFlag: '--version',
+    installCommand: {
+      linuxApt: 'apt-get install -y cmake',
+      linuxPacman: 'pacman -S --noconfirm cmake',
+      linuxDnf: 'dnf install -y cmake',
+      macosBrew: 'brew install cmake',
+      windowsWinget: 'winget install Kitware.CMake'
+    }
+  },
+  {
+    id: 'bash',
+    name: 'Bash Shell',
+    binary: 'bash',
+    category: 'core',
+    versionFlag: '--version',
+    installCommand: {
+      linuxApt: 'apt-get install -y bash',
+      linuxPacman: 'pacman -S --noconfirm bash',
+      linuxDnf: 'dnf install -y bash',
+      macosBrew: 'brew install bash',
+      windowsWinget: 'winget install Git.Git'
+    }
+  },
+  {
+    id: 'rustc',
+    name: 'Rust Compiler',
+    binary: 'rustc',
+    category: 'compiler',
+    versionFlag: '--version',
+    installCommand: {
+      linuxApt: "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y",
+      linuxPacman: 'pacman -S --noconfirm rustup',
+      linuxDnf: 'dnf install -y rust cargo',
+      macosBrew: 'brew install rustup',
+      windowsWinget: 'winget install Rustlang.Rustup'
+    }
+  },
+  {
+    id: 'trunk',
+    name: 'Trunk (Rust WASM bundler)',
+    binary: 'trunk',
+    category: 'package-manager',
+    versionFlag: '--version',
+    installCommand: {
+      linuxApt: 'cargo install --locked trunk',
+      linuxPacman: 'pacman -S --noconfirm trunk',
+      linuxDnf: 'cargo install --locked trunk',
+      macosBrew: 'brew install trunk',
+      windowsWinget: 'cargo install --locked trunk'
+    }
+  },
+  {
+    id: 'dx',
+    name: 'Dioxus CLI',
+    binary: 'dx',
+    category: 'package-manager',
+    versionFlag: '--version',
+    installCommand: {
+      linuxApt: 'cargo install dioxus-cli',
+      linuxPacman: 'cargo install dioxus-cli',
+      linuxDnf: 'cargo install dioxus-cli',
+      macosBrew: 'cargo install dioxus-cli',
+      windowsWinget: 'cargo install dioxus-cli'
+    }
+  },
+  {
+    id: 'ruby',
+    name: 'Ruby Runtime',
+    binary: 'ruby',
+    category: 'runtime',
+    versionFlag: '--version',
+    installCommand: {
+      linuxApt: 'apt-get install -y ruby-full',
+      linuxPacman: 'pacman -S --noconfirm ruby',
+      linuxDnf: 'dnf install -y ruby ruby-devel',
+      macosBrew: 'brew install ruby',
+      windowsWinget: 'winget install RubyInstallerTeam.RubyWithDevKit.3.3'
+    }
+  },
+  {
+    id: 'gem',
+    name: 'RubyGems',
+    binary: 'gem',
+    category: 'package-manager',
+    versionFlag: '--version',
+    installCommand: {
+      linuxApt: 'apt-get install -y ruby-full',
+      linuxPacman: 'pacman -S --noconfirm rubygems',
+      linuxDnf: 'dnf install -y rubygems',
+      macosBrew: 'brew install ruby',
+      windowsWinget: 'winget install RubyInstallerTeam.RubyWithDevKit.3.3'
+    }
+  },
+  {
+    id: 'bundle',
+    name: 'Bundler',
+    binary: 'bundle',
+    category: 'package-manager',
+    versionFlag: '--version',
+    installCommand: {
+      linuxApt: 'gem install bundler',
+      linuxPacman: 'gem install bundler',
+      linuxDnf: 'gem install bundler',
+      macosBrew: 'gem install bundler',
+      windowsWinget: 'gem install bundler'
+    }
+  },
+  {
+    id: 'erl',
+    name: 'Erlang/OTP',
+    binary: 'erl',
+    category: 'runtime',
+    versionFlag: '-noshell -eval \'io:fwrite("OTP ~s~n", [erlang:system_info(otp_release)]), halt().\'',
+    timeoutMs: 10000,
+    installCommand: {
+      linuxApt: 'apt-get install -y erlang',
+      linuxPacman: 'pacman -S --noconfirm erlang',
+      linuxDnf: 'dnf install -y erlang',
+      macosBrew: 'brew install erlang',
+      windowsWinget: 'winget install Erlang.ErlangOTP'
+    }
+  },
+  {
+    id: 'elixir',
+    name: 'Elixir',
+    binary: 'elixir',
+    category: 'runtime',
+    versionFlag: '--version',
+    timeoutMs: 10000,
+    installCommand: {
+      linuxApt: 'apt-get install -y elixir',
+      linuxPacman: 'pacman -S --noconfirm elixir',
+      linuxDnf: 'dnf install -y elixir',
+      macosBrew: 'brew install elixir',
+      windowsWinget: 'winget install ElixirLang.Elixir'
+    }
+  },
+  {
+    id: 'gleam',
+    name: 'Gleam',
+    binary: 'gleam',
+    category: 'compiler',
+    versionFlag: '--version',
+    installCommand: {
+      linuxApt: 'snap install gleam --classic',
+      linuxPacman: 'pacman -S --noconfirm gleam',
+      linuxDnf: 'dnf install -y gleam',
+      macosBrew: 'brew install gleam',
+      windowsWinget: 'winget install Gleam.Gleam'
+    }
+  },
+  {
+    id: 'cabal',
+    name: 'Cabal (Haskell)',
+    binary: 'cabal',
+    category: 'package-manager',
+    versionFlag: '--version',
+    installCommand: {
+      linuxApt: 'apt-get install -y cabal-install',
+      linuxPacman: 'pacman -S --noconfirm cabal-install',
+      linuxDnf: 'dnf install -y cabal-install',
+      macosBrew: 'brew install cabal-install',
+      windowsWinget: 'winget install Haskell.GHCup'
+    }
+  },
+  {
+    id: 'stack',
+    name: 'Stack (Haskell)',
+    binary: 'stack',
+    category: 'package-manager',
+    versionFlag: '--version',
+    installCommand: {
+      linuxApt: 'apt-get install -y haskell-stack',
+      linuxPacman: 'pacman -S --noconfirm stack',
+      linuxDnf: 'dnf install -y stack',
+      macosBrew: 'brew install haskell-stack',
+      windowsWinget: 'winget install commercialhaskell.stack'
+    }
+  },
+  {
+    id: 'opam',
+    name: 'OPAM (OCaml)',
+    binary: 'opam',
+    category: 'package-manager',
+    versionFlag: '--version',
+    installCommand: {
+      linuxApt: 'apt-get install -y opam',
+      linuxPacman: 'pacman -S --noconfirm opam',
+      linuxDnf: 'dnf install -y opam',
+      macosBrew: 'brew install opam',
+      windowsWinget: 'winget install OCaml.opam'
+    }
+  },
+  {
+    id: 'gradle',
+    name: 'Gradle',
+    binary: 'gradle',
+    category: 'package-manager',
+    versionFlag: '--version',
+    timeoutMs: 30000,
+    installCommand: {
+      linuxApt: 'apt-get install -y gradle',
+      linuxPacman: 'pacman -S --noconfirm gradle',
+      linuxDnf: 'sdk install gradle',
+      macosBrew: 'brew install gradle',
+      windowsWinget: 'winget install Gradle.Gradle'
+    }
+  },
+  {
+    id: 'r',
+    name: 'R Runtime',
+    binary: 'R',
+    category: 'runtime',
+    versionFlag: '--version',
+    installCommand: {
+      linuxApt: 'apt-get install -y r-base',
+      linuxPacman: 'pacman -S --noconfirm r',
+      linuxDnf: 'dnf install -y R',
+      macosBrew: 'brew install r',
+      windowsWinget: 'winget install RProject.R'
+    }
+  },
+  {
+    id: 'luajit',
+    name: 'LuaJIT',
+    binary: 'luajit',
+    category: 'runtime',
+    versionFlag: '-v',
+    installCommand: {
+      linuxApt: 'apt-get install -y luajit',
+      linuxPacman: 'pacman -S --noconfirm luajit',
+      linuxDnf: 'dnf install -y luajit',
+      macosBrew: 'brew install luajit',
+      windowsWinget: 'winget install DEVCOM.LuaJIT'
+    }
+  },
+  {
+    id: 'v',
+    name: 'V Compiler',
+    binary: 'v',
+    category: 'compiler',
+    versionFlag: 'version',
+    installCommand: {
+      linuxApt: 'git clone --depth=1 https://github.com/vlang/v ~/v && make -C ~/v && ~/v/v symlink',
+      linuxPacman: 'pacman -S --noconfirm vlang',
+      linuxDnf: 'git clone --depth=1 https://github.com/vlang/v ~/v && make -C ~/v && ~/v/v symlink',
+      macosBrew: 'brew install vlang',
+      windowsWinget: 'winget install vlang.vlang'
+    }
+  },
+  {
+    id: 'hugo',
+    name: 'Hugo',
+    binary: 'hugo',
+    category: 'compiler',
+    versionFlag: 'version',
+    installCommand: {
+      linuxApt: 'apt-get install -y hugo',
+      linuxPacman: 'pacman -S --noconfirm hugo',
+      linuxDnf: 'dnf install -y hugo',
+      macosBrew: 'brew install hugo',
+      windowsWinget: 'winget install Hugo.Hugo.Extended'
+    }
+  },
+  {
+    id: 'meteor',
+    name: 'Meteor',
+    binary: 'meteor',
+    category: 'runtime',
+    versionFlag: '--version',
+    timeoutMs: 20000,
+    installCommand: {
+      linuxApt: 'npx meteor',
+      linuxPacman: 'npx meteor',
+      linuxDnf: 'npx meteor',
+      macosBrew: 'npx meteor',
+      windowsWinget: 'npx meteor'
+    }
+  },
+  {
+    id: 'clasp',
+    name: 'Google clasp CLI',
+    binary: 'clasp',
+    category: 'package-manager',
+    versionFlag: '--version',
+    installCommand: {
+      linuxApt: 'npm install -g @google/clasp',
+      linuxPacman: 'npm install -g @google/clasp',
+      linuxDnf: 'npm install -g @google/clasp',
+      macosBrew: 'npm install -g @google/clasp',
+      windowsWinget: 'npm install -g @google/clasp'
     }
   },
   {
@@ -444,7 +870,7 @@ export async function auditEnvironment(): Promise<BinaryAudit[]> {
     MONITORED_BINARIES.map(async (item) => {
       try {
         const { stdout, stderr } = await execAsync(`${item.binary} ${item.versionFlag}`, { 
-          timeout: 4000,
+          timeout: item.timeoutMs ?? 4000,
           env: process.env
         })
         const output = (stdout || stderr || '').trim().split('\n')[0]
