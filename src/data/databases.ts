@@ -132,7 +132,7 @@ export const DATABASE_CATALOG: DatabaseOption[] = [
     defaultPort: 9000,
     category: 'storage',
     description: 'High-performance distributed S3 object storage suite with integrated web management console on :9001.',
-    imageTag: 'minio/minio:latest',
+    imageTag: 'cgr.dev/chainguard/minio:latest',
     healthcheckCmd: 'curl -f http://localhost:9000/minio/health/live',
     badgeColor: 'bg-rose-600/20 text-rose-300 border-rose-600/40'
   },

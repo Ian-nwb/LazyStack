@@ -262,10 +262,10 @@ export const MONITORED_BINARIES: Array<{
     category: 'runtime',
     versionFlag: '--version',
     installCommand: {
-      linuxPacman: 'pacman -S --noconfirm dotnet-sdk-9.0',
-      linuxFallback: 'curl -fsSL https://dot.net/v1/dotnet-install.sh | bash -s -- --channel 9.0',
+      linuxPacman: 'pacman -S --noconfirm dotnet-sdk',
+      linuxFallback: 'curl -fsSL https://dot.net/v1/dotnet-install.sh | bash -s -- --channel 10.0',
       macosBrew: 'brew install dotnet',
-      windowsWinget: 'winget install Microsoft.DotNet.SDK.9'
+      windowsWinget: 'winget install Microsoft.DotNet.SDK.10'
     }
   },
   {

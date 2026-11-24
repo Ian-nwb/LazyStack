@@ -1,9 +1,15 @@
 import { Files, GITIGNORE, json, NativeContext, readme, shell } from './context'
 
+/** A namespace equal to a generated type name (App, Program, MainPage...) breaks `using <ns>`, e.g. folder `app` -> `App`. */
+const DOTNET_RESERVED_NAMES = new Set(['App', 'Program', 'Routes', 'Layout', 'Pages', 'MainLayout', 'NavMenu', 'Home', 'Counter', 'MainPage', 'AppShell', 'MauiProgram'])
+function dotnetNamespace(c: NativeContext): string {
+  return DOTNET_RESERVED_NAMES.has(c.pascal) ? `${c.pascal}Web` : c.pascal
+}
+
 function aspnet(c: NativeContext): Files {
-  const ns = c.pascal
+  const ns = dotnetNamespace(c)
   return {
-    [`${c.name}.csproj`]: `<Project Sdk="Microsoft.NET.Sdk.Web">\n\n  <PropertyGroup>\n    <TargetFramework>net9.0</TargetFramework>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <RootNamespace>${ns}</RootNamespace>\n    <AssemblyName>app</AssemblyName>\n  </PropertyGroup>\n\n</Project>\n`,
+    [`${c.name}.csproj`]: `<Project Sdk="Microsoft.NET.Sdk.Web">\n\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <RootNamespace>${ns}</RootNamespace>\n    <AssemblyName>app</AssemblyName>\n  </PropertyGroup>\n\n</Project>\n`,
     'Program.cs': `using ${ns}.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -59,9 +65,9 @@ public static class StatusEndpoints
 }
 
 function blazor(c: NativeContext): Files {
-  const ns = c.pascal
+  const ns = dotnetNamespace(c)
   return {
-    [`${c.name}.csproj`]: `<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">\n\n  <PropertyGroup>\n    <TargetFramework>net9.0</TargetFramework>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <RootNamespace>${ns}</RootNamespace>\n    <AssemblyName>app</AssemblyName>\n  </PropertyGroup>\n\n  <ItemGroup>\n    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="9.0.0" />\n    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="9.0.0" PrivateAssets="all" />\n  </ItemGroup>\n\n</Project>\n`,
+    [`${c.name}.csproj`]: `<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">\n\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <RootNamespace>${ns}</RootNamespace>\n    <AssemblyName>app</AssemblyName>\n  </PropertyGroup>\n\n  <ItemGroup>\n    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.0" />\n    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.0" PrivateAssets="all" />\n  </ItemGroup>\n\n</Project>\n`,
     'Program.cs': `using Microsoft.AspNetCore.Components.Web;\nusing Microsoft.AspNetCore.Components.WebAssembly.Hosting;\nusing ${ns};\n\nvar builder = WebAssemblyHostBuilder.CreateDefault(args);\nbuilder.RootComponents.Add<App>("#app");\nbuilder.RootComponents.Add<HeadOutlet>("head::after");\n\nbuilder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });\n\nawait builder.Build().RunAsync();\n`,
     'App.razor': `<Router AppAssembly="@typeof(App).Assembly">\n    <Found Context="routeData">\n        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />\n        <FocusOnNavigate RouteData="@routeData" Selector="h1" />\n    </Found>\n    <NotFound>\n        <LayoutView Layout="@typeof(MainLayout)">\n            <p role="alert">Sorry, there's nothing at this address.</p>\n        </LayoutView>\n    </NotFound>\n</Router>\n`,
     '_Imports.razor': `@using System.Net.Http\n@using System.Net.Http.Json\n@using Microsoft.AspNetCore.Components.Forms\n@using Microsoft.AspNetCore.Components.Routing\n@using Microsoft.AspNetCore.Components.Web\n@using Microsoft.AspNetCore.Components.Web.Virtualization\n@using Microsoft.AspNetCore.Components.WebAssembly.Http\n@using Microsoft.JSInterop\n@using ${ns}\n@using ${ns}.Layout\n`,
@@ -306,7 +312,7 @@ end
 
 /** .NET MAUI on .NET 10, matching the `dotnet new maui` single-project layout. */
 function maui(c: NativeContext): Files {
-  const ns = c.pascal
+  const ns = dotnetNamespace(c)
   const appId = `com.lazystack.${c.snake.replace(/_/g, '').replace(/^(\d)/, 'app$1')}`
   const tests = `tests/${ns}.Tests`
   const purple = '#512BD4'

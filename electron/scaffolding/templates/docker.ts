@@ -134,12 +134,14 @@ export function generateDockerCompose(settings: ProjectSettings): string {
         yaml += `    healthcheck:\n      test: ["CMD", "curl", "-f", "http://localhost:7700/health"]\n      interval: 5s\n      timeout: 5s\n      retries: 5\n`
         break
       case 'minio':
-        yaml += `    image: minio/minio:latest\n`
+        // minio/minio left Docker Hub in 2025; Chainguard publishes a maintained build with the same API and env.
+        yaml += `    image: cgr.dev/chainguard/minio:latest\n`
         yaml += `    command: server /data --console-address ":9001"\n`
         yaml += `    environment:\n      MINIO_ROOT_USER: \${MINIO_ROOT_USER:-lazystack_admin}\n      MINIO_ROOT_PASSWORD: \${MINIO_ROOT_PASSWORD:-minio_secret_password}\n`
         yaml += `    ports:\n      - "\${${sName.toUpperCase()}_PORT:-${db.port}}:9000"\n      - "9001:9001"\n`
         yaml += `    volumes:\n      - ${sName}_data:/data\n`
-        yaml += `    healthcheck:\n      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]\n      interval: 5s\n      timeout: 5s\n      retries: 5\n`
+        // The image has bash but no curl/wget/grep, so probe the health endpoint over /dev/tcp.
+        yaml += `    healthcheck:\n      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /minio/health/live HTTP/1.0\\r\\nHost: localhost\\r\\n\\r\\n' >&3 && read -r status <&3 && [[ $$status == *' 200 '* ]]"]\n      interval: 5s\n      timeout: 5s\n      retries: 10\n`
         break
       case 'scylladb':
         yaml += `    image: scylladb/scylla:5.4\n`
@@ -262,7 +264,7 @@ export function generateDockerCompose(settings: ProjectSettings): string {
         yaml += `    environment:\n      NATS_URL: nats://${sName}:4222\n`
         break
       case 'kafka-ui':
-        yaml += `    image: provectuslabs/kafka-ui:latest\n`
+        yaml += `    image: kafbat/kafka-ui:latest\n`
         yaml += `    environment:\n      KAFKA_CLUSTERS_0_NAME: ${sName}\n      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: ${sName}:29092\n      DYNAMIC_CONFIG_ENABLED: "true"\n`
         break
       case 'prisma-studio':
@@ -548,9 +550,11 @@ CMD ["lapis", "server", "production"]
 
   if (techId === 'r-plumber') {
     return {
-      dockerfile: `FROM r-base:4.4-alpine
+      dockerfile: `FROM rocker/r-ver:4.4
 WORKDIR /app
-RUN R -e "install.packages('plumber', repos='https://cloud.r-project.org')"
+# plumber needs libsodium; install.packages() only warns on failure, so check the package loads.
+RUN apt-get update && apt-get install -y --no-install-recommends libsodium-dev && rm -rf /var/lib/apt/lists/* \\
+ && R -q -e "install.packages('plumber'); if (!requireNamespace('plumber', quietly = TRUE)) quit(status = 1)"
 COPY . .
 EXPOSE ${port}
 CMD ["R", "-e", "pr <- plumber::plumb('plumber.R'); pr$run(host='0.0.0.0', port=${port})"]
@@ -730,7 +734,7 @@ ${starterProfile === 'api-service' ? `CMD ["sh", "-c", "alembic upgrade head && 
 
   if (techId.startsWith('go-')) {
     return {
-      dockerfile: `FROM golang:1.23-alpine AS builder
+      dockerfile: `FROM golang:1.27-alpine AS builder
 WORKDIR /app
 COPY go.mod go.sum* ./
 COPY . .
@@ -899,7 +903,7 @@ CMD ["php", "-S", "0.0.0.0:${port}", "-t", "public"]
   }
 
   if (techId === 'vanilla-go') {
-    return { dockerfile: `FROM golang:1.23-alpine AS build\nWORKDIR /src\nCOPY . .\nRUN go mod tidy && CGO_ENABLED=0 go build -o /server .\nFROM scratch\nCOPY --from=build /server /server\nEXPOSE ${port}\nENV PORT=${port}\nENTRYPOINT ["/server"]\n`, dockerignore: `.git\n` }
+    return { dockerfile: `FROM golang:1.27-alpine AS build\nWORKDIR /src\nCOPY . .\nRUN go mod tidy && CGO_ENABLED=0 go build -o /server .\nFROM scratch\nCOPY --from=build /server /server\nEXPOSE ${port}\nENV PORT=${port}\nENTRYPOINT ["/server"]\n`, dockerignore: `.git\n` }
   }
 
   if (techId === 'vanilla-python') {
@@ -924,7 +928,7 @@ CMD ["php", "-S", "0.0.0.0:${port}", "-t", "public"]
 
   if (techId === 'csharp-blazor') {
     return {
-      dockerfile: `FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+      dockerfile: `FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 COPY *.csproj ./
 RUN dotnet restore
@@ -942,14 +946,14 @@ EXPOSE ${port}
 
   if (techId.startsWith('csharp-')) {
     return {
-      dockerfile: `FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+      dockerfile: `FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 COPY *.csproj ./
 RUN dotnet restore
 COPY . .
 RUN dotnet publish -c Release -o /out
 
-FROM mcr.microsoft.com/dotnet/aspnet:9.0
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
 COPY --from=build /out .
 ENV PORT=${port}

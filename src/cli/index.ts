@@ -11,7 +11,7 @@ import { createDatabaseCredentials } from '../../electron/scaffolding/templates/
 import { buildPlanTree, renderPlanTreeText } from '../utils/planTree'
 import type { ScaffoldChanges } from '../../electron/scaffolding/writer'
 import { importProject } from '../../electron/project/importer'
-import { TECH_CATALOG } from '../data/frameworks'
+import { TECH_CATALOG, isHostOnlyTech } from '../data/frameworks'
 import { DATABASE_CATALOG } from '../data/databases'
 import { STACK_PRESETS, StackPreset } from '../data/presets'
 import { ARCHITECTURE_PRESETS, normalizeStructureConfig } from '../data/structurePresets'
@@ -275,6 +275,13 @@ export async function runCli(args: string[] = process.argv.slice(2)) {
   }
 
   if (command === 'list') {
+    if (args.includes('--json')) {
+      console.log(JSON.stringify({
+        frameworks: TECH_CATALOG.map(t => ({ id: t.id, name: t.name, language: t.language, category: t.category, role: t.role, defaultPort: t.defaultPort, hostOnly: isHostOnlyTech(t.id), experimental: Boolean(t.experimental) })),
+        databases: DATABASE_CATALOG.map(d => ({ id: d.id, name: d.name, category: d.category, defaultPort: d.defaultPort, image: d.imageTag }))
+      }, null, 2))
+      return
+    }
     console.log(`\nLazyStack Supported Frameworks & Ecosystem (${TECH_CATALOG.length} Frameworks):\n`)
     
     const categories = ['systems', 'frontend', 'backend', 'fullstack', 'mobile-desktop', 'scripting'] as const
