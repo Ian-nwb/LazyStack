@@ -395,6 +395,34 @@ export const MONITORED_BINARIES: Array<{
     }
   },
   {
+    id: 'perl',
+    name: 'Perl 5',
+    binary: 'perl',
+    category: 'runtime',
+    versionFlag: '-v',
+    installCommand: {
+      linuxApt: 'apt-get install -y perl',
+      linuxPacman: 'pacman -S --noconfirm perl',
+      linuxDnf: 'dnf install -y perl',
+      macosBrew: 'brew install perl',
+      windowsWinget: 'winget install StrawberryPerl.StrawberryPerl'
+    }
+  },
+  {
+    id: 'cpanm',
+    name: 'cpanminus (Perl modules)',
+    binary: 'cpanm',
+    category: 'package-manager',
+    versionFlag: '--version',
+    installCommand: {
+      linuxApt: 'apt-get install -y cpanminus',
+      linuxPacman: 'pacman -S --noconfirm cpanminus',
+      linuxDnf: 'dnf install -y perl-App-cpanminus',
+      macosBrew: 'brew install cpanminus',
+      windowsWinget: 'winget install StrawberryPerl.StrawberryPerl'
+    }
+  },
+  {
     id: 'mvn',
     name: 'Maven (Java Build Tool)',
     binary: 'mvn',

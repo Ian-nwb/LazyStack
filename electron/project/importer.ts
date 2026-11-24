@@ -37,6 +37,12 @@ type Rule = [RegExp, string]
 const firstMatch = (text: string, rules: Rule[]) => rules.find(([pattern]) => pattern.test(text))
 
 const NPM_RULES: Rule[] = [
+  [/"wxt"/, 'wxt-extension'],
+  [/"wrangler"/, 'cloudflare-workers'],
+  [/"@astrojs\/starlight"/, 'astro-starlight'],
+  [/"vite-plugin-elm"/, 'elm-app'],
+  [/"alpinejs"/, 'alpine-vite'],
+  [/"class-variance-authority"[\s\S]*"react"|"react"[\s\S]*"class-variance-authority"/, 'react-shadcn'],
   [/"@redwoodjs\//, 'redwoodjs'],
   [/"@blitzjs\//, 'blitz'],
   [/"@docusaurus\/core"/, 'docusaurus'],
@@ -81,6 +87,7 @@ const NPM_RULES: Rule[] = [
   [/"@google\/clasp"/, 'google-apps-script']
 ]
 const CARGO_RULES: Rule[] = [
+  [/^\s*rocket\s*=/m, 'rust-rocket'],
   [/^\s*dioxus\s*=/m, 'rust-dioxus'],
   [/^\s*slint\s*=/m, 'rust-slint'],
   [/^\s*bevy\s*=/m, 'rust-bevy'],
@@ -92,6 +99,7 @@ const CARGO_RULES: Rule[] = [
   [/^\s*poem\s*=/m, 'rust-poem']
 ]
 const GO_RULES: Rule[] = [
+  [/a-h\/templ/, 'go-templ-htmx'],
   [/goravel\/framework/, 'go-goravel'],
   [/gin-gonic\/gin/, 'go-gin'],
   [/gofiber\/fiber/, 'go-fiber'],
@@ -99,6 +107,10 @@ const GO_RULES: Rule[] = [
   [/go-chi\/chi/, 'go-chi']
 ]
 const PY_RULES: Rule[] = [
+  [/^\s*django-ninja\b/im, 'python-django-ninja'],
+  [/^\s*dash\b/im, 'python-dash'],
+  [/^\s*python-fasthtml\b/im, 'python-fasthtml'],
+  [/^\s*mkdocs(-material)?\b/im, 'mkdocs-material'],
   [/^\s*streamlit\b/im, 'python-streamlit'],
   [/^\s*gradio\b/im, 'python-gradio'],
   [/^\s*litestar\b/im, 'python-litestar'],
@@ -114,6 +126,9 @@ const PY_RULES: Rule[] = [
   [/^\s*anvil-uplink\b/im, 'python-anvil']
 ]
 const JVM_RULES: Rule[] = [
+  [/io\.quarkus/, 'java-quarkus'],
+  [/io\.micronaut/, 'java-micronaut'],
+  [/io\.javalin/, 'java-javalin'],
   [/spring-boot/, 'java-springboot'],
   [/org\.openjfx|javafx/, 'java-javafx'],
   [/io\.ktor/, 'kotlin-ktor'],
@@ -192,7 +207,7 @@ async function detectApp(dir: string, entries: string[]): Promise<{ techId: stri
   if (has('hugo.toml') || ((has('hugo.yaml') || has('hugo.yml') || has('hugo.json')) && (has('content') || has('layouts')))) return { techId: 'hugo', confidence: 'high', evidence: 'Hugo config file' }
   if (has('gleam.toml')) return /wisp/.test(await file('gleam.toml')) ? { techId: 'gleam-wisp', confidence: 'high', evidence: 'gleam.toml depends on Wisp' } : null
   if (has('v.mod')) return { techId: 'v-vweb', confidence: 'medium', evidence: 'v.mod' }
-  if (has('manage.py')) return { techId: 'python-django', confidence: 'high', evidence: 'manage.py' }
+  if (has('manage.py')) return /django-ninja/i.test(await file('requirements.txt') + await file('pyproject.toml')) ? { techId: 'python-django-ninja', confidence: 'high', evidence: 'manage.py with django-ninja' } : { techId: 'python-django', confidence: 'high', evidence: 'manage.py' }
   if (has('rxconfig.py')) return { techId: 'python-reflex', confidence: 'high', evidence: 'rxconfig.py' }
   if (has('requirements.txt') || has('pyproject.toml')) {
     const text = `${await file('requirements.txt')}\n${(await file('pyproject.toml')).replace(/"/g, '\n')}`
@@ -213,9 +228,11 @@ async function detectApp(dir: string, entries: string[]): Promise<{ techId: stri
     const composer = await file('composer.json')
     if (/laravel\/framework/.test(composer)) return { techId: 'fullstack-laravel', confidence: 'high', evidence: 'composer requires laravel/framework' }
     if (/symfony\/framework-bundle/.test(composer)) return { techId: 'php-symfony', confidence: 'high', evidence: 'composer requires symfony/framework-bundle' }
+    if (/slim\/slim/.test(composer)) return { techId: 'php-slim', confidence: 'high', evidence: 'composer requires slim/slim' }
     return { techId: 'vanilla-php', confidence: 'medium', evidence: 'composer.json without a known framework' }
   }
   if (has('Gemfile') && /\bjekyll\b/.test(await file('Gemfile'))) return { techId: 'jekyll', confidence: 'high', evidence: 'Gemfile requires jekyll' }
+  if (has('Gemfile') && /\bsinatra\b/.test(await file('Gemfile')) && !/\brails\b/.test(await file('Gemfile'))) return { techId: 'ruby-sinatra', confidence: 'high', evidence: 'Gemfile requires sinatra' }
   if (has('Gemfile')) return /\brails\b/.test(await file('Gemfile')) ? { techId: 'ruby-rails', confidence: 'high', evidence: 'Gemfile requires rails' } : null
   if (has('mix.exs')) return /phoenix|plug/.test(await file('mix.exs')) ? { techId: 'elixir-phoenix', confidence: 'high', evidence: 'mix.exs requires Phoenix/Plug' } : null
   const csproj = entries.find(entry => entry.endsWith('.csproj'))
@@ -223,6 +240,7 @@ async function detectApp(dir: string, entries: string[]): Promise<{ techId: stri
     const text = await file(csproj)
     if (/<UseMaui>\s*true\s*<\/UseMaui>/i.test(text)) return { techId: 'csharp-maui', confidence: 'high', evidence: `${csproj} sets UseMaui` }
     if (/BlazorWebAssembly/.test(text)) return { techId: 'csharp-blazor', confidence: 'high', evidence: `${csproj} uses the Blazor WebAssembly SDK` }
+    if (/Sdk\.Web/.test(text) && has('Pages')) return { techId: 'csharp-razor', confidence: 'medium', evidence: `${csproj} uses the Web SDK with a Pages/ folder` }
     if (/Sdk\.Web/.test(text)) return { techId: 'csharp-aspnet', confidence: 'high', evidence: `${csproj} uses the Web SDK` }
     return null
   }
@@ -234,10 +252,12 @@ async function detectApp(dir: string, entries: string[]): Promise<{ techId: stri
   if (has('pubspec.yaml')) {
     const pubspec = await file('pubspec.yaml')
     if (/sdk:\s*flutter/.test(pubspec)) return { techId: 'dart-flutter', confidence: 'high', evidence: 'pubspec.yaml depends on Flutter' }
+    if (/^\s*dart_frog\s*:/m.test(pubspec)) return { techId: 'dart-frog', confidence: 'high', evidence: 'pubspec.yaml depends on Dart Frog' }
     if (/^\s*jaspr\s*:/m.test(pubspec)) return { techId: 'dart-jaspr', confidence: 'high', evidence: 'pubspec.yaml depends on Jaspr' }
     if (/serverpod/.test(pubspec)) return { techId: 'dart-serverpod', confidence: 'high', evidence: 'pubspec.yaml depends on Serverpod' }
     return /\bshelf\b/.test(pubspec) ? { techId: 'dart-shelf', confidence: 'high', evidence: 'pubspec.yaml depends on Shelf' } : null
   }
+  if (has('Package.swift') && /hummingbird/.test(await file('Package.swift'))) return { techId: 'swift-hummingbird', confidence: 'high', evidence: 'Package.swift depends on Hummingbird' }
   if (has('Package.swift')) return /vapor/.test(await file('Package.swift')) ? { techId: 'swift-vapor', confidence: 'high', evidence: 'Package.swift depends on Vapor' } : { techId: 'swiftui-client', confidence: 'low', evidence: 'Swift package' }
   if (has('dune-project')) return { techId: 'ocaml-dream', confidence: /dream/.test(await read(path.join(dir, 'bin', 'dune'))) ? 'high' : 'low', evidence: 'dune-project' }
   if (has('Project.toml')) return /Genie/.test(await file('Project.toml')) ? { techId: 'julia-genie', confidence: 'high', evidence: 'Project.toml depends on Genie' } : null
@@ -249,12 +269,18 @@ async function detectApp(dir: string, entries: string[]): Promise<{ techId: stri
   if (has('CMakeLists.txt')) return /Drogon/.test(await file('CMakeLists.txt')) ? { techId: 'cpp-drogon', confidence: 'high', evidence: 'CMake finds Drogon' } : null
   if (has('main.c') && /microhttpd/.test(await file('main.c'))) return { techId: 'c-microhttpd', confidence: 'high', evidence: 'main.c uses libmicrohttpd' }
   if (has('plumber.R')) return { techId: 'r-plumber', confidence: 'high', evidence: 'plumber.R' }
+  if (has('app.R') && /shiny/.test(await file('app.R'))) return { techId: 'r-shiny', confidence: 'high', evidence: 'app.R uses Shiny' }
+  if (has('cpanfile') && /Mojolicious/.test(await file('cpanfile'))) return { techId: 'perl-mojolicious', confidence: 'high', evidence: 'cpanfile requires Mojolicious' }
+  const fsproj = entries.find(entry => entry.endsWith('.fsproj'))
+  if (fsproj && /Giraffe/.test(await file(fsproj))) return { techId: 'fsharp-giraffe', confidence: 'high', evidence: `${fsproj} references Giraffe` }
+  if (has('mkdocs.yml')) return { techId: 'mkdocs-material', confidence: 'medium', evidence: 'mkdocs.yml' }
+  if (has('wp-content') && !has('package.json')) return { techId: 'php-wordpress', confidence: 'medium', evidence: 'wp-content/ directory' }
   if (has('app.lua') && has('config.lua')) return { techId: 'lua-lapis', confidence: 'medium', evidence: 'Lapis app.lua + config.lua' }
   if (has('appsscript.json') || has('.clasp.json')) return { techId: 'google-apps-script', confidence: 'high', evidence: 'Apps Script manifest' }
   return null
 }
 
-const MANIFESTS = /^(package\.json|Cargo\.toml|go\.mod|manage\.py|rxconfig\.py|requirements\.txt|pyproject\.toml|pom\.xml|build\.gradle(\.kts)?|Main\.java|build\.sbt|deps\.edn|project\.clj|composer\.json|Gemfile|mix\.exs|.+\.csproj|deno\.jsonc?|pubspec\.yaml|Package\.swift|dune-project|Project\.toml|rebar\.config|shard\.yml|.+\.nimble|main\.nim|.+\.cabal|build\.zig|CMakeLists\.txt|plumber\.R|appsscript\.json|redwood\.toml|setup\.sh|gleam\.toml|v\.mod|hugo\.(toml|ya?ml|json)|\.meteor)$/
+const MANIFESTS = /^(package\.json|Cargo\.toml|go\.mod|manage\.py|rxconfig\.py|requirements\.txt|pyproject\.toml|pom\.xml|build\.gradle(\.kts)?|Main\.java|build\.sbt|deps\.edn|project\.clj|composer\.json|Gemfile|mix\.exs|.+\.csproj|deno\.jsonc?|pubspec\.yaml|Package\.swift|dune-project|Project\.toml|rebar\.config|shard\.yml|.+\.nimble|main\.nim|.+\.cabal|build\.zig|CMakeLists\.txt|plumber\.R|appsscript\.json|redwood\.toml|setup\.sh|gleam\.toml|v\.mod|hugo\.(toml|ya?ml|json)|\.meteor|app\.R|cpanfile|.+\.fsproj|mkdocs\.yml|wp-content)$/
 
 async function containsInTree(dir: string, pattern: RegExp, depth: number): Promise<boolean> {
   if (depth < 0 || !(await fs.pathExists(dir))) return false

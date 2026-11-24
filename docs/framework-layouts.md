@@ -65,9 +65,29 @@ The architecture root does not turn every service into a JavaScript package. A G
 | Dart Jaspr | `pubspec.yaml`, `bin/main.dart`, `lib/app.dart`, `lib/components/`, `test/` |
 | Goose (vanilla) | `src/main.goose`; host only |
 | Goose HTTP | `src/main.goose`, `src/http.c`, `src/main.build` (sidecar) |
+| Quarkus / Micronaut / Javalin (2.0) | `pom.xml`, `src/main/java/<pkg>/` (resource, controller or `App`), `src/main/resources/application.properties` (`PORT`), `src/test/java/` (`@QuarkusTest`, `@MicronautTest`, `JavalinTest`) |
+| Go templ + HTMX (2.0) | `go.mod`, `main.go`, `router.go`, `components.templ` (`templ generate` writes `*_templ.go`), `router_test.go` |
+| Django Ninja (2.0) | `manage.py`, `config/` (settings, urls, wsgi), `api/` (`api.py` Ninja router, `tests.py`), `pytest.ini` |
+| Plotly Dash / FastHTML (2.0) | `app.py` (layout, callbacks, `/health` on the Flask server), `test_app.py`; FastHTML `main.py`, `test_main.py` |
+| MkDocs Material (2.0) | `mkdocs.yml`, `docs/` |
+| Slim 4 (2.0) | `composer.json`, `public/index.php`, `src/AppFactory.php`, `tests/`, `phpunit.xml` |
+| WordPress (2.0) | `wp-content/themes/<theme>/` (`style.css`, `functions.php`, `index.php`), `wp-content/plugins/`, `wp-content/mu-plugins/health.php`; core comes from the official image |
+| Sinatra (2.0) | `Gemfile`, `app.rb`, `config.ru`, `Rakefile`, `test/` |
+| Rocket (2.0) | `Cargo.toml`, `src/main.rs` (routes, launch, tests) |
+| Mojolicious (2.0) | `cpanfile`, `app.pl` (Mojolicious::Lite), `t/` |
+| R Shiny (2.0) | `app.R` |
+| Hummingbird 2 (2.0) | `Package.swift`, `Sources/App/App.swift`, `Tests/AppTests/` |
+| Dart Frog (2.0) | `pubspec.yaml`, `routes/` (file-based routes), `test/routes/` |
+| F# Giraffe (2.0) | `<name>.fsproj`, `Program.fs` |
+| Razor Pages (2.0) | `<name>.csproj`, `Program.cs`, `Pages/` (`.cshtml` + PageModel, `Shared/_Layout.cshtml`), `wwwroot/` |
+| Alpine.js / Elm (2.0) | `index.html`, `src/main.js`, `vite.config.js`; Alpine `src/counter.js` + test; Elm `elm.json`, `src/Main.elm` |
+| React + Tailwind + shadcn/ui (2.0) | `components.json`, `vite.config.ts`, `src/components/ui/`, `src/lib/utils.ts`, `src/index.css` (Tailwind v4 theme), `src/App.test.tsx` |
+| Astro Starlight (2.0) | `astro.config.mjs`, `src/content.config.ts`, `src/content/docs/` |
+| Cloudflare Workers (2.0) | `wrangler.jsonc`, `src/index.ts` (Hono), `src/index.test.ts` |
+| WXT browser extension (2.0) | `wxt.config.ts`, `entrypoints/` (background, popup), `utils/`; host only |
 | Vanilla HTML, Node, Go, Python, Java | simple runtime entrypoints without a framework-imposed workspace |
 
-Desktop, mobile and hosted apps (GPUI, Slint, Bevy, Dioxus, JavaFX, Swing, Electron, Tauri, Flutter, SwiftUI, Anvil, Apps Script) always run on the host and never get a Docker service.
+Desktop, mobile, browser-extension and hosted apps (GPUI, Slint, Bevy, Dioxus, JavaFX, Swing, Electron, Tauri, Flutter, SwiftUI, WXT, Anvil, Apps Script) always run on the host and never get a Docker service.
 
 This table describes starter output, not a claim that the generated app is a complete production application. Each app's README gives its selected framework's local run command. The API-service profile currently expands FastAPI with a model, CRUD routes, token auth, migration, and tests.
 

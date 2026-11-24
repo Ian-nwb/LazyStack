@@ -59,25 +59,26 @@ To run the projects LazyStack generates you need Docker with Compose, plus the t
 
 ## Supported frameworks, databases and tools
 
-LazyStack ships **118 frameworks** in 32 languages, **45 databases and services**, 32 testing tools, 15 architecture layouts, 5 stack presets and 4 reverse proxies. Every framework below generates a framework-native starter with a Dockerfile, a test, a README and a `.gitignore`.
+LazyStack ships **142 frameworks** in 35 languages, **45 databases and services**, 32 testing tools, 15 architecture layouts, 5 stack presets and 4 reverse proxies. Every framework below generates a framework-native starter with a Dockerfile, a test, a README and a `.gitignore`.
 
-### Frameworks (118)
+### Frameworks (142)
 
 | Language | Frameworks and app types |
 | --- | --- |
-| JavaScript / TypeScript | Vanilla Node.js (http) (backend), Deno 2.0 (Native Server / Oak) (backend), Deno (Fresh Framework) (full-stack), Bun (ElysiaJS) (backend), Express (backend), Fastify (backend), NestJS (backend), Hono (backend), Next.js (App Router) (full-stack), Nuxt 3 (Vue Fullstack) (full-stack), Remix / React Router v7 (full-stack), SvelteKit (full-stack), Astro (Content & Islands) (full-stack), React 19 + Vite (frontend), React + MUI (Material UI) (frontend), Vue.js 3 + Vite (frontend), Angular 18+ (frontend), SolidJS + Vite (frontend), Qwik + Qwik City (frontend), Inferno (React-Compatible) (frontend), Ionic (Capacitor Mobile) (desktop/mobile), Capacitor (Web to Native) (desktop/mobile), Electron Desktop Client (desktop/mobile), React Native (Expo) (desktop/mobile), Google Apps Script (worker), AssemblyScript (Wasm) (worker), TanStack Start (React) (full-stack), SolidStart (full-stack), Lit (Web Components) (frontend), Quasar (Vite) (frontend), Svelte + Vite (frontend), Preact + Vite (frontend), Gatsby (frontend), Vike (React) (frontend), RedwoodJS (full-stack), Blitz.js (full-stack), Meteor (full-stack), Next.js + tRPC (full-stack), AdonisJS (backend), Koa (backend), Bun (Bun.serve) (backend), Eleventy (static site), Docusaurus (static site), VitePress (static site) |
-| Python | Vanilla Python (WSGI) (backend), Python (FastAPI) (backend), Python (Django) (full-stack), Python (Flask) (backend), Reflex (Python Full-Stack UI) (full-stack), NiceGUI (Python Web UI) (full-stack), Anvil (Hosted Python Full-Stack) (full-stack), Python (Litestar) (backend), Python (Sanic) (backend), Python (Starlette) (backend), Python (Tornado) (backend), Python (Pyramid) (backend), Python (Streamlit) (full-stack), Python (Gradio) (full-stack) |
-| Rust | Rust (Actix-Web) (backend), Rust (Axum) (backend), Rust (GPUI Desktop) (desktop/mobile), Rust (Dioxus) (frontend), Rust (Slint Desktop) (desktop/mobile), Rust (Bevy Game Engine) (desktop/mobile), Rust (Yew WebAssembly) (frontend), Rust (Leptos WebAssembly) (frontend), Tauri Desktop App (Rust + Web) (desktop/mobile), Rust (Poem OpenAPI) (backend) |
-| Go | Vanilla Go (net/http) (backend), Go (Gin) (backend), Go (Fiber) (backend), Go (Echo) (backend), Go (Chi Router) (backend), Go (Goravel) (backend), Hugo (static site) |
-| Dart | Dart (Flutter Web & Multiplatform) (desktop/mobile), Dart (Shelf) (backend), Dart (Serverpod) (backend), Dart (Jaspr) (full-stack) |
-| Java | Vanilla Java (JDK HttpServer) (backend), Java (Spring Boot 3) (backend), Java (JavaFX Desktop) (desktop/mobile), Java (Swing Desktop) (desktop/mobile) |
-| C# | C# (ASP.NET Core Web API) (backend), C# (Blazor Server/WASM) (full-stack), C# (.NET MAUI) (desktop/mobile) |
-| PHP | Vanilla PHP (backend), PHP (Laravel 11) (full-stack), PHP (Symfony 7) (full-stack) |
+| JavaScript / TypeScript | Vanilla Node.js (http) (backend), Deno 2.0 (Native Server / Oak) (backend), Deno (Fresh Framework) (full-stack), Bun (ElysiaJS) (backend), Express (backend), Fastify (backend), NestJS (backend), Hono (backend), Next.js (App Router) (full-stack), Nuxt 3 (Vue Fullstack) (full-stack), Remix / React Router v7 (full-stack), SvelteKit (full-stack), Astro (Content & Islands) (full-stack), React 19 + Vite (frontend), React + MUI (Material UI) (frontend), Vue.js 3 + Vite (frontend), Angular 18+ (frontend), SolidJS + Vite (frontend), Qwik + Qwik City (frontend), Inferno (React-Compatible) (frontend), Ionic (Capacitor Mobile) (desktop/mobile), Capacitor (Web to Native) (desktop/mobile), Electron Desktop Client (desktop/mobile), React Native (Expo) (desktop/mobile), Google Apps Script (worker), AssemblyScript (Wasm) (worker), TanStack Start (React) (full-stack), SolidStart (full-stack), Lit (Web Components) (frontend), Quasar (Vite) (frontend), Svelte + Vite (frontend), Preact + Vite (frontend), Gatsby (frontend), Vike (React) (frontend), RedwoodJS (full-stack), Blitz.js (full-stack), Meteor (full-stack), Next.js + tRPC (full-stack), AdonisJS (backend), Koa (backend), Bun (Bun.serve) (backend), Eleventy (static site), Docusaurus (static site), VitePress (static site), Alpine.js + Vite (frontend), React + Tailwind + shadcn/ui (frontend), Astro Starlight (Docs) (static site), Cloudflare Workers (Hono) (backend), Browser Extension (WXT) (desktop/mobile) |
+| Python | Vanilla Python (WSGI) (backend), Python (FastAPI) (backend), Python (Django) (full-stack), Python (Flask) (backend), Reflex (Python Full-Stack UI) (full-stack), NiceGUI (Python Web UI) (full-stack), Anvil (Hosted Python Full-Stack) (full-stack), Python (Litestar) (backend), Python (Sanic) (backend), Python (Starlette) (backend), Python (Tornado) (backend), Python (Pyramid) (backend), Python (Streamlit) (full-stack), Python (Gradio) (full-stack), Python (Django Ninja) (backend), Python (Plotly Dash) (full-stack), Python (FastHTML) (full-stack), MkDocs Material (static site) |
+| Rust | Rust (Actix-Web) (backend), Rust (Axum) (backend), Rust (GPUI Desktop) (desktop/mobile), Rust (Dioxus) (frontend), Rust (Slint Desktop) (desktop/mobile), Rust (Bevy Game Engine) (desktop/mobile), Rust (Yew WebAssembly) (frontend), Rust (Leptos WebAssembly) (frontend), Tauri Desktop App (Rust + Web) (desktop/mobile), Rust (Poem OpenAPI) (backend), Rust (Rocket) (backend) |
+| Go | Vanilla Go (net/http) (backend), Go (Gin) (backend), Go (Fiber) (backend), Go (Echo) (backend), Go (Chi Router) (backend), Go (Goravel) (backend), Hugo (static site), Go (templ + HTMX) (full-stack) |
+| Java | Vanilla Java (JDK HttpServer) (backend), Java (Spring Boot 3) (backend), Java (JavaFX Desktop) (desktop/mobile), Java (Swing Desktop) (desktop/mobile), Java (Quarkus) (backend), Java (Micronaut) (backend), Java (Javalin) (backend) |
+| Dart | Dart (Flutter Web & Multiplatform) (desktop/mobile), Dart (Shelf) (backend), Dart (Serverpod) (backend), Dart (Jaspr) (full-stack), Dart (Dart Frog) (backend) |
+| PHP | Vanilla PHP (backend), PHP (Laravel 11) (full-stack), PHP (Symfony 7) (full-stack), PHP (Slim 4) (backend), WordPress (full-stack) |
+| C# | C# (ASP.NET Core Web API) (backend), C# (Blazor Server/WASM) (full-stack), C# (.NET MAUI) (desktop/mobile), C# (Razor Pages) (full-stack) |
+| Ruby | Ruby (Ruby on Rails 7/8) (full-stack), Jekyll (static site), Ruby (Sinatra) (backend) |
+| Swift | SwiftUI Apple Client (desktop/mobile), Swift (Vapor 4) (backend), Swift (Hummingbird 2) (backend) |
 | Goose | Goose (Vanilla) (worker), Goose (HTTP) (backend, experimental) |
 | HTML / CSS / JS | Vanilla HTML5 / CSS3 / JS (frontend), HTMX + Modern Web (frontend) |
 | Kotlin | Kotlin/JS Browser Frontend (frontend), Kotlin (Ktor / Spring Boot) (backend) |
-| Ruby | Ruby (Ruby on Rails 7/8) (full-stack), Jekyll (static site) |
-| Swift | SwiftUI Apple Client (desktop/mobile), Swift (Vapor 4) (backend) |
+| R | R (Plumber API) (backend), R (Shiny) (full-stack) |
 | Assembly | Assembly (x86_64 NASM) (backend, experimental) |
 | Bash | Bash Shell Worker / CLI Service (worker) |
 | C | C (libmicrohttpd / POSIX) (backend) |
@@ -85,14 +86,16 @@ LazyStack ships **118 frameworks** in 32 languages, **45 databases and services*
 | Clojure | Clojure (Ring / Kit) (backend) |
 | Crystal | Crystal (Kemal) (backend) |
 | Elixir | Elixir (Phoenix LiveView) (backend) |
+| Elm | Elm (Browser.element) (frontend) |
 | Erlang | Erlang (Cowboy) (backend) |
+| F# | F# (Giraffe) (backend) |
 | Gleam | Gleam (Wisp) (backend) |
 | Haskell | Haskell (Scotty / Servant) (backend) |
 | Julia | Julia (Genie.jl) (backend) |
 | Lua | Lua (OpenResty / Lapis) (backend) |
 | Nim | Nim (HappyX) (backend) |
 | OCaml | OCaml (Dream) (backend) |
-| R | R (Plumber API) (backend) |
+| Perl | Perl (Mojolicious) (backend) |
 | Scala | Scala (Play Framework) (backend) |
 | SQL | SQL Migration & Seeder Service (worker) |
 | V | V (veb) (backend) |

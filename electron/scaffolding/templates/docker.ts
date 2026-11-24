@@ -1,4 +1,5 @@
 import { devServiceCompose, isDevService } from './devServices'
+import { getV2Dockerfile } from './native/v2'
 import { ProjectSettings } from '../../../src/types'
 import { resolveStructurePaths } from '../../../src/data/structurePresets'
 import { getDatabaseAdminUiOption } from '../../../src/data/databaseAdminUis'
@@ -412,6 +413,8 @@ function buildThenServeDockerfile(build: StaticSiteBuild, port: number): string 
 
 export function getDockerfileForTech(techId: string, port: number, folderName = 'app', starterProfile?: string): { dockerfile: string, dockerignore: string } {
   let dockerignore = `node_modules\n.git\n.env\n*.log\ndist\nbuild\ntmp\n`
+  const v2 = getV2Dockerfile(techId, port, folderName)
+  if (v2) return v2
 
   if (techId === 'assembly-nasm') {
     return {
@@ -812,7 +815,7 @@ CMD ["./server/bin/server", "start"]
     return {
       dockerfile: `FROM rust:${rustVersion}-alpine AS builder
 RUN apk add --no-cache musl-dev
-RUN rustup target add wasm32-unknown-unknown && cargo install --locked trunk
+RUN rustup target add wasm32-unknown-unknown && cargo install --locked trunk --version 0.21.14
 WORKDIR /app
 COPY . .
 RUN trunk build --release

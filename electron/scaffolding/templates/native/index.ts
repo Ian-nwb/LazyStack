@@ -8,6 +8,7 @@ import { jvmExtras, jvmStarters } from './jvm'
 import { rustExtras, rustStarters } from './rust'
 import { jsFrameworkStarters } from './jsFrameworks'
 import { languageStarters } from './languages'
+import { v2Starters } from './v2'
 
 type Starter = (c: NativeContext) => Files
 type Extra = (c: NativeContext, files: Files) => Files | void
@@ -25,7 +26,8 @@ const STARTERS: Record<string, Starter> = {
   ...backendStarters,
   ...otherStarters,
   ...jsFrameworkStarters,
-  ...languageStarters
+  ...languageStarters,
+  ...v2Starters
 }
 
 /**

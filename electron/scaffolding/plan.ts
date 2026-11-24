@@ -297,6 +297,12 @@ export function planScaffold(settings: ProjectSettings, databaseCredentials: Rec
             appEnv += laravelDbEnv + `DB_PASSWORD=${credentials.password}\n`
             appEnvExample += laravelDbEnv + 'DB_PASSWORD=replace_me\n'
           }
+          // The official WordPress image reads its own WORDPRESS_DB_* variables.
+          if (app.techId === 'php-wordpress' && credentials && ['mysql', 'mariadb'].includes(db.type) && !usedVariable('WORDPRESS_DB_HOST')) {
+            const wpEnv = `WORDPRESS_DB_HOST=${host}:${port}\nWORDPRESS_DB_NAME=${credentials.database}\nWORDPRESS_DB_USER=${credentials.username}\n`
+            appEnv += wpEnv + `WORDPRESS_DB_PASSWORD=${credentials.password}\n`
+            appEnvExample += wpEnv + 'WORDPRESS_DB_PASSWORD=replace_me\n'
+          }
         } else {
           const variablePrefix = serviceName.toUpperCase()
           appEnv += `${variablePrefix}_HOST=${host}\n${variablePrefix}_PORT=${port}\n`

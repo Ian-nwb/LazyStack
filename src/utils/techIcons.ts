@@ -18,6 +18,9 @@ const ICON_MAP: Record<string, string> = {
   'c':            `${DEVICON_BASE}/c/c-original.svg`,
   'c++':          `${DEVICON_BASE}/cplusplus/cplusplus-original.svg`,
   'zig':          `${DEVICON_BASE}/zig/zig-original.svg`,
+  'f#':           `${DEVICON_BASE}/fsharp/fsharp-original.svg`,
+  'elm':          `${DEVICON_BASE}/elm/elm-original.svg`,
+  'perl':         `${DEVICON_BASE}/perl/perl-original.svg`,
   // Goose has no Devicon; local trace of the Goose logo
   'goose':        gooseIconUrl,
   'rust':         `${DEVICON_BASE}/rust/rust-original.svg`,
@@ -131,6 +134,17 @@ const FRAMEWORK_ICON_OVERRIDES: Record<string, string> = {
   'jekyll':             `${DEVICON_BASE}/jekyll/jekyll-original.svg`,
   'vitepress':          `${DEVICON_BASE}/vitejs/vitejs-original.svg`,
   'python-streamlit':   `${DEVICON_BASE}/streamlit/streamlit-original.svg`,
+  'java-quarkus':       `${DEVICON_BASE}/quarkus/quarkus-original.svg`,
+  'python-django-ninja': `${DEVICON_BASE}/django/django-plain.svg`,
+  'python-dash':        `${DEVICON_BASE}/plotly/plotly-original.svg`,
+  'mkdocs-material':    `${DEVICON_BASE}/markdown/markdown-original.svg`,
+  'php-wordpress':      `${DEVICON_BASE}/wordpress/wordpress-plain.svg`,
+  'csharp-razor':       `${DEVICON_BASE}/dotnetcore/dotnetcore-original.svg`,
+  'alpine-vite':        `${DEVICON_BASE}/alpinejs/alpinejs-original.svg`,
+  'react-shadcn':       `${DEVICON_BASE}/tailwindcss/tailwindcss-original.svg`,
+  'astro-starlight':    `${DEVICON_BASE}/astro/astro-original.svg`,
+  'cloudflare-workers': `${DEVICON_BASE}/cloudflareworkers/cloudflareworkers-original.svg`,
+  'wxt-extension':      `${DEVICON_BASE}/chrome/chrome-original.svg`,
 }
 
 /**

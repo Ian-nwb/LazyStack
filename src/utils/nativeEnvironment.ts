@@ -1,5 +1,11 @@
 export function getNativeEnvironmentDefaults(techId: string): string {
-  if (/^(ts-|fullstack-(nextjs|nuxt|remix|sveltekit|astro)|react-|vue-|angular-|solidjs-|qwik-|tanstack-|solid-start|lit-|vanilla-node|deno-|electron-app|tauri-app|capacitor-app|ionic-framework|quasar-|svelte-|preact-|gatsby|vike|redwoodjs|blitz|nextjs-trpc|bun-native|eleventy|docusaurus|vitepress)/.test(techId)) return 'NODE_ENV=development\n'
+  if (/^(ts-|fullstack-(nextjs|nuxt|remix|sveltekit|astro)|react-|vue-|angular-|solidjs-|qwik-|tanstack-|solid-start|lit-|vanilla-node|deno-|electron-app|tauri-app|capacitor-app|ionic-framework|quasar-|svelte-|preact-|gatsby|vike|redwoodjs|blitz|nextjs-trpc|bun-native|eleventy|docusaurus|vitepress|alpine-vite|react-shadcn|astro-starlight|cloudflare-workers|wxt-extension|elm-app)/.test(techId)) return 'NODE_ENV=development\n'
+  if (techId === 'python-django-ninja') return 'PYTHONUNBUFFERED=1\nDJANGO_DEBUG=1\n'
+  if (techId === 'java-quarkus') return 'QUARKUS_PROFILE=dev\n'
+  if (techId === 'java-micronaut') return 'MICRONAUT_ENVIRONMENTS=dev\n'
+  if (techId === 'rust-rocket') return 'ROCKET_PROFILE=debug\n'
+  if (techId === 'ruby-sinatra') return 'RACK_ENV=development\n'
+  if (techId === 'perl-mojolicious') return 'MOJO_MODE=development\n'
   if (techId === 'python-streamlit') return 'PYTHONUNBUFFERED=1\nSTREAMLIT_BROWSER_GATHER_USAGE_STATS=false\n'
   if (techId === 'python-gradio') return 'PYTHONUNBUFFERED=1\nGRADIO_ANALYTICS_ENABLED=False\n'
   if (techId === 'meteor') return 'ROOT_URL=http://localhost:3000\n'

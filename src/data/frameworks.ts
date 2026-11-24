@@ -1653,6 +1653,331 @@ export const TECH_CATALOG: TechItem[] = [
       { binary: 'goose', label: 'Goose Compiler', installHint: 'https://github.com/aardappel/goose/releases' },
       { binary: 'gcc', label: 'GCC Compiler', installHint: 'apt install build-essential / brew install gcc' }
     ]
+  },
+  {
+    id: 'java-quarkus',
+    name: 'Java (Quarkus)',
+    language: 'Java',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 8080,
+    description: 'Kubernetes-native Java stack with live reload (quarkus:dev), Dev UI and fast startup. REST resource, @QuarkusTest and a fast-jar Docker image.',
+    badgeColor: 'bg-red-500/20 text-red-300 border-red-500/40',
+    requires: [
+      { binary: 'java', label: 'Java JDK 21+', installHint: 'https://adoptium.net' },
+      { binary: 'mvn', label: 'Maven', installHint: 'https://maven.apache.org/install.html' }
+    ]
+  },
+  {
+    id: 'java-micronaut',
+    name: 'Java (Micronaut)',
+    language: 'Java',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 8080,
+    description: 'Compile-time dependency injection and AOT for small, fast JVM services. Controller, Micronaut Test and a shaded-jar image.',
+    badgeColor: 'bg-sky-500/20 text-sky-300 border-sky-500/40',
+    requires: [
+      { binary: 'java', label: 'Java JDK 21+', installHint: 'https://adoptium.net' },
+      { binary: 'mvn', label: 'Maven', installHint: 'https://maven.apache.org/install.html' }
+    ]
+  },
+  {
+    id: 'java-javalin',
+    name: 'Java (Javalin)',
+    language: 'Java',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 7070,
+    description: 'Lightweight Java and Kotlin web framework on Jetty: plain lambdas, no annotations. JavalinTest tests and a fat-jar image.',
+    badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
+    requires: [
+      { binary: 'java', label: 'Java JDK 21+', installHint: 'https://adoptium.net' },
+      { binary: 'mvn', label: 'Maven', installHint: 'https://maven.apache.org/install.html' }
+    ]
+  },
+  {
+    id: 'go-templ-htmx',
+    name: 'Go (templ + HTMX)',
+    language: 'Go',
+    category: 'fullstack',
+    role: 'fullstack',
+    defaultPort: 8080,
+    description: 'Server-rendered Go with type-safe templ components and HTMX interactivity on the standard library router.',
+    badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
+    requires: [
+      { binary: 'go', label: 'Go Toolchain', installHint: 'https://go.dev/dl/' }
+    ]
+  },
+  {
+    id: 'python-django-ninja',
+    name: 'Python (Django Ninja)',
+    language: 'Python',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 8000,
+    description: 'Django with Django Ninja: typed, Pydantic-validated API endpoints and OpenAPI docs at /api/docs.',
+    badgeColor: 'bg-emerald-600/20 text-emerald-300 border-emerald-600/40',
+    requires: [
+      { binary: 'python3', label: 'Python 3.10+', installHint: 'https://www.python.org/downloads/' }
+    ]
+  },
+  {
+    id: 'python-dash',
+    name: 'Python (Plotly Dash)',
+    language: 'Python',
+    category: 'fullstack',
+    role: 'fullstack',
+    defaultPort: 8050,
+    description: 'Analytical web apps in pure Python: Plotly charts, components and callbacks, served by Flask.',
+    badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40',
+    requires: [
+      { binary: 'python3', label: 'Python 3.10+', installHint: 'https://www.python.org/downloads/' }
+    ]
+  },
+  {
+    id: 'python-fasthtml',
+    name: 'Python (FastHTML)',
+    language: 'Python',
+    category: 'fullstack',
+    role: 'fullstack',
+    defaultPort: 5001,
+    description: 'Hypermedia apps in Python: server-rendered components and HTMX, on Starlette.',
+    badgeColor: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/40',
+    requires: [
+      { binary: 'python3', label: 'Python 3.10+', installHint: 'https://www.python.org/downloads/' }
+    ]
+  },
+  {
+    id: 'mkdocs-material',
+    name: 'MkDocs Material',
+    language: 'Python',
+    category: 'frontend',
+    role: 'static-site',
+    defaultPort: 8000,
+    description: 'Documentation site with Material for MkDocs: search, navigation, admonitions and code copy.',
+    badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
+    requires: [
+      { binary: 'python3', label: 'Python 3.10+', installHint: 'https://www.python.org/downloads/' }
+    ]
+  },
+  {
+    id: 'php-slim',
+    name: 'PHP (Slim 4)',
+    language: 'PHP',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 8080,
+    description: 'PSR-7/PSR-15 micro-framework for APIs. App factory, PHPUnit test and a Composer-built image.',
+    badgeColor: 'bg-violet-500/20 text-violet-300 border-violet-500/40',
+    requires: [
+      { binary: 'php', label: 'PHP 8.2+', installHint: 'https://www.php.net/downloads' },
+      { binary: 'composer', label: 'Composer', installHint: 'https://getcomposer.org/download/' }
+    ]
+  },
+  {
+    id: 'php-wordpress',
+    name: 'WordPress',
+    language: 'PHP',
+    category: 'fullstack',
+    role: 'fullstack',
+    defaultPort: 8080,
+    description: 'WordPress with a starter theme in wp-content, on the official image. Pair it with MySQL or MariaDB; WORDPRESS_DB_* variables are written for you.',
+    badgeColor: 'bg-sky-600/20 text-sky-300 border-sky-600/40',
+    requires: [
+      { binary: 'docker', label: 'Docker Engine', installHint: 'https://docs.docker.com/get-docker/' }
+    ]
+  },
+  {
+    id: 'ruby-sinatra',
+    name: 'Ruby (Sinatra)',
+    language: 'Ruby',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 4567,
+    description: 'Minimal Ruby DSL for web services on Puma, with Minitest and Rack::Test.',
+    badgeColor: 'bg-red-600/20 text-red-300 border-red-600/40',
+    requires: [
+      { binary: 'ruby', label: 'Ruby 3.2+', installHint: 'https://www.ruby-lang.org/en/downloads/' },
+      { binary: 'bundle', label: 'Bundler', installHint: 'gem install bundler' }
+    ]
+  },
+  {
+    id: 'rust-rocket',
+    name: 'Rust (Rocket)',
+    language: 'Rust',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 8000,
+    description: 'Type-safe Rust web framework with request guards and JSON support, tested with the local client.',
+    badgeColor: 'bg-orange-500/20 text-orange-300 border-orange-500/40',
+    requires: [
+      { binary: 'cargo', label: 'Cargo (Rust PM)', installHint: 'https://rustup.rs' }
+    ]
+  },
+  {
+    id: 'perl-mojolicious',
+    name: 'Perl (Mojolicious)',
+    language: 'Perl',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 3000,
+    description: 'Real-time Perl web framework (Mojolicious::Lite) with WebSockets, a dev server with reload and Test::Mojo.',
+    badgeColor: 'bg-sky-500/20 text-sky-300 border-sky-500/40',
+    requires: [
+      { binary: 'perl', label: 'Perl 5.36+', installHint: 'https://www.perl.org/get.html' },
+      { binary: 'cpanm', label: 'cpanminus', installHint: 'curl -L https://cpanmin.us | perl - App::cpanminus' }
+    ]
+  },
+  {
+    id: 'r-shiny',
+    name: 'R (Shiny)',
+    language: 'R',
+    category: 'fullstack',
+    role: 'fullstack',
+    defaultPort: 3838,
+    description: 'Interactive R web apps: reactive inputs and plots with no JavaScript.',
+    badgeColor: 'bg-blue-600/20 text-blue-300 border-blue-600/40',
+    requires: [
+      { binary: 'R', label: 'R 4.x', installHint: 'https://cran.r-project.org' }
+    ]
+  },
+  {
+    id: 'swift-hummingbird',
+    name: 'Swift (Hummingbird 2)',
+    language: 'Swift',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 8080,
+    description: 'Lightweight Swift server on SwiftNIO and structured concurrency, tested with HummingbirdTesting.',
+    badgeColor: 'bg-orange-500/20 text-orange-300 border-orange-500/40',
+    requires: [
+      { binary: 'swift', label: 'Swift 6 Toolchain', installHint: 'https://www.swift.org/install/' }
+    ]
+  },
+  {
+    id: 'dart-frog',
+    name: 'Dart (Dart Frog)',
+    language: 'Dart',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 8080,
+    description: 'File-based routing API framework for Dart with hot reload; compiles to a native server binary.',
+    badgeColor: 'bg-teal-500/20 text-teal-300 border-teal-500/40',
+    requires: [
+      { binary: 'dart', label: 'Dart SDK', installHint: 'https://dart.dev/get-dart' }
+    ]
+  },
+  {
+    id: 'fsharp-giraffe',
+    name: 'F# (Giraffe)',
+    language: 'F#',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 5000,
+    description: 'Functional F# web API on ASP.NET Core: HTTP handlers composed with >=>.',
+    badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
+    requires: [
+      { binary: 'dotnet', label: '.NET 10 SDK', installHint: 'https://dotnet.microsoft.com/download' }
+    ]
+  },
+  {
+    id: 'csharp-razor',
+    name: 'C# (Razor Pages)',
+    language: 'C#',
+    category: 'fullstack',
+    role: 'fullstack',
+    defaultPort: 5000,
+    description: 'Server-rendered ASP.NET Core with Razor Pages: one page and PageModel per route.',
+    badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
+    requires: [
+      { binary: 'dotnet', label: '.NET 10 SDK', installHint: 'https://dotnet.microsoft.com/download' }
+    ]
+  },
+  {
+    id: 'alpine-vite',
+    name: 'Alpine.js + Vite',
+    language: 'JS / TS',
+    category: 'frontend',
+    role: 'frontend',
+    defaultPort: 5173,
+    description: 'Minimal reactive UI with Alpine.js directives (x-data, @click, x-for) in plain HTML, bundled by Vite.',
+    badgeColor: 'bg-teal-500/20 text-teal-300 border-teal-500/40',
+    requires: [
+      { binary: 'node', label: 'Node.js 22+', installHint: 'https://nodejs.org' },
+      { binary: 'npm', label: 'npm', installHint: 'Installed with Node.js' }
+    ]
+  },
+  {
+    id: 'react-shadcn',
+    name: 'React + Tailwind + shadcn/ui',
+    language: 'JS / TS',
+    category: 'frontend',
+    role: 'frontend',
+    defaultPort: 5173,
+    description: 'React 19 on Vite with Tailwind CSS v4 and shadcn/ui components you own (components.json ready for `npx shadcn add`).',
+    badgeColor: 'bg-zinc-500/20 text-zinc-200 border-zinc-500/40',
+    requires: [
+      { binary: 'node', label: 'Node.js 22+', installHint: 'https://nodejs.org' },
+      { binary: 'npm', label: 'npm', installHint: 'Installed with Node.js' }
+    ]
+  },
+  {
+    id: 'astro-starlight',
+    name: 'Astro Starlight (Docs)',
+    language: 'JS / TS',
+    category: 'frontend',
+    role: 'static-site',
+    defaultPort: 4321,
+    description: 'Documentation framework on Astro with search, sidebar, dark mode and i18n.',
+    badgeColor: 'bg-violet-500/20 text-violet-300 border-violet-500/40',
+    requires: [
+      { binary: 'node', label: 'Node.js 22+', installHint: 'https://nodejs.org' },
+      { binary: 'npm', label: 'npm', installHint: 'Installed with Node.js' }
+    ]
+  },
+  {
+    id: 'cloudflare-workers',
+    name: 'Cloudflare Workers (Hono)',
+    language: 'JS / TS',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 8787,
+    description: 'Edge API on Cloudflare Workers with Hono; `wrangler dev` runs the real workerd runtime locally, `wrangler deploy` ships it.',
+    badgeColor: 'bg-orange-500/20 text-orange-300 border-orange-500/40',
+    requires: [
+      { binary: 'node', label: 'Node.js 22+', installHint: 'https://nodejs.org' },
+      { binary: 'npm', label: 'npm', installHint: 'Installed with Node.js' }
+    ]
+  },
+  {
+    id: 'wxt-extension',
+    hostOnly: true,
+    name: 'Browser Extension (WXT)',
+    language: 'JS / TS',
+    category: 'mobile-desktop',
+    role: 'desktop-mobile',
+    defaultPort: 3000,
+    description: 'Cross-browser extension (Chrome, Edge, Firefox, Safari) with WXT: file-based entrypoints, HMR and a typed manifest.',
+    badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+    requires: [
+      { binary: 'node', label: 'Node.js 22+', installHint: 'https://nodejs.org' },
+      { binary: 'npm', label: 'npm', installHint: 'Installed with Node.js' }
+    ]
+  },
+  {
+    id: 'elm-app',
+    name: 'Elm (Browser.element)',
+    language: 'Elm',
+    category: 'frontend',
+    role: 'frontend',
+    defaultPort: 5173,
+    description: 'Purely functional frontend with The Elm Architecture, bundled by Vite with vite-plugin-elm.',
+    badgeColor: 'bg-sky-500/20 text-sky-300 border-sky-500/40',
+    requires: [
+      { binary: 'node', label: 'Node.js 22+', installHint: 'https://nodejs.org' },
+      { binary: 'npm', label: 'npm', installHint: 'Installed with Node.js' }
+    ]
   }
 ]
 
