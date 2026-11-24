@@ -38,7 +38,10 @@ export const DATABASE_EXTRA_PORTS: Partial<Record<DatabaseType, Array<{ port: nu
   nats: [{ port: 8222, label: 'monitoring' }],
   mosquitto: [{ port: 9001, label: 'WebSockets' }],
   redpanda: [{ port: 9644, label: 'admin API' }],
-  cockroachdb: [{ port: 8180, label: 'console' }]
+  cockroachdb: [{ port: 8180, label: 'console' }],
+  mailpit: [{ port: 8025, label: 'web inbox' }],
+  'otel-lgtm': [{ port: 4317, label: 'OTLP gRPC' }, { port: 3300, label: 'Grafana' }],
+  temporal: [{ port: 8233, label: 'web UI' }]
 }
 
 const databaseLabel = (db: ProjectSettings['databases'][number]) => db.customName || db.type

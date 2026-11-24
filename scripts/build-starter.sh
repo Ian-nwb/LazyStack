@@ -44,8 +44,10 @@ fi
 echo "build $tech ($app)"
 # LAZYSTACK_BUILDER selects a buildx builder (e.g. one configured with a Docker Hub mirror).
 log="$work/build.log"
+# LAZYSTACK_NO_LOAD=1 only checks that the image builds (no image is kept), for sweeps on small disks.
 if [ -n "${LAZYSTACK_BUILDER:-}" ]; then
-  build=(docker buildx build --builder "$LAZYSTACK_BUILDER" --load)
+  if [ -n "${LAZYSTACK_NO_LOAD:-}" ]; then out=(--output type=cacheonly); else out=(--load); fi
+  build=(docker buildx build --builder "$LAZYSTACK_BUILDER" "${out[@]}")
 else
   build=(docker build)
 fi

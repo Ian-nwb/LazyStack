@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Database, AlertTriangle, HardDrive, ShieldCheck, Cloud, Server, ExternalLink, Package, Key, Plus, Trash2, Box } from 'lucide-react'
 import { SelectedDatabase, DatabaseType, CartApp, DatabaseAdminUi } from '../types'
-import { DATABASE_CATALOG, MESSAGING_CATEGORIES } from '../data/databases'
+import { DATABASE_CATALOG, MESSAGING_CATEGORIES, isPostgresFamily } from '../data/databases'
 import { getDatabaseAdminUiCommandName, getDatabaseAdminUiOption, getDatabaseAdminUiOptions } from '../data/databaseAdminUis'
 
 interface DatabasePickerProps {
@@ -384,7 +384,7 @@ export const DatabasePicker: React.FC<DatabasePickerProps> = ({ databases, setDa
                             <p className="text-[10px] text-red-400 truncate font-mono">{portCollision}</p>
                           )}
 
-                          {['postgres', 'mysql', 'mariadb', 'mongodb'].includes(db.id) && (
+                          {(isPostgresFamily(db.id) || ['mysql', 'mariadb', 'mongodb'].includes(db.id)) && (
                             <div className="grid grid-cols-2 gap-2 pt-1">
                               <label className="text-[10px] text-zinc-400">Database name
                                 <input value={inst.databaseName || `lazystack_${inst.type}`} onChange={(e) => updateInstance(instKey, { databaseName: e.target.value })} className="mt-1 w-full bg-surface-900 border border-surface-700 rounded px-2 py-1 text-[11px] font-mono text-white focus:outline-none focus:border-zinc-400" />

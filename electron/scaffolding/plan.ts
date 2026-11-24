@@ -1,4 +1,5 @@
 import { applyBrokerClients, isBrokerType } from './templates/brokerClients'
+import { devServiceEnv, isDevService } from './templates/devServices'
 import { ProjectSettings } from '../../src/types'
 import { generateDockerCompose, generateDockerDevCompose, getDockerfileForTech, getDbServiceName } from './templates/docker'
 import { generateNginxConfig, generateApacheConfig, generateCaddyConfig, generateTraefikConfig } from './templates/proxies'
@@ -6,7 +7,7 @@ import { getStarterFilesForTech } from './templates/appTemplates'
 import { generateMetaFiles, GeneratedDatabaseCredential, README_TREE_PLACEHOLDER } from './templates/meta'
 import { buildPlanTree, renderPlanTreeText } from '../../src/utils/planTree'
 import { renderArchitectureMarkdown } from '../../src/utils/architectureDoc'
-import { DATABASE_CATALOG } from '../../src/data/databases'
+import { DATABASE_CATALOG, isPostgresFamily, isRedisFamily } from '../../src/data/databases'
 import { generateCloudServiceFiles, generateCloudEnvVars } from './templates/cloudServices'
 import { resolveStructurePaths, resolvePresetScaffoldDirs } from '../../src/data/structurePresets'
 import { TESTING_TOOLS } from '../../src/data/testingTools'
@@ -50,7 +51,7 @@ const path = {
  * the file system. The generator replays the plan through the scaffold writer; the Blueprint
  * tree, README and consistency checks read it directly.
  */
-const MESSAGING_VARIABLES: Record<string, true> = { redis: true, valkey: true, rabbitmq: true, kafka: true, nats: true, memcached: true, mosquitto: true, redpanda: true }
+const MESSAGING_VARIABLES: Record<string, true> = { redis: true, valkey: true, dragonfly: true, rabbitmq: true, kafka: true, nats: true, memcached: true, mosquitto: true, redpanda: true }
 
 export function planScaffold(settings: ProjectSettings, databaseCredentials: Record<string, GeneratedDatabaseCredential>, options: PlanOptions = {}): ScaffoldPlan {
   const existingAppDirs = options.existingAppDirs ?? new Set<string>()
@@ -230,21 +231,29 @@ export function planScaffold(settings: ProjectSettings, databaseCredentials: Rec
         const credentials = databaseCredentials[serviceName]
         const catalogEntry = DATABASE_CATALOG.find(item => item.id === db.type)
         // Kafka's in-network listener (29092) differs from the host-published one (9092).
-        const containerPort = db.type === 'kafka' || db.type === 'redpanda' ? 29092 : catalogEntry?.defaultPort || db.port
+        const containerPort = db.type === 'kafka' || db.type === 'redpanda' ? 29092 : catalogEntry?.containerPort ?? (catalogEntry?.defaultPort || db.port)
         const host = app.runMode === 'docker' ? serviceName : 'localhost'
         const port = app.runMode === 'docker' ? containerPort : db.port
         let connectionUrl = ''
         let exampleUrl = ''
-        if (['postgres', 'mysql', 'mariadb'].includes(db.type) && credentials) {
-          const scheme = db.type === 'postgres' ? 'postgresql' : db.type
+        if (isDevService(db.type)) {
+          // Developer services expose several well-known variables instead of one URL.
+          const lines = devServiceEnv(db.type, { host, port, hostPort: db.port, appFolder: app.folderName, projectName: settings.projectName })
+            .filter(([name]) => !appEnv.split('\n').some(line => line.startsWith(`${name}=`)))
+            .map(([name, value]) => `${name}=${value}\n`).join('')
+          appEnv += lines
+          appEnvExample += lines
+          return
+        }
+        if ((isPostgresFamily(db.type) || ['mysql', 'mariadb'].includes(db.type)) && credentials) {
+          const scheme = isPostgresFamily(db.type) ? 'postgresql' : db.type
           connectionUrl = `${scheme}://${encodeURIComponent(credentials.username)}:${encodeURIComponent(credentials.password)}@${host}:${port}/${encodeURIComponent(credentials.database)}`
           exampleUrl = `${scheme}://${encodeURIComponent(credentials.username)}:replace_me@${host}:${port}/${encodeURIComponent(credentials.database)}`
         } else if (db.type === 'mongodb' && credentials) {
           connectionUrl = `mongodb://${encodeURIComponent(credentials.username)}:${encodeURIComponent(credentials.password)}@${host}:${port}/${encodeURIComponent(credentials.database)}?authSource=admin`
           exampleUrl = `mongodb://${encodeURIComponent(credentials.username)}:replace_me@${host}:${port}/${encodeURIComponent(credentials.database)}?authSource=admin`
-        } else if (['redis', 'valkey'].includes(db.type)) {
-          const scheme = db.type === 'valkey' ? 'redis' : 'redis'
-          connectionUrl = `${scheme}://${host}:${port}`
+        } else if (isRedisFamily(db.type)) {
+          connectionUrl = `redis://${host}:${port}`
           exampleUrl = connectionUrl
         } else if (db.type === 'nats') {
           connectionUrl = `nats://${host}:${port}`
@@ -271,7 +280,7 @@ export function planScaffold(settings: ProjectSettings, databaseCredentials: Rec
           connectionUrl = `amqp://${encodeURIComponent(credentials.username)}:${encodeURIComponent(credentials.password)}@${host}:${port}`
           exampleUrl = `amqp://${encodeURIComponent(credentials.username)}:replace_me@${host}:${port}`
         }
-        const messagingVariable = ({ redis: 'REDIS_URL', valkey: 'REDIS_URL', rabbitmq: 'RABBITMQ_URL', kafka: 'KAFKA_BROKERS', nats: 'NATS_URL', memcached: 'MEMCACHED_URL', mosquitto: 'MQTT_URL', redpanda: 'KAFKA_BROKERS' } as Record<string, string>)[db.type]
+        const messagingVariable = ({ redis: 'REDIS_URL', valkey: 'REDIS_URL', dragonfly: 'REDIS_URL', rabbitmq: 'RABBITMQ_URL', kafka: 'KAFKA_BROKERS', nats: 'NATS_URL', memcached: 'MEMCACHED_URL', mosquitto: 'MQTT_URL', redpanda: 'KAFKA_BROKERS' } as Record<string, string>)[db.type]
         const usedVariable = (name: string) => appEnv.split('\n').some(line => line.startsWith(`${name}=`))
         // Caches and brokers get their own well-known variable; DATABASE_URL stays with the first data store.
         const isFirstDataStore = !messagingVariable && appDbs.findIndex(item => !(item.type in MESSAGING_VARIABLES)) === idx
@@ -282,8 +291,8 @@ export function planScaffold(settings: ProjectSettings, databaseCredentials: Rec
         if (connectionUrl) {
           appEnv += `${variable}=${connectionUrl}\n`
           appEnvExample += `${variable}=${exampleUrl}\n`
-          if (app.techId === 'fullstack-laravel' && idx === 0 && credentials && ['postgres', 'mysql', 'mariadb'].includes(db.type)) {
-            const driver = db.type === 'postgres' ? 'pgsql' : 'mysql'
+          if (app.techId === 'fullstack-laravel' && idx === 0 && credentials && (isPostgresFamily(db.type) || ['mysql', 'mariadb'].includes(db.type))) {
+            const driver = isPostgresFamily(db.type) ? 'pgsql' : 'mysql'
             const laravelDbEnv = `DB_CONNECTION=${driver}\nDB_HOST=${host}\nDB_PORT=${port}\nDB_DATABASE=${credentials.database}\nDB_USERNAME=${credentials.username}\n`
             appEnv += laravelDbEnv + `DB_PASSWORD=${credentials.password}\n`
             appEnvExample += laravelDbEnv + 'DB_PASSWORD=replace_me\n'
@@ -315,7 +324,7 @@ export function planScaffold(settings: ProjectSettings, databaseCredentials: Rec
     const starterFiles = getStarterFilesForTech(app.techId, app.folderName, app.port, app.flavor, app.starterProfile)
     // Services (not UI-only apps) get a connect/publish/subscribe example for each cache or broker they use.
     if (app.role === 'backend' || app.role === 'worker' || app.role === 'fullstack') {
-      applyBrokerClients(starterFiles, appDbs.map(db => db.type).filter(isBrokerType), (app.flavor || 'typescript') === 'typescript')
+      applyBrokerClients(starterFiles, [...new Set(appDbs.map(db => (db.type === 'dragonfly' ? 'redis' : db.type)).filter(isBrokerType))], (app.flavor || 'typescript') === 'typescript')
     }
     for (const [fileName, fileContent] of Object.entries(starterFiles)) {
       const filePath = path.join(appDir, fileName)

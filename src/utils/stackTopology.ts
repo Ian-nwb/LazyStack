@@ -85,11 +85,13 @@ export function getDbServiceName(db: SelectedDatabase, idx: number, apps?: CartA
     const slug = db.customName.toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/^_+|_+$/g, '')
     if (slug) return slug
   }
+  // Service names also become ${NAME_PORT} variables in Compose, where `-` would read as a default.
+  const safe = (name: string) => name.replace(/[^A-Za-z0-9_]/g, '_')
   const assignedApp = apps?.find(a => a.id === db.assignedAppId)
   if (assignedApp) {
-    return `${assignedApp.folderName}_${db.type}`
+    return safe(`${assignedApp.folderName}_${db.type}`)
   }
-  return idx > 0 ? `${db.type}_${idx + 1}` : db.type
+  return safe(idx > 0 ? `${db.type}_${idx + 1}` : db.type)
 }
 
 /** Port a database listens on inside its container, and any further ports Compose publishes 1:1. */
@@ -100,7 +102,12 @@ const DB_CONTAINER_PORTS: Record<string, { port: number; extra?: number[] }> = {
   neo4j: { port: 7474, extra: [7687] }, qdrant: { port: 6333, extra: [6334] },
   meilisearch: { port: 7700 }, minio: { port: 9000, extra: [9001] },
   scylladb: { port: 9042 }, rabbitmq: { port: 5672, extra: [15672] },
-  kafka: { port: 9092 }, pocketbase: { port: 8090 }
+  kafka: { port: 9092 }, pocketbase: { port: 8090 },
+  timescaledb: { port: 5432 }, pgvector: { port: 5432 }, dragonfly: { port: 6379 },
+  keycloak: { port: 8080 }, mailpit: { port: 1025, extra: [8025] }, localstack: { port: 4566 },
+  'otel-lgtm': { port: 4318, extra: [4317] }, ollama: { port: 11434 }, typesense: { port: 8108 },
+  elasticsearch: { port: 9200 }, 'dynamodb-local': { port: 8000 }, seaweedfs: { port: 8333 },
+  temporal: { port: 7233, extra: [8233] }
 }
 
 export function getComposeProjectName(projectName: string): string {

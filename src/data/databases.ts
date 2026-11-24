@@ -1,6 +1,13 @@
-import { DatabaseOption } from '../types'
+import { DatabaseOption, DatabaseType } from '../types'
 
 export const MESSAGING_CATEGORIES = ['cache', 'message-broker'] as const
+
+/** Postgres-compatible images: same credentials, `postgresql://` URL, pg_isready and admin UIs. */
+export const POSTGRES_FAMILY: DatabaseType[] = ['postgres', 'timescaledb', 'pgvector']
+export const isPostgresFamily = (type: DatabaseType) => POSTGRES_FAMILY.includes(type)
+/** Redis-protocol caches: `redis://` URL, REDIS_URL and the Redis client examples. */
+export const REDIS_FAMILY: DatabaseType[] = ['redis', 'valkey', 'dragonfly']
+export const isRedisFamily = (type: DatabaseType) => REDIS_FAMILY.includes(type)
 
 export const DATABASE_CATALOG: DatabaseOption[] = [
   {
@@ -243,6 +250,147 @@ export const DATABASE_CATALOG: DatabaseOption[] = [
 
   // ─── Cloud & BaaS Providers ────────────────────────────────────────
 
+  {
+    id: 'timescaledb',
+    name: 'TimescaleDB (Postgres Time Series)',
+    defaultPort: 5433,
+    containerPort: 5432,
+    category: 'olap',
+    description: 'PostgreSQL with hypertables, continuous aggregates and compression for time-series data. Same SQL, drivers and admin UIs as Postgres.',
+    imageTag: 'timescale/timescaledb:latest-pg17',
+    healthcheckCmd: 'pg_isready',
+    badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+  },
+  {
+    id: 'pgvector',
+    name: 'pgvector (Postgres + Vector Search)',
+    defaultPort: 5434,
+    containerPort: 5432,
+    category: 'vector',
+    description: 'PostgreSQL 17 with the pgvector extension for embeddings and similarity search next to your relational data.',
+    imageTag: 'pgvector/pgvector:pg17',
+    healthcheckCmd: 'pg_isready',
+    badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40'
+  },
+  {
+    id: 'dragonfly',
+    name: 'Dragonfly (Redis-Compatible)',
+    defaultPort: 6380,
+    containerPort: 6379,
+    category: 'cache',
+    description: 'Multi-threaded, Redis- and Memcached-compatible in-memory store. Drop-in for Redis clients via REDIS_URL.',
+    imageTag: 'docker.dragonflydb.io/dragonflydb/dragonfly:latest',
+    healthcheckCmd: 'healthcheck.sh',
+    badgeColor: 'bg-violet-500/20 text-violet-300 border-violet-500/40'
+  },
+  {
+    id: 'keycloak',
+    name: 'Keycloak (OIDC / SSO)',
+    defaultPort: 8085,
+    containerPort: 8080,
+    category: 'auth',
+    description: 'Open-source identity provider. LazyStack imports a realm with one OIDC client per app and a dev/dev user, and gives apps OIDC_ISSUER_URL and OIDC_CLIENT_ID.',
+    isHeavyMemory: true,
+    imageTag: 'quay.io/keycloak/keycloak:26.4',
+    healthcheckCmd: 'GET :9000/health/ready',
+    badgeColor: 'bg-sky-600/20 text-sky-300 border-sky-600/40'
+  },
+  {
+    id: 'mailpit',
+    name: 'Mailpit (Dev SMTP + Inbox)',
+    defaultPort: 1025,
+    category: 'devtools',
+    description: 'Catches every email your apps send over SMTP and shows it in a web inbox on :8025. Apps get SMTP_HOST, SMTP_PORT and SMTP_URL.',
+    imageTag: 'axllent/mailpit:latest',
+    healthcheckCmd: '/mailpit readyz',
+    badgeColor: 'bg-teal-500/20 text-teal-300 border-teal-500/40'
+  },
+  {
+    id: 'localstack',
+    name: 'LocalStack (AWS Emulator)',
+    defaultPort: 4566,
+    category: 'devtools',
+    description: 'Emulates S3, SQS, SNS, DynamoDB, Lambda and more on one port. Apps get AWS_ENDPOINT_URL and test credentials.',
+    isHeavyMemory: true,
+    imageTag: 'localstack/localstack:4',
+    healthcheckCmd: 'GET /_localstack/health',
+    badgeColor: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/40'
+  },
+  {
+    id: 'dynamodb-local',
+    name: 'DynamoDB Local',
+    defaultPort: 8004,
+    containerPort: 8000,
+    category: 'key-value',
+    description: "Amazon's official local DynamoDB (in-memory). Apps get DYNAMODB_ENDPOINT and dummy AWS credentials.",
+    imageTag: 'amazon/dynamodb-local:latest',
+    healthcheckCmd: 'curl http://127.0.0.1:8000',
+    badgeColor: 'bg-orange-500/20 text-orange-300 border-orange-500/40'
+  },
+  {
+    id: 'seaweedfs',
+    name: 'SeaweedFS (S3-Compatible Storage)',
+    defaultPort: 8333,
+    category: 'storage',
+    description: 'Apache-2.0 distributed file and object store with an S3 API on :8333. Apps get S3_ENDPOINT and AWS-style keys.',
+    imageTag: 'chrislusf/seaweedfs:latest',
+    healthcheckCmd: 'GET /healthz',
+    badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+  },
+  {
+    id: 'typesense',
+    name: 'Typesense (Typo-Tolerant Search)',
+    defaultPort: 8108,
+    category: 'search',
+    description: 'Fast, typo-tolerant search engine with a simple API. Apps get TYPESENSE_URL and TYPESENSE_API_KEY.',
+    imageTag: 'typesense/typesense:29.0',
+    healthcheckCmd: 'GET /health',
+    badgeColor: 'bg-pink-500/20 text-pink-300 border-pink-500/40'
+  },
+  {
+    id: 'elasticsearch',
+    name: 'Elasticsearch 9 (Single Node)',
+    defaultPort: 9201,
+    containerPort: 9200,
+    category: 'search',
+    description: 'Elasticsearch in single-node dev mode with security off and a 512 MB heap. Apps get ELASTICSEARCH_URL.',
+    isHeavyMemory: true,
+    imageTag: 'docker.elastic.co/elasticsearch/elasticsearch:9.2.0',
+    healthcheckCmd: 'GET /_cluster/health',
+    badgeColor: 'bg-yellow-600/20 text-yellow-300 border-yellow-600/40'
+  },
+  {
+    id: 'otel-lgtm',
+    name: 'Grafana LGTM (OpenTelemetry)',
+    defaultPort: 4318,
+    category: 'observability',
+    description: 'One container with an OpenTelemetry collector, Grafana (:3300), Loki, Tempo and Prometheus. Apps get OTEL_EXPORTER_OTLP_ENDPOINT and OTEL_SERVICE_NAME.',
+    isHeavyMemory: true,
+    imageTag: 'grafana/otel-lgtm:latest',
+    healthcheckCmd: 'GET :3000/api/health',
+    badgeColor: 'bg-orange-600/20 text-orange-300 border-orange-600/40'
+  },
+  {
+    id: 'ollama',
+    name: 'Ollama (Local LLMs)',
+    defaultPort: 11434,
+    category: 'ai',
+    description: 'Runs open models (Llama, Qwen, Mistral, Gemma) locally behind an HTTP API. Pull a model with `docker compose exec ollama ollama pull <model>`. Apps get OLLAMA_HOST.',
+    isHeavyMemory: true,
+    imageTag: 'ollama/ollama:latest',
+    healthcheckCmd: 'ollama list',
+    badgeColor: 'bg-zinc-500/20 text-zinc-200 border-zinc-500/40'
+  },
+  {
+    id: 'temporal',
+    name: 'Temporal (Durable Workflows)',
+    defaultPort: 7233,
+    category: 'workflow',
+    description: 'Temporal dev server with its web UI on :8233, for durable workflows and background jobs. Apps get TEMPORAL_ADDRESS.',
+    imageTag: 'temporalio/temporal:latest',
+    healthcheckCmd: 'temporal operator cluster health',
+    badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40'
+  },
   {
     id: 'supabase',
     name: 'Supabase (Postgres + Auth + Realtime)',

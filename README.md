@@ -59,7 +59,7 @@ To run the projects LazyStack generates you need Docker with Compose, plus the t
 
 ## Supported frameworks, databases and tools
 
-LazyStack ships **118 frameworks** in 32 languages, **32 databases and services**, 32 testing tools, 15 architecture layouts, 5 stack presets and 4 reverse proxies. Every framework below generates a framework-native starter with a Dockerfile, a test, a README and a `.gitignore`.
+LazyStack ships **118 frameworks** in 32 languages, **45 databases and services**, 32 testing tools, 15 architecture layouts, 5 stack presets and 4 reverse proxies. Every framework below generates a framework-native starter with a Dockerfile, a test, a README and a `.gitignore`.
 
 ### Frameworks (118)
 
@@ -98,7 +98,7 @@ LazyStack ships **118 frameworks** in 32 languages, **32 databases and services*
 | V | V (veb) (backend) |
 | Zig | Zig (HTTP / Zap) (backend) |
 
-### Databases, brokers and cloud services (32)
+### Databases, brokers and cloud services (45)
 
 Self-hosted ones run in Docker Compose with a healthcheck and generated credentials; cloud ones get an SDK client file and environment variables.
 
@@ -106,14 +106,20 @@ Self-hosted ones run in Docker Compose with a healthcheck and generated credenti
 | --- | --- |
 | Relational (SQL) | PostgreSQL 16, MySQL 8.4 LTS, MariaDB 11, ScyllaDB (Ultra-Fast Cassandra), CockroachDB (Distributed SQL) |
 | Document | MongoDB 7, SurrealDB v2 |
-| Cache | Redis 7 (Alpine), Valkey 8 (Linux Foundation), Memcached (Distributed Cache) |
-| Analytics (OLAP) and time series | ClickHouse OLAP, InfluxDB 2 (Time Series) |
+| Key-value | DynamoDB Local |
+| Cache | Redis 7 (Alpine), Valkey 8 (Linux Foundation), Memcached (Distributed Cache), Dragonfly (Redis-Compatible) |
+| Analytics (OLAP) and time series | ClickHouse OLAP, InfluxDB 2 (Time Series), TimescaleDB (Postgres Time Series) |
 | Graph | Neo4j Graph Database |
 | Embedded | SQLite (Embedded / Shared File) |
-| Vector | Qdrant Vector DB (AI & Embeddings) |
-| Search | Meilisearch (Instant Full-Text), OpenSearch (Search & Analytics) |
-| Object storage | MinIO (S3-Compatible Object Store) |
+| Vector | Qdrant Vector DB (AI & Embeddings), pgvector (Postgres + Vector Search) |
+| Search | Meilisearch (Instant Full-Text), OpenSearch (Search & Analytics), Typesense (Typo-Tolerant Search), Elasticsearch 9 (Single Node) |
+| Object storage | MinIO (S3-Compatible Object Store), SeaweedFS (S3-Compatible Storage) |
 | Message brokers and streaming | RabbitMQ (Message Broker + GUI), Apache Kafka (Event Streaming / KRaft), Eclipse Mosquitto (MQTT Broker), Redpanda (Kafka API, no JVM), NATS (JetStream Messaging) |
+| Auth and identity (OIDC) | Keycloak (OIDC / SSO) |
+| Developer tools (email, AWS emulation) | Mailpit (Dev SMTP + Inbox), LocalStack (AWS Emulator) |
+| Observability (OpenTelemetry) | Grafana LGTM (OpenTelemetry) |
+| Local AI | Ollama (Local LLMs) |
+| Workflows and durable jobs | Temporal (Durable Workflows) |
 | Backend as a service (SDK client + env vars) | Supabase (Postgres + Auth + Realtime), Firebase (Firestore + Auth + Storage), Appwrite (Open-Source BaaS), Convex (Reactive Backend), Pocketbase (Single-Binary BaaS) |
 | Managed cloud databases (SDK client + env vars) | PlanetScale (Serverless MySQL), Neon (Serverless Postgres), Turso (Edge SQLite / libSQL), Upstash (Serverless Redis + Kafka) |
 
@@ -130,6 +136,9 @@ Self-hosted ones run in Docker Compose with a healthcheck and generated credenti
 | Apache Kafka (Event Streaming / KRaft) | Kafka UI |
 | Redpanda (Kafka API, no JVM) | Kafka UI |
 | NATS (JetStream Messaging) | NATS NUI |
+| TimescaleDB (Postgres Time Series) | Adminer, pgAdmin |
+| pgvector (Postgres + Vector Search) | Adminer, pgAdmin |
+| Dragonfly (Redis-Compatible) | Redis Commander |
 
 ### Testing tools (32)
 

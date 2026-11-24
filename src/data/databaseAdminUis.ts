@@ -24,6 +24,17 @@ const ADMIN_UI_OPTIONS: Partial<Record<DatabaseType, DatabaseAdminUiOption[]>> =
     { id: 'phpmyadmin', name: 'phpMyAdmin', defaultPort: 8082, containerPort: 80 },
     { id: 'prisma-studio', name: 'Prisma Studio', defaultPort: 5555, containerPort: 5555, hostProcess: true }
   ],
+  timescaledb: [
+    { id: 'adminer', name: 'Adminer', defaultPort: 8088, containerPort: 8080 },
+    { id: 'pgadmin', name: 'pgAdmin', defaultPort: 5050, containerPort: 80 }
+  ],
+  pgvector: [
+    { id: 'adminer', name: 'Adminer', defaultPort: 8088, containerPort: 8080 },
+    { id: 'pgadmin', name: 'pgAdmin', defaultPort: 5050, containerPort: 80 }
+  ],
+  dragonfly: [
+    { id: 'redis-commander', name: 'Redis Commander', defaultPort: 8089, containerPort: 8081 }
+  ],
   mongodb: [
     { id: 'mongo-express', name: 'Mongo Express', defaultPort: 8081, containerPort: 8081 }
   ],

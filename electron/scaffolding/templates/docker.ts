@@ -1,3 +1,4 @@
+import { devServiceCompose, isDevService } from './devServices'
 import { ProjectSettings } from '../../../src/types'
 import { resolveStructurePaths } from '../../../src/data/structurePresets'
 import { getDatabaseAdminUiOption } from '../../../src/data/databaseAdminUis'
@@ -35,7 +36,9 @@ export function generateDockerCompose(settings: ProjectSettings): string {
     yaml += `  ${sName}:\n`
     switch (db.type) {
       case 'postgres':
-        yaml += `    image: postgres:16-alpine\n`
+      case 'timescaledb':
+      case 'pgvector':
+        yaml += `    image: ${({ postgres: 'postgres:16-alpine', timescaledb: 'timescale/timescaledb:latest-pg17', pgvector: 'pgvector/pgvector:pg17' } as Record<string, string>)[db.type]}\n`
         yaml += `    environment:\n`
         yaml += `      POSTGRES_USER: \${${sName.toUpperCase()}_USER:-${db.username || 'lazystack_user'}}\n`
         yaml += `      POSTGRES_PASSWORD: \${${sName.toUpperCase()}_PASSWORD:-secret}\n`
@@ -216,7 +219,18 @@ export function generateDockerCompose(settings: ProjectSettings): string {
         yaml += `    volumes:\n      - ${sName}_data:/pb_data\n`
         yaml += `    healthcheck:\n      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8090/api/health || exit 1"]\n      interval: 5s\n      timeout: 5s\n      retries: 5\n`
         break
+      case 'dragonfly':
+        yaml += `    image: docker.dragonflydb.io/dragonflydb/dragonfly:latest\n`
+        yaml += `    ulimits:\n      memlock: -1\n`
+        yaml += `    ports:\n      - "\${${sName.toUpperCase()}_PORT:-${db.port}}:6379"\n`
+        yaml += `    volumes:\n      - ${sName}_data:/data\n`
+        yaml += `    healthcheck:\n      test: ["CMD", "healthcheck.sh"]\n      interval: 5s\n      timeout: 5s\n      retries: 10\n`
+        break
       default:
+        if (isDevService(db.type)) {
+          yaml += devServiceCompose(db.type, db, sName, settings)
+          break
+        }
         yaml += `    image: ${db.type}:latest\n`
         yaml += `    ports:\n      - "${db.port}:${db.port}"\n`
     }

@@ -104,6 +104,20 @@ export type DatabaseType =
   | 'cockroachdb'
   | 'opensearch'
   | 'influxdb'
+  | 'timescaledb'
+  | 'pgvector'
+  | 'dragonfly'
+  // Developer services (2.0)
+  | 'keycloak'
+  | 'mailpit'
+  | 'localstack'
+  | 'otel-lgtm'
+  | 'ollama'
+  | 'typesense'
+  | 'elasticsearch'
+  | 'dynamodb-local'
+  | 'seaweedfs'
+  | 'temporal'
   // Cloud & BaaS providers
   | 'supabase'
   | 'firebase'
@@ -121,7 +135,9 @@ export interface DatabaseOption {
   id: DatabaseType
   name: string
   defaultPort: number
-  category: 'relational' | 'document' | 'key-value' | 'cache' | 'olap' | 'graph' | 'embedded' | 'vector' | 'search' | 'storage' | 'message-broker' | 'baas' | 'cloud-db'
+  category: 'relational' | 'document' | 'key-value' | 'cache' | 'olap' | 'graph' | 'embedded' | 'vector' | 'search' | 'storage' | 'message-broker' | 'auth' | 'devtools' | 'observability' | 'ai' | 'workflow' | 'baas' | 'cloud-db'
+  /** Port the service listens on inside its container when it differs from the default host port. */
+  containerPort?: number
   description: string
   isHeavyMemory?: boolean
   imageTag?: string

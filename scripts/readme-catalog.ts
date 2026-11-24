@@ -41,6 +41,11 @@ const DB_CATEGORY_LABEL: Record<DatabaseOption['category'], string> = {
   search: 'Search',
   storage: 'Object storage',
   'message-broker': 'Message brokers and streaming',
+  auth: 'Auth and identity (OIDC)',
+  devtools: 'Developer tools (email, AWS emulation)',
+  observability: 'Observability (OpenTelemetry)',
+  ai: 'Local AI',
+  workflow: 'Workflows and durable jobs',
   baas: 'Backend as a service (SDK client + env vars)',
   'cloud-db': 'Managed cloud databases (SDK client + env vars)'
 }

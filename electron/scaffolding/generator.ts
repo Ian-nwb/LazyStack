@@ -6,7 +6,7 @@ import { validateFolderName, validatePath, validateRelativeProjectPath, joinPath
 import { createDatabaseCredentials } from './templates/meta'
 import { planScaffold } from './plan'
 import { normalizeStructureConfig } from '../../src/data/structurePresets'
-import { DATABASE_CATALOG } from '../../src/data/databases'
+import { DATABASE_CATALOG, isPostgresFamily } from '../../src/data/databases'
 import { resolveStructurePaths } from '../../src/data/structurePresets'
 import { getDatabaseAdminUiOption } from '../../src/data/databaseAdminUis'
 import { TECH_CATALOG, isHostOnlyTech } from '../../src/data/frameworks'
@@ -176,7 +176,7 @@ export async function scaffoldProject(inputSettings: ProjectSettings, options: S
   for (const app of settings.apps.filter(item => item.techId === 'python-fastapi' && item.starterProfile === 'api-service')) {
     const appDatabases = getAppDatabases(settings, app)
     const firstDb = appDatabases[0]
-    if (firstDb && !['postgres', 'mysql', 'mariadb'].includes(firstDb.type)) {
+    if (firstDb && !isPostgresFamily(firstDb.type) && !['mysql', 'mariadb'].includes(firstDb.type)) {
       return { success: false, targetDir: '', filesCreated: 0, error: `The FastAPI API service profile needs PostgreSQL, MySQL, or MariaDB as its first configured database for '${app.folderName}'. Remove or reorder the incompatible database, or use the minimal starter.` }
     }
   }
