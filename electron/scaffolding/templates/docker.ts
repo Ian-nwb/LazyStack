@@ -987,7 +987,7 @@ CMD ["dotnet", "app.dll"]
       dockerfile: `FROM ruby:3.3-slim
 WORKDIR /app
 COPY Gemfile* ./
-RUN bundle install || true
+RUN bundle install
 COPY . .
 EXPOSE ${port}
 CMD ["bundle", "exec", "rackup", "-p", "${port}", "-o", "0.0.0.0"]
@@ -1159,7 +1159,7 @@ RUN apk add --no-cache git unzip
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 WORKDIR /app
 COPY composer.json composer.lock* ./
-RUN composer install --no-dev --optimize-autoloader --no-interaction || true
+RUN composer install --no-dev --optimize-autoloader --no-interaction
 COPY . .
 EXPOSE ${port}
 CMD ["php", "-S", "0.0.0.0:${port}", "-t", "public"]
@@ -1174,7 +1174,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
-RUN npm run build || true
+RUN npm run build --if-present
 
 FROM node:22-alpine
 WORKDIR /app
