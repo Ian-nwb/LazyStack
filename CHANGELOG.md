@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.0.0] - 2026-11-24
 
-LazyStack 2.0 adds 24 frameworks, 13 developer services, reproducible toolchains and real deploy targets, and fixes images that had stopped working. The full scope, including what follows in 2.x, is in [docs/v2-plan.md](docs/v2-plan.md).
+LazyStack 2.0 adds 24 frameworks, 13 developer services, reproducible toolchains and real deploy targets, and fixes images that had stopped working.
 
 ### Fixed
 - **MinIO projects failed at `docker compose up`**: `minio/minio` was removed from Docker Hub. MinIO now uses the maintained Chainguard build (`cgr.dev/chainguard/minio`, same API and variables) with a healthcheck that needs only bash. SeaweedFS is available as an Apache-2.0 alternative.

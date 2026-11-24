@@ -330,7 +330,7 @@ showcase/            Project website
 
 ## Ideas under consideration
 
-Planned for 2.x (see [docs/v2-plan.md](docs/v2-plan.md)): ClojureScript, ReScript, PureScript, Scala.js and Compose Multiplatform; Analog, Waku, Ember, Nitro, Encore.ts, Loco.rs, Vaadin, Laravel + Inertia/Livewire and headless CMSs (Payload, Strapi, Directus, Medusa); per-app ORM and UI-kit choices; gRPC/GraphQL/AsyncAPI codegen; Zitadel and Authentik; environment profiles, secrets (Vault, 1Password), a template registry, an AI blueprint drafter, Pulumi export, and a macOS build (sponsor me a Macbook for app signature).
+Planned for 2.x: ClojureScript, ReScript, PureScript, Scala.js and Compose Multiplatform; Analog, Waku, Ember, Nitro, Encore.ts, Loco.rs, Vaadin, Laravel + Inertia/Livewire and headless CMSs (Payload, Strapi, Directus, Medusa); per-app ORM and UI-kit choices; gRPC/GraphQL/AsyncAPI codegen; Zitadel and Authentik; environment profiles, secrets (Vault, 1Password), a template registry, an AI blueprint drafter, Pulumi export, and a macOS build (sponsor me a Macbook for app signature).
 
 ## Contributing
 
