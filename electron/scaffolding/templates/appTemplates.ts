@@ -2749,7 +2749,8 @@ render(() => <App />, document.getElementById('root')!);
     "preview": "vite preview"
   },
   "dependencies": {
-    "inferno": "^8.2.3"${isTS ? '' : ''}
+    "inferno": "^8.2.3",
+    "inferno-create-element": "^8.2.3"${isTS ? '' : ''}
   },
   "devDependencies": {
     "vite": "^5.3.0",
@@ -2781,7 +2782,7 @@ export default defineConfig({
   esbuild: {
     jsxFactory: 'createElement',
     jsxFragment: 'Fragment',
-    jsxInject: \`import { createElement, Fragment } from 'inferno'\`
+    jsxInject: \`import { createElement } from 'inferno-create-element'; import { Fragment } from 'inferno'\`
   },
   server: {
     port: ${port},
@@ -2869,7 +2870,9 @@ Inferno uses the same JSX syntax as React but renders with near-native DOM speed
   "private": true,
   "scripts": {
     "dev": "vite --port ${port} --host",
-    "build": "qwik build"
+    "build": "qwik build preview",
+    "build.client": "vite build",
+    "build.types": "tsc --incremental --noEmit"
   },
   "dependencies": {
     "@builder.io/qwik": "^1.10.0",
@@ -2877,6 +2880,7 @@ Inferno uses the same JSX syntax as React but renders with near-native DOM speed
   },
   "devDependencies": {
     "typescript": "^5.6.0",
+    "@types/node": "^22.0.0",
     "vite": "^6.0.0"
   }
 }
@@ -2900,7 +2904,9 @@ export default defineConfig({
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
     "jsxImportSource": "@builder.io/qwik",
-    "strict": true
+    "strict": true,
+    "skipLibCheck": true,
+    "types": ["node", "vite/client"]
   }
 }
 `

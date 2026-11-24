@@ -1089,6 +1089,26 @@ CMD ["sh", "-c", "echo 'SQL Migrations container ready'"]
     }
   }
 
+  if (techId === 'redwoodjs') {
+    // npm workspaces (api/, web/) must be present before install, or web's @redwoodjs/vite is
+    // never installed; the build must fail loudly instead of shipping an unbuilt app.
+    return {
+      dockerfile: `FROM node:22-alpine
+RUN apk add --no-cache openssl
+WORKDIR /app
+COPY package*.json ./
+COPY api/package.json api/
+COPY web/package.json web/
+RUN npm install --ignore-scripts
+COPY . .
+RUN npm rebuild && npm run build
+EXPOSE ${port}
+ENV PORT=${port}
+CMD ["npm", "start"]
+`,
+      dockerignore: `${dockerignore}.redwood\n`
+    }
+  }
   if (techId === 'blitz') {
     // Blitz runs \`prisma generate --schema db/schema.prisma\` in postinstall, so install after COPY.
     return {

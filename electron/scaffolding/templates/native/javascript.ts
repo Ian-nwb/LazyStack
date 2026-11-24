@@ -893,10 +893,33 @@ export const jsExtras: Record<string, (c: NativeContext, files: Files) => Files>
   'vue-vite': (c, files) => ({ ...viteSpaExtras(c, files, 'Vue 3 + Vite'), ...(c.isTS ? { 'src/vite-env.d.ts': '/// <reference types="vite/client" />\n\ndeclare module \'*.vue\' {\n  import type { DefineComponent } from \'vue\';\n  const component: DefineComponent<object, object, unknown>;\n  export default component;\n}\n' } : {}) }),
   'solidjs-vite': (c, files) => viteSpaExtras(c, files, 'Solid + Vite'),
   'inferno-js': (c, files) => viteSpaExtras(c, files, 'Inferno + Vite'),
-  'lit-element': (c, files) => viteSpaExtras(c, files, 'Lit'),
+  'lit-element': (c, files) => {
+    // `npm run build` runs tsc, which needs a tsconfig; Lit decorators need legacy decorator semantics.
+    if (!files['tsconfig.json']) {
+      files['tsconfig.json'] = json({
+        compilerOptions: {
+          target: 'ES2022', module: 'ESNext', moduleResolution: 'bundler', lib: ['ES2022', 'DOM', 'DOM.Iterable'],
+          experimentalDecorators: true, useDefineForClassFields: false, strict: true, noEmit: true, skipLibCheck: true, isolatedModules: true
+        },
+        include: ['src']
+      })
+    }
+    return viteSpaExtras(c, files, 'Lit')
+  },
   'qwik-city': (c, files) => {
     ensureStart(files, `vite preview --host 0.0.0.0 --port ${c.port || 5173}`)
-    return { 'public/.gitkeep': '', 'src/components/.gitkeep': '' }
+    // `qwik build` runs build.client, build.preview and build.types; the client build needs
+    // src/root.tsx and the preview server needs the SSR and preview entries.
+    patchPackageJson(files, pkg => {
+      pkg.scripts = { ...pkg.scripts, 'build.preview': 'vite build --ssr src/entry.preview.tsx' }
+    })
+    return {
+      'public/.gitkeep': '',
+      'src/components/.gitkeep': '',
+      'src/root.tsx': `import { component$ } from '@builder.io/qwik';\nimport { QwikCityProvider, RouterOutlet } from '@builder.io/qwik-city';\n\nexport default component$(() => (\n  <QwikCityProvider>\n    <head>\n      <meta charset="utf-8" />\n      <meta name="viewport" content="width=device-width, initial-scale=1.0" />\n      <title>${c.name}</title>\n    </head>\n    <body lang="en">\n      <RouterOutlet />\n    </body>\n  </QwikCityProvider>\n));\n`,
+      'src/entry.ssr.tsx': `import { renderToStream, type RenderToStreamOptions } from '@builder.io/qwik/server';\nimport { manifest } from '@qwik-client-manifest';\nimport Root from './root';\n\nexport default function (opts: RenderToStreamOptions) {\n  return renderToStream(<Root />, {\n    manifest,\n    ...opts,\n    containerAttributes: { lang: 'en', ...opts.containerAttributes }\n  });\n}\n`,
+      'src/entry.preview.tsx': `import { createQwikCity } from '@builder.io/qwik-city/middleware/node';\nimport qwikCityPlan from '@qwik-city-plan';\nimport render from './entry.ssr';\n\n// Serves the production build with vite preview (the start script).\nexport default createQwikCity({ render, qwikCityPlan });\n`
+    }
   },
   'fullstack-nextjs': (c, files) => {
     ensureStart(files, `next start -p ${c.port || 3000}`)
