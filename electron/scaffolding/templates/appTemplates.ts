@@ -1939,6 +1939,9 @@ if (file_exists(__DIR__.'/../vendor/autoload.php')) {
   "autoload": {
     "psr-4": { "App\\\\": "src/" }
   },
+  "config": {
+    "allow-plugins": { "symfony/runtime": true, "symfony/flex": true }
+  },
   "scripts": {
     "auto-scripts": {},
     "post-install-cmd": ["@auto-scripts"],

@@ -985,6 +985,8 @@ CMD ["dotnet", "app.dll"]
   if (techId.startsWith('ruby-')) {
     return {
       dockerfile: `FROM ruby:3.3-slim
+# Native gems (bigdecimal, psych, nio4r...) need a compiler and libyaml headers.
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential libyaml-dev && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY Gemfile* ./
 RUN bundle install
