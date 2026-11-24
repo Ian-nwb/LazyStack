@@ -390,7 +390,7 @@ public class Main {
   }
 
   if (techId === 'kotlin-js') {
-    files['settings.gradle.kts'] = `pluginManagement { repositories { gradlePluginPortal(); mavenCentral() } }\ndependencyResolutionManagement { repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS); repositories { mavenCentral() } }\nrootProject.name = "${folderName}"\n`
+    files['settings.gradle.kts'] = `pluginManagement { repositories { gradlePluginPortal(); mavenCentral() } }\ndependencyResolutionManagement { repositoriesMode.set(RepositoriesMode.PREFER_PROJECT); repositories { mavenCentral() } }\nrootProject.name = "${folderName}"\n`
     files['build.gradle.kts'] = `plugins { kotlin("multiplatform") version "2.2.20" }\nkotlin { js { browser(); binaries.executable() } }\n`
     files['src/jsMain/kotlin/Main.kt'] = `import kotlinx.browser.document\n\nfun main() { document.body?.innerHTML = "<main style='font-family:sans-serif;padding:3rem'><h1>${folderName}</h1><p>Kotlin/JS browser frontend</p></main>" }\n`
     files['README.md'] = `# ${folderName} (Kotlin/JS)\n\nBuild the browser bundle with \`./gradlew jsBrowserDevelopmentWebpack\`. Serve the generated output under \`build/dist/js/developmentExecutable\`. Requires JDK and Gradle. Docs: https://kotlinlang.org/docs/js-get-started.html\n`
@@ -2749,7 +2749,7 @@ render(() => <App />, document.getElementById('root')!);
     "preview": "vite preview"
   },
   "dependencies": {
-    "inferno": "^8.2.5"${isTS ? '' : ''}
+    "inferno": "^8.2.3"${isTS ? '' : ''}
   },
   "devDependencies": {
     "vite": "^5.3.0",
@@ -2877,8 +2877,7 @@ Inferno uses the same JSX syntax as React but renders with near-native DOM speed
   },
   "devDependencies": {
     "typescript": "^5.6.0",
-    "vite": "^6.0.0",
-    "@builder.io/qwik/optimizer": "^1.10.0"
+    "vite": "^6.0.0"
   }
 }
 `

@@ -939,8 +939,9 @@ CMD ["php", "-S", "0.0.0.0:${port}", "-t", "public"]
     return { dockerfile: `FROM python:3.12-slim\nWORKDIR /app\nCOPY requirements.txt .\nRUN pip install --no-cache-dir -r requirements.txt\nCOPY . .\nEXPOSE ${port}\nCMD ["python", "main.py"]\n`, dockerignore: `.git\n.venv\n__pycache__\n` }
   }
 
+  // The Kotlin/JS plugin downloads a glibc Node.js, which does not run on Alpine.
   if (techId === 'kotlin-js') {
-    return { dockerfile: `FROM gradle:8-jdk21-alpine AS build\nWORKDIR /app\nCOPY . .\nRUN gradle jsBrowserDistribution --no-daemon\nFROM nginx:alpine\nCOPY --from=build /app/build/dist/js/productionExecutable/ /usr/share/nginx/html/\nEXPOSE ${port}\n`, dockerignore: `.gradle\nbuild\n.git\n` }
+    return { dockerfile: `FROM gradle:8-jdk21 AS build\nWORKDIR /app\nCOPY . .\nRUN gradle jsBrowserDistribution --no-daemon\nFROM nginx:alpine\nCOPY --from=build /app/build/dist/js/productionExecutable/ /usr/share/nginx/html/\nEXPOSE ${port}\n`, dockerignore: `.gradle\nbuild\n.git\n` }
   }
 
   if (techId === 'csharp-blazor') {
