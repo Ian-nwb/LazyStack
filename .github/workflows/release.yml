@@ -73,10 +73,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          # Artifacts keep their release/<version>/ folder; upload the files, not the folder.
+          mapfile -t assets < <(find dist-release -type f)
           if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
-            gh release upload "$GITHUB_REF_NAME" dist-release/* --clobber
+            gh release upload "$GITHUB_REF_NAME" "${assets[@]}" --clobber
           else
-            gh release create "$GITHUB_REF_NAME" dist-release/* --title "LazyStack $GITHUB_REF_NAME" --notes-file notes.md
+            gh release create "$GITHUB_REF_NAME" "${assets[@]}" --title "LazyStack $GITHUB_REF_NAME" --notes-file notes.md
           fi
 
   npm:
