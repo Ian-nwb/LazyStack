@@ -1,7 +1,7 @@
 {
   "name": "lazystack",
   "version": "1.5.2",
-  "description": "Desktop app and CLI that scaffolds polyglot projects: 87 frameworks, 25 databases, Docker Compose, reverse proxy and a dev orchestrator from one blueprint.",
+  "description": "Desktop app and CLI that scaffolds polyglot projects: 118 frameworks, 32 databases and services, Docker Compose, reverse proxy and a dev orchestrator from one blueprint.",
   "type": "module",
   "main": "dist-electron/main.js",
   "bin": {
@@ -16,6 +16,7 @@
     "cli": "node ./bin/lazystack.js",
     "verify:browser": "esbuild scripts/verify-browser.ts --bundle --platform=browser --format=iife --outfile=dist-scripts/verify-browser.js --log-level=warning && node scripts/run-in-browser-context.mjs dist-scripts/verify-browser.js",
     "verify:layout": "esbuild scripts/verify-layout.ts --bundle --platform=node --format=esm --packages=external --outfile=dist-scripts/verify-layout.mjs --log-level=warning && node dist-scripts/verify-layout.mjs",
+    "docs:catalog": "esbuild scripts/readme-catalog.ts --bundle --platform=node --format=esm --packages=external --outfile=dist-scripts/readme-catalog.mjs --log-level=warning && node dist-scripts/readme-catalog.mjs",
     "verify:templates": "esbuild scripts/verify-templates.ts --bundle --platform=node --format=esm --packages=external --outfile=dist-scripts/verify-templates.mjs --log-level=warning && node dist-scripts/verify-templates.mjs",
     "start": "electron .",
     "pack": "npm run build && electron-builder --dir",

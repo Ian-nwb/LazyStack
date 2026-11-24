@@ -32,6 +32,9 @@ jobs:
       - name: Verify framework templates against catalog and Dockerfiles
         run: npm run verify:templates
 
+      - name: Verify README catalog matches the data files
+        run: npm run docs:catalog -- --check
+
       - name: Verify architecture presets against the scaffold plan
         run: npm run verify:layout
 
