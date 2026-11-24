@@ -13,7 +13,9 @@ LazyStack 2.0 adds 24 frameworks, 13 developer services, reproducible toolchains
 - **MinIO projects failed at `docker compose up`**: `minio/minio` was removed from Docker Hub. MinIO now uses the maintained Chainguard build (`cgr.dev/chainguard/minio`, same API and variables) with a healthcheck that needs only bash. SeaweedFS is available as an Apache-2.0 alternative.
 - **R (Plumber) Docker image never built**: `r-base:4.4-alpine` doesn't exist. It now uses `rocker/r-ver:4.4` with libsodium, and the build fails if plumber doesn't install (the old image would have started and crashed).
 - **.NET 9 reached end of support on 2026-11-10**: ASP.NET Core, Blazor and MAUI starters, their Docker images and the installer use .NET 10 LTS. A project named `app` no longer breaks Blazor (its `App` namespace collided with the `App` component).
-- **Yew and Leptos images**: `cargo install trunk` pulled trunk 0.22, which needs rustc 1.96; trunk is pinned to 0.21.14.
+- **Yew and Leptos images**: `cargo install trunk` pulled trunk 0.22, which needs rustc 1.96, and the Leptos image pinned Rust 1.88 while its dependencies now need 1.89. trunk is pinned to 0.21.14 and both build on current stable Rust.
+- **Blitz image never built**: Prisma's postinstall (`prisma generate --schema db/schema.prisma`) ran before the sources were copied. Blitz now installs dependencies after `COPY`.
+- **Javalin starter**: `/health` returned 500 because no JSON mapper was on the classpath; Jackson is now a dependency.
 - **Compose variables for hyphenated names**: service names like `my-api_postgres` produced `${MY-API_POSTGRES_PORT}`, which Compose reads as a default-value expression. Service names now use only letters, digits and `_`.
 - The importer no longer mistakes the Kafka UI image for a Kafka broker. Go images use Go 1.27; Kafka UI uses the maintained `kafbat/kafka-ui`.
 

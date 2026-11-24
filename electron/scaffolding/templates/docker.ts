@@ -811,9 +811,9 @@ CMD ["./server/bin/server", "start"]
   }
 
   if (techId === 'rust-yew' || techId === 'rust-leptos') {
-    const rustVersion = techId === 'rust-leptos' ? '1.88' : '1.85'
+    // Current stable Rust: starters have no Cargo.lock, so new dependency releases raise the MSRV.
     return {
-      dockerfile: `FROM rust:${rustVersion}-alpine AS builder
+      dockerfile: `FROM rust:1-alpine AS builder
 RUN apk add --no-cache musl-dev
 RUN rustup target add wasm32-unknown-unknown && cargo install --locked trunk --version 0.21.14
 WORKDIR /app
@@ -1088,6 +1088,22 @@ CMD ["sh", "-c", "echo 'SQL Migrations container ready'"]
     }
   }
 
+  if (techId === 'blitz') {
+    // Blitz runs \`prisma generate --schema db/schema.prisma\` in postinstall, so install after COPY.
+    return {
+      dockerfile: `FROM node:22-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm install --ignore-scripts
+COPY . .
+RUN npm rebuild && npm run postinstall --if-present && npm run build
+EXPOSE ${port}
+ENV PORT=${port}
+CMD ["npm", "start"]
+`,
+      dockerignore
+    }
+  }
   if (techId === 'fullstack-laravel') {
     return {
       dockerfile: `FROM php:8.3-cli-alpine
