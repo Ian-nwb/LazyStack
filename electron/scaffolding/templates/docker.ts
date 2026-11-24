@@ -623,9 +623,9 @@ CMD ["./server"]
       dockerfile: `FROM crystallang/crystal:1.12-alpine AS builder
 WORKDIR /app
 COPY shard.yml shard.lock* ./
-RUN shards install --production
+RUN shards install
 COPY . .
-RUN crystal build --release --static src/server.cr -o bin/server
+RUN mkdir -p bin && crystal build --release --static src/server.cr -o bin/server
 
 FROM alpine:3.20
 WORKDIR /app
