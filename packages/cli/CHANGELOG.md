@@ -1,5 +1,9 @@
 # LazyStack CLI changelog
 
+## 2.0.1
+
+- Generated Dockerfiles fail when the app build or dependency install fails (Node, Ruby on Rails, Symfony) instead of producing a broken image; Rails images can build native gems and Symfony allows its runtime Composer plugin.
+
 ## 2.0.0
 
 - 24 new frameworks (142 total), including F#, Elm and Perl, Quarkus, Micronaut, Javalin, Go templ + HTMX, Django Ninja, React + Tailwind + shadcn/ui, Cloudflare Workers and WXT. `import` recognizes them.

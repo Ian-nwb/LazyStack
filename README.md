@@ -28,14 +28,14 @@
 
 LazyStack is a desktop app and a command-line tool for starting polyglot projects. Combine a React client, a FastAPI service, a Go worker and an Expo app with PostgreSQL and Redis, choose an architecture layout, and get a project where every app follows its framework's own conventions and the whole stack starts with `npm run dev`.
 
-**Current version: 2.0.0.** 24 new frameworks (F#, Elm and Perl are new languages; Quarkus, Micronaut, Go templ + HTMX, Django Ninja, React + Tailwind + shadcn/ui, Cloudflare Workers and more), 13 new services (Keycloak, Mailpit, LocalStack, Grafana LGTM, Ollama, Temporal and others), and generated projects now include a dev container, `mise.toml` and real deploy targets (SSH + Compose, Fly.io, Render, GitLab CI). Fixes MinIO projects (the image left Docker Hub), the R Plumber image, and moves .NET starters to .NET 10. See the [changelog](CHANGELOG.md) and the [v2 plan](docs/v2-plan.md).
+**Current version: 2.0.1.** Docker builds now fail when an app's build or dependency install fails (they used to produce an image that crashed at runtime), which also fixes the Ruby on Rails and Symfony images. 2.0.0 added 24 frameworks (F#, Elm and Perl are new languages; Quarkus, Micronaut, Go templ + HTMX, Django Ninja, React + Tailwind + shadcn/ui, Cloudflare Workers and more), 13 services (Keycloak, Mailpit, LocalStack, Grafana LGTM, Ollama, Temporal and others), a dev container, `mise.toml` and real deploy targets. See the [changelog](CHANGELOG.md).
 
 ## Download
 
 | Platform | Package |
 | --- | --- |
-| Linux x64 | [`LazyStack-2.0.0.AppImage`](https://github.com/Ian-nwb/LazyStack/releases/download/v2.0.0/LazyStack-2.0.0.AppImage) |
-| Windows x64 | [`LazyStack.2.0.0.exe`](https://github.com/Ian-nwb/LazyStack/releases/download/v2.0.0/LazyStack.2.0.0.exe) (portable) |
+| Linux x64 | [`LazyStack-2.0.1.AppImage`](https://github.com/Ian-nwb/LazyStack/releases/download/v2.0.1/LazyStack-2.0.1.AppImage) |
+| Windows x64 | [`LazyStack.2.0.1.exe`](https://github.com/Ian-nwb/LazyStack/releases/download/v2.0.1/LazyStack.2.0.1.exe) (portable) |
 | macOS |package not yet available (sponsor me a Macbook for app signature) |
 
 The CLI is on npm: `npx lazystack --help`.

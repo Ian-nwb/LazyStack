@@ -5,6 +5,13 @@ All notable changes to LazyStack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.1] - 2026-11-24
+
+### Fixed
+- **Docker builds succeeded while the app inside was broken.** The shared Node Dockerfile ran `npm run build || true`, and the Ruby on Rails and Symfony Dockerfiles ran `bundle install || true` and `composer install ... || true`, so a failed build or dependency install still produced an image that crashed at runtime. These steps now fail the build (`npm run build --if-present` keeps starters without a build script working). Verified by building all 35 affected starters on GitHub's runners.
+- **Ruby on Rails image** could not install native gems (`bigdecimal`, `psych`) on `ruby:3.3-slim`; it now installs `build-essential` and `libyaml-dev`.
+- **Symfony image**: Composer refused to install because the `symfony/runtime` plugin was not allowed in `composer.json`; the starter now allows `symfony/runtime` and `symfony/flex`, like the Symfony skeleton.
+
 ## [2.0.0] - 2026-11-24
 
 LazyStack 2.0 adds 24 frameworks, 13 developer services, reproducible toolchains and real deploy targets, and fixes images that had stopped working. The full scope, including what follows in 2.x, is in [docs/v2-plan.md](docs/v2-plan.md).
