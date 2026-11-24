@@ -5,6 +5,28 @@ All notable changes to LazyStack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.2] - 2026-11-24
+
+### Fixed
+- **Auto-install failed on Linux for every apt, dnf and pacman package.** The installer ran `sudo` without a terminal, so it stopped with "a terminal is required to read the password" (or, under `npm run dev`, waited for a password in the dev server's terminal). It now runs as root if it already is, uses passwordless or cached `sudo -n`, otherwise asks for the password with the desktop's `pkexec` prompt. With none of those available it shows the exact command to run in a terminal.
+- **Package manager detection depended on `which`**, which some distros (e.g. `archlinux:base`) don't ship, so the result was "unknown". It now looks up `apt-get`, `dnf` and `pacman` on PATH directly.
+- **apt installs failed on fresh systems** ("Unable to locate package"): `apt-get update` runs first, with `DEBIAN_FRONTEND=noninteractive`. Pacman syncs its database when none exists yet.
+- **Install commands could hang until the timeout** when a tool asked a question. Commands now run with stdin closed and a 15-minute limit; `curl … | sh` installers fail when the download fails instead of reporting success.
+- **Package names that don't exist in the distro repos**, found by checking every recipe against Ubuntu 22.04/24.04, Debian 12/13, Fedora 45 and Arch:
+  - Docker Compose: `docker-compose-v2`, or `docker-compose` on Debian (was `docker-compose-plugin`); Fedora uses `moby-engine` and `nodejs-npm`.
+  - Java falls back from JDK 17 to 21 (Debian 13) or the latest OpenJDK (Fedora 45).
+  - .NET installs SDK 9 (the templates target `net9.0`; it was SDK 8), through Microsoft's `dotnet-install.sh` into `~/.dotnet` on apt and dnf systems, and `dotnet-sdk-9.0` on Arch.
+  - Dart (apt/dnf), sbt, Gradle (Ubuntu ships Gradle 4.4), Gleam (Fedora), Flutter (Arch), V, Nim and Julia get user-level fallback installers when the package manager can't install them.
+  - Arch Rust installs `rust` instead of a bare `rustup` with no toolchain; Fedora gets `swift-lang`, `clojure` and `julia` recipes.
+- **Windows: winget waited for its agreement prompt** on machines where it had never run. Installs now use `winget install --id <Id> -e --accept-source-agreements --accept-package-agreements --silent`. A missing winget is reported with a pointer to App Installer instead of a generic error.
+- **Windows: wrong or non-existent winget IDs** (checked against the winget-pkgs repository): Elixir is `Elixir.Elixir`, Nim `nim.nim`, Cabal `haskell.cabal`, Swift `Swift.Toolchain`, Julia `Julialang.Julia`, .NET `Microsoft.DotNet.SDK.9`. Maven, Gradle, Composer, GHC, Flutter and V have no winget package, so they now link to their install pages.
+- **Windows: adding a directory to PATH could truncate the user's PATH.** `setx PATH "%PATH%;dir"` copied the combined system and user PATH into the user PATH and cut it at 1024 characters. LazyStack now appends only to `HKCU\Environment\Path`, keeping `%VAR%` entries, and notifies running programs.
+- **Windows: successful installs were reported as "not found in PATH"** because the running app never saw the PATH that winget installers write to the registry. The auditor now reads the machine and user PATH from the registry, and the hint says to restart LazyStack instead of `source ~/.bashrc`.
+- Linux `curl | sh` recipes no longer run on Windows. A tool that installs but fails its version check (e.g. .NET without libicu, Gradle without Java) now reports that error instead of "Successfully installed". A tool with no recipe for your package manager (e.g. Goose on apt) says so and links its install page, instead of suggesting your package manager wasn't detected.
+
+### Not verified
+- The Windows changes (winget flags, registry PATH read/write) were not run on Windows. The PowerShell PATH script was parse-checked, and the winget IDs were checked against the winget-pkgs repository. The Linux installer was tested end to end in Ubuntu 24.04, Debian 13, Fedora 45 and Arch containers, as root and as a user without sudo. The `pkexec` prompt was not exercised.
+
 ## [1.5.1] - 2026-11-23
 
 ### Fixed

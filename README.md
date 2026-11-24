@@ -28,14 +28,14 @@
 
 LazyStack is a desktop app and a command-line tool for starting polyglot projects. Combine a React client, a FastAPI service, a Go worker and an Expo app with PostgreSQL and Redis, choose an architecture layout, and get a project where every app follows its framework's own conventions and the whole stack starts with `npm run dev`.
 
-**Current version: 1.5.1.** Hotfix: the Host Auditor showed installed tools (npm, Go, Cargo and others) as missing until you pressed Re-Audit Host. 1.5.0: Adds the Goose language (a plain Goose app and a Goose HTTP service), Dart Jaspr, and a host auditor that checks every toolchain the catalog needs, with Flutter and Dart now found when they're installed outside the default PATH. 1.4.0 added 6 databases and broker examples for Rust and ASP.NET. See the [changelog](CHANGELOG.md).
+**Current version: 1.5.2.** Hotfix: auto-install from the Host Auditor works again on Linux (it asks for your password through the desktop prompt instead of failing on `sudo`) and on Windows (winget no longer hangs on its agreement prompt, and installing no longer rewrites your PATH). 1.5.1 fixed installed tools showing as missing until Re-Audit Host. 1.5.0: Adds the Goose language (a plain Goose app and a Goose HTTP service), Dart Jaspr, and a host auditor that checks every toolchain the catalog needs, with Flutter and Dart now found when they're installed outside the default PATH. 1.4.0 added 6 databases and broker examples for Rust and ASP.NET. See the [changelog](CHANGELOG.md).
 
 ## Download
 
 | Platform | Package |
 | --- | --- |
-| Linux x64 | [`LazyStack-1.5.1.AppImage`](https://github.com/Ian-nwb/LazyStack/releases/download/v1.5.1/LazyStack-1.5.1.AppImage) |
-| Windows x64 | [`LazyStack.1.5.1.exe`](https://github.com/Ian-nwb/LazyStack/releases/download/v1.5.1/LazyStack.1.5.1.exe) (portable) |
+| Linux x64 | [`LazyStack-1.5.2.AppImage`](https://github.com/Ian-nwb/LazyStack/releases/download/v1.5.2/LazyStack-1.5.2.AppImage) |
+| Windows x64 | [`LazyStack.1.5.2.exe`](https://github.com/Ian-nwb/LazyStack/releases/download/v1.5.2/LazyStack.1.5.2.exe) (portable) |
 | macOS |package not yet available (sponsor me a Macbook for app signature) |
 
 The CLI is on npm: `npx lazystack --help`.

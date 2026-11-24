@@ -1,5 +1,9 @@
 # LazyStack CLI changelog
 
+## 1.5.2
+
+- `lazystack doctor` on Windows also reads the machine and user PATH from the registry, so tools installed while a shell is open are found.
+
 ## 1.5.1
 
 - `lazystack doctor` and the host audit share one audit across concurrent callers, run at most 8 version checks at a time with a 10-second default timeout, and count a tool found on PATH as installed when only its version check timed out.
