@@ -1,7 +1,7 @@
 {
   "name": "lazystack",
-  "version": "1.5.2",
-  "description": "Desktop app and CLI that scaffolds polyglot projects: 118 frameworks, 32 databases and services, Docker Compose, reverse proxy and a dev orchestrator from one blueprint.",
+  "version": "2.0.0",
+  "description": "Desktop app and CLI that scaffolds polyglot projects: 142 frameworks, 45 databases and services, Docker Compose, reverse proxy and a dev orchestrator from one blueprint.",
   "type": "module",
   "main": "dist-electron/main.js",
   "bin": {
@@ -18,12 +18,15 @@
     "verify:layout": "esbuild scripts/verify-layout.ts --bundle --platform=node --format=esm --packages=external --outfile=dist-scripts/verify-layout.mjs --log-level=warning && node dist-scripts/verify-layout.mjs",
     "docs:catalog": "esbuild scripts/readme-catalog.ts --bundle --platform=node --format=esm --packages=external --outfile=dist-scripts/readme-catalog.mjs --log-level=warning && node dist-scripts/readme-catalog.mjs",
     "verify:templates": "esbuild scripts/verify-templates.ts --bundle --platform=node --format=esm --packages=external --outfile=dist-scripts/verify-templates.mjs --log-level=warning && node dist-scripts/verify-templates.mjs",
+    "test:unit": "esbuild scripts/unit-tests.ts --bundle --platform=node --format=esm --packages=external --outfile=dist-scripts/unit-tests.mjs --log-level=warning && node --test dist-scripts/unit-tests.mjs",
+    "check:images": "esbuild scripts/check-images.ts --bundle --platform=node --format=esm --packages=external --outfile=dist-scripts/check-images.mjs --log-level=warning && node dist-scripts/check-images.mjs",
     "start": "electron .",
     "pack": "npm run build && electron-builder --dir",
     "dist": "npm run build && electron-builder",
     "dist:linux": "npm run build && electron-builder --linux AppImage",
     "dist:deb": "npm run build && electron-builder --linux deb",
     "dist:win": "npm run build && electron-builder --win portable",
+    "dist:mac": "npm run build && electron-builder --mac zip",
     "dist:release": "npm run build && electron-builder --linux AppImage --win portable"
   },
   "keywords": [
@@ -49,7 +52,7 @@
     "productName": "LazyStack",
     "icon": "build/icon.png",
     "directories": {
-      "output": "release/1.5.2"
+      "output": "release/2.0.0"
     },
     "files": [
       "dist/**/*",
@@ -61,13 +64,29 @@
         "AppImage"
       ],
       "category": "Development",
-      "maintainer": "Ian-nwb (https://github.com/Ian-nwb)"
+      "maintainer": "Ian-nwb (https://github.com/Ian-nwb)",
+      "artifactName": "${productName}-${version}.${ext}"
     },
     "win": {
       "target": [
         "portable"
-      ]
-    }
+      ],
+      "artifactName": "${productName}.${version}.${ext}"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "zip",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ],
+      "category": "public.app-category.developer-tools",
+      "identity": null
+    },
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}"
   },
   "dependencies": {
     "clsx": "^2.1.1",

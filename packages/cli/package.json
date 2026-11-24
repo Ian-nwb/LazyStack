@@ -1,7 +1,7 @@
 {
   "name": "lazystack",
-  "version": "1.5.2",
-  "description": "Scaffold polyglot projects and monorepos from a JSON blueprint: 118 frameworks, 32 databases, Docker Compose and a dev orchestrator.",
+  "version": "2.0.0",
+  "description": "Scaffold polyglot projects and monorepos from a JSON blueprint: 142 frameworks, 45 databases and services, Docker Compose and a dev orchestrator.",
   "type": "module",
   "bin": {
     "lazystack": "bin/lazystack.js"

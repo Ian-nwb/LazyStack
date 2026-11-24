@@ -1,5 +1,13 @@
 # LazyStack CLI changelog
 
+## 2.0.0
+
+- 24 new frameworks (142 total), including F#, Elm and Perl, Quarkus, Micronaut, Javalin, Go templ + HTMX, Django Ninja, React + Tailwind + shadcn/ui, Cloudflare Workers and WXT. `import` recognizes them.
+- 13 new services (45 total): Keycloak, Mailpit, LocalStack, DynamoDB Local, Grafana LGTM, Ollama, Typesense, Elasticsearch, SeaweedFS, Temporal, TimescaleDB, pgvector, Dragonfly.
+- Generated projects include `mise.toml`, a dev container, Fly.io/Render/GitLab deploy files and a real SSH + Compose deploy job.
+- `lazystack list --json` prints the catalog as JSON.
+- Fixes: MinIO image (left Docker Hub), R Plumber image, .NET 10, Compose variables for hyphenated names.
+
 ## 1.5.2
 
 - `lazystack doctor` on Windows also reads the machine and user PATH from the registry, so tools installed while a shell is open are found.

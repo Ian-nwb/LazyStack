@@ -14,10 +14,10 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js 20
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
 
       - name: Install dependencies
@@ -32,6 +32,9 @@ jobs:
       - name: Verify framework templates against catalog and Dockerfiles
         run: npm run verify:templates
 
+      - name: Unit tests (installer helpers, generator invariants)
+        run: npm run test:unit
+
       - name: Verify README catalog matches the data files
         run: npm run docs:catalog -- --check
 
@@ -41,6 +44,43 @@ jobs:
       - name: Verify the Blueprint planner runs without Node globals
         run: npm run verify:browser
 
+  windows_smoke:
+    name: Windows - unit tests, scaffold, doctor and PATH
+    runs-on: windows-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install dependencies and build the CLI
+        run: |
+          npm ci
+          npm run build:cli
+
+      - name: Unit tests
+        run: npm run test:unit
+
+      - name: Scaffold a preset and check generated files
+        shell: bash
+        run: |
+          node bin/lazystack.js scaffold --preset fastapi-react --name win-demo --out "$RUNNER_TEMP" --skip-port-check
+          for f in infra/docker-compose.yml .env mise.toml .devcontainer/devcontainer.json scripts/dev.ps1 lazystack.json; do
+            test -f "$RUNNER_TEMP/win-demo/$f" || { echo "missing $f"; exit 1; }
+          done
+
+      - name: Doctor reads the registry PATH and probes tools
+        shell: bash
+        run: |
+          node bin/lazystack.js export --preset fastapi-react --name win-doctor --out "$RUNNER_TEMP/doctor.json"
+          node bin/lazystack.js doctor --config "$RUNNER_TEMP/doctor.json" | tee "$RUNNER_TEMP/doctor.txt" || true
+          grep -q "Prerequisite check for win-doctor" "$RUNNER_TEMP/doctor.txt"
+          grep -q "✓ Python" "$RUNNER_TEMP/doctor.txt"
+
   cli_package_smoke:
     name: npm CLI Package Smoke Check
     needs: build_and_typecheck
@@ -49,10 +89,10 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js 20
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Install dependencies
         run: npm ci
@@ -116,10 +156,10 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js 20
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
 
       - name: Install dependencies
@@ -278,10 +318,10 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js 20
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
 
       - name: Install dependencies
@@ -345,10 +385,10 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js 20
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
 
       - name: Install dependencies and build CLI

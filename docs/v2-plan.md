@@ -1,7 +1,7 @@
 # LazyStack v2 plan
 
 Source: the gap scan of the 1.5.2 catalog (118 frameworks, 32 services) against the 2026 web ecosystem.
-Status keys: **2.0** = ships in 2.0.0, **2.x** = planned after 2.0.
+Status keys: **2.0** = shipped in 2.0.0 (2026-11-24), **2.x** = planned after 2.0.
 
 ## 1. Broken in 1.5.x (2.0)
 

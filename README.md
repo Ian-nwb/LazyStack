@@ -28,15 +28,15 @@
 
 LazyStack is a desktop app and a command-line tool for starting polyglot projects. Combine a React client, a FastAPI service, a Go worker and an Expo app with PostgreSQL and Redis, choose an architecture layout, and get a project where every app follows its framework's own conventions and the whole stack starts with `npm run dev`.
 
-**Current version: 1.5.2.** Hotfix: auto-install from the Host Auditor works again on Linux (it asks for your password through the desktop prompt instead of failing on `sudo`) and on Windows (winget no longer hangs on its agreement prompt, and installing no longer rewrites your PATH). 1.5.1 fixed installed tools showing as missing until Re-Audit Host. 1.5.0: Adds the Goose language (a plain Goose app and a Goose HTTP service), Dart Jaspr, and a host auditor that checks every toolchain the catalog needs, with Flutter and Dart now found when they're installed outside the default PATH. 1.4.0 added 6 databases and broker examples for Rust and ASP.NET. See the [changelog](CHANGELOG.md).
+**Current version: 2.0.0.** 24 new frameworks (F#, Elm and Perl are new languages; Quarkus, Micronaut, Go templ + HTMX, Django Ninja, React + Tailwind + shadcn/ui, Cloudflare Workers and more), 13 new services (Keycloak, Mailpit, LocalStack, Grafana LGTM, Ollama, Temporal and others), and generated projects now include a dev container, `mise.toml` and real deploy targets (SSH + Compose, Fly.io, Render, GitLab CI). Fixes MinIO projects (the image left Docker Hub), the R Plumber image, and moves .NET starters to .NET 10. See the [changelog](CHANGELOG.md) and the [v2 plan](docs/v2-plan.md).
 
 ## Download
 
 | Platform | Package |
 | --- | --- |
-| Linux x64 | [`LazyStack-1.5.2.AppImage`](https://github.com/Ian-nwb/LazyStack/releases/download/v1.5.2/LazyStack-1.5.2.AppImage) |
-| Windows x64 | [`LazyStack.1.5.2.exe`](https://github.com/Ian-nwb/LazyStack/releases/download/v1.5.2/LazyStack.1.5.2.exe) (portable) |
-| macOS |package not yet available (sponsor me a Macbook for app signature) |
+| Linux x64 | [`LazyStack-2.0.0.AppImage`](https://github.com/Ian-nwb/LazyStack/releases/download/v2.0.0/LazyStack-2.0.0.AppImage) |
+| Windows x64 | [`LazyStack.2.0.0.exe`](https://github.com/Ian-nwb/LazyStack/releases/download/v2.0.0/LazyStack.2.0.0.exe) (portable) |
+| macOS (Apple silicon / Intel) | [`LazyStack-2.0.0-mac-arm64.zip`](https://github.com/Ian-nwb/LazyStack/releases/download/v2.0.0/LazyStack-2.0.0-mac-arm64.zip) / [`-mac-x64.zip`](https://github.com/Ian-nwb/LazyStack/releases/download/v2.0.0/LazyStack-2.0.0-mac-x64.zip) (unsigned: right-click the app and choose Open the first time) |
 
 The CLI is on npm: `npx lazystack --help`.
 
@@ -44,14 +44,16 @@ To run the projects LazyStack generates you need Docker with Compose, plus the t
 
 ## What it does
 
-- **118 frameworks across every role.** Frontends, backend services, full-stack apps, workers, desktop and mobile clients, and scripts, in JavaScript/TypeScript, Python, Go, Rust, Java, Kotlin, C#, PHP, Ruby, Elixir, Swift, Dart, Goose and a long tail of others. See the [full list](#supported-frameworks-databases-and-tools).
+- **142 frameworks across every role.** Frontends, backend services, full-stack apps, workers, desktop and mobile clients, and scripts, in JavaScript/TypeScript, Python, Go, Rust, Java, Kotlin, C#, F#, PHP, Ruby, Elixir, Swift, Dart, Elm, Perl, Goose and a long tail of others. See the [full list](#supported-frameworks-databases-and-tools).
 - **Framework-native starters.** Each app gets what its own initializer would create (`create-expo-app`, `nest new`, `django-admin startproject`, `mix phx.new`, `dx new`, `dotnet new maui`, start.spring.io, and so on), with a passing test, a `.gitignore` and a README.
-- **32 databases and services.** PostgreSQL, MySQL, MongoDB, Redis, Kafka, NATS, CockroachDB, ClickHouse, Qdrant and more run in Compose with generated credentials; Supabase, Firebase, Neon, Turso and other cloud providers get SDK clients and environment variables. Optional admin UIs: Adminer, pgAdmin, Prisma Studio, phpMyAdmin, Mongo Express, Redis Commander.
+- **45 databases and services.** PostgreSQL (plus TimescaleDB and pgvector), MySQL, MongoDB, Redis, Dragonfly, Kafka, NATS, CockroachDB, ClickHouse, Qdrant, Elasticsearch, Typesense and more run in Compose with generated credentials and healthchecks; Supabase, Firebase, Neon, Turso and other cloud providers get SDK clients and environment variables. Optional admin UIs: Adminer, pgAdmin, Prisma Studio, phpMyAdmin, Mongo Express, Redis Commander, Kafka UI, NATS NUI.
+- **Developer services.** Keycloak (a realm with one OIDC client per app and a `dev`/`dev` user), Mailpit (catch-all SMTP with a web inbox), LocalStack and DynamoDB Local (AWS), Grafana LGTM (OpenTelemetry traces, logs and metrics), Ollama (local LLMs), SeaweedFS (S3) and Temporal (durable workflows), each wired into connected apps through well-known variables such as `OIDC_ISSUER_URL`, `SMTP_URL`, `AWS_ENDPOINT_URL` and `OTEL_EXPORTER_OTLP_ENDPOINT`.
 - **15 architecture layouts.** Standard monorepo, microservices, modular monolith, Polyglot, event-driven, serverless, DDD, hexagonal, clean architecture, CQRS, JAMstack and edge, mobile and cross-platform, data platform, AI/ML, or your own folder structure. The Blueprint shows the exact resulting tree.
 - **Port-conflict check.** Duplicate ports (including fixed extras such as RabbitMQ's management UI) block scaffolding; a live banner offers Auto-fix, and `lazystack ports` also reports ports already in use on your machine.
 - **Service connections.** Wire apps together with URLs, environment variable names, health checks and startup order.
 - **One command to run everything.** The generated dev orchestrator starts databases in Docker and every app on the host with hot reload and colour-coded output.
-- **Deployment files.** Docker Compose, Nginx/Apache/Caddy/Traefik config, Kubernetes manifests, a Helm chart, Terraform for AWS/GCP/DigitalOcean and GitHub Actions workflows.
+- **Deployment files.** Docker Compose, Nginx/Apache/Caddy/Traefik config, Kubernetes manifests, a Helm chart, Terraform for AWS/GCP/DigitalOcean, a GitHub Actions workflow that builds images and deploys over SSH with Compose, a `fly.toml` per service, a Render Blueprint and GitLab CI.
+- **Reproducible toolchains.** Every project gets `mise.toml` (run `mise install` to get the exact Node, Python, Go, Java, .NET, Rust... versions, no root needed) and a `.devcontainer` for VS Code and Codespaces, plus `.editorconfig`, Lefthook pre-commit formatters and Renovate.
 - **Existing projects.** Open a folder you already have: LazyStack detects its apps, databases and proxy, shows the stack as a diagram, and adds new services without touching your code.
 - **Testing tools per app.** Jest, Vitest, pytest, JUnit, Playwright, Cypress, k6, Pact, Storybook, OWASP ZAP and more, opt-in per app.
 
@@ -283,7 +285,7 @@ Apps are placed inside the layout's root and then follow their framework's layou
 
 ## Build from source
 
-Requires Node.js 20+ and npm 10+.
+Requires Node.js 22+ and npm 10+.
 
 ```bash
 git clone https://github.com/Ian-nwb/LazyStack.git
@@ -297,9 +299,24 @@ Package the desktop app:
 
 ```bash
 npm run dist:linux     # release/<version>/LazyStack-<version>.AppImage
-npm run dist:win       # release/<version>/LazyStack <version>.exe (portable)
-npm run dist:release   # both
+npm run dist:win       # release/<version>/LazyStack.<version>.exe (portable)
+npm run dist:mac       # release/<version>/LazyStack-<version>-mac-{arm64,x64}.zip (unsigned)
+npm run dist:release   # Linux + Windows
 ```
+
+Pushing a `v*` tag runs `.github/workflows/release.yml`, which builds all three on GitHub's runners, creates the GitHub release from `CHANGELOG.md` and publishes the CLI to npm.
+
+Checks:
+
+```bash
+npx tsc --noEmit
+npm run test:unit         # installer helpers and generator invariants (no Docker)
+npm run verify:templates  # starter files vs Dockerfiles for every framework
+npm run check:images      # every image the generator can emit still exists
+scripts/build-starter.sh go-templ-htmx   # scaffold one framework and docker build it
+```
+
+`.github/workflows/starters.yml` builds every starter and checks every image weekly.
 
 ## Repository layout
 
@@ -314,7 +331,7 @@ showcase/            Project website
 
 ## Ideas under consideration
 
-Not built yet: a local AI assistant that drafts blueprints from a description, separate development/staging/production profiles, OpenTelemetry and Grafana wiring, database backup and restore, Vault and 1Password integration, a shareable template registry, Pulumi export, and sizing estimates.
+Planned for 2.x (see [docs/v2-plan.md](docs/v2-plan.md)): ClojureScript, ReScript, PureScript, Scala.js and Compose Multiplatform; Analog, Waku, Ember, Nitro, Encore.ts, Loco.rs, Vaadin, Laravel + Inertia/Livewire and headless CMSs (Payload, Strapi, Directus, Medusa); per-app ORM and UI-kit choices; gRPC/GraphQL/AsyncAPI codegen; Zitadel and Authentik; environment profiles, secrets (Vault, 1Password), a template registry, an AI blueprint drafter, Pulumi export and signed macOS builds.
 
 ## Contributing
 

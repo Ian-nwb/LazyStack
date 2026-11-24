@@ -44,6 +44,8 @@ export interface IElectronAPI {
   checkPorts: (ports: number[]) => Promise<Array<{ port: number; inUse: boolean; process?: string }>>
   installBinary: (binaryId: string) => Promise<InstallResult>
   addToPath: (dirPath: string) => Promise<boolean>
+  checkForUpdate: () => Promise<{ current: string; latest?: string; url?: string; updateAvailable: boolean }>
+  openReleasePage: (url: string) => Promise<void>
 }
 
 const api: IElectronAPI = {
@@ -69,6 +71,8 @@ const api: IElectronAPI = {
   checkPorts: (ports: number[]) => ipcRenderer.invoke('check-ports', ports),
   installBinary: (binaryId: string) => ipcRenderer.invoke('install-binary', binaryId),
   addToPath: (dirPath: string) => ipcRenderer.invoke('add-to-path', dirPath),
+  checkForUpdate: () => ipcRenderer.invoke('check-update'),
+  openReleasePage: (url: string) => ipcRenderer.invoke('open-release-page', url),
 }
 
 contextBridge.exposeInMainWorld('electronAPI', api)

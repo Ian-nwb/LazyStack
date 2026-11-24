@@ -1,0 +1,76 @@
+name: Build every starter
+
+# Weekly (and on demand): scaffold every non-host-only framework and build its Dockerfile, and
+# check that every image the generator references still exists. Catches template rot (dependency
+# versions, removed base images) that the per-PR CI matrix does not cover.
+on:
+  schedule:
+    - cron: '0 4 * * 1'
+  workflow_dispatch:
+    inputs:
+      techs:
+        description: 'Comma-separated tech ids to build (empty = all)'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  catalog:
+    name: List starters
+    runs-on: ubuntu-latest
+    outputs:
+      techs: ${{ steps.list.outputs.techs }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build:cli
+      - id: list
+        env:
+          ONLY: ${{ github.event.inputs.techs }}
+        run: |
+          techs=$(node bin/lazystack.js list --json | node -e '
+            let s = ""; process.stdin.on("data", d => s += d).on("end", () => {
+              const only = (process.env.ONLY || "").split(",").map(t => t.trim()).filter(Boolean)
+              const ids = JSON.parse(s).frameworks.filter(f => !f.hostOnly).map(f => f.id).filter(id => !only.length || only.includes(id))
+              console.log(JSON.stringify(ids))
+            })')
+          echo "techs=$techs" >> "$GITHUB_OUTPUT"
+
+  images:
+    name: Referenced images exist
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run check:images
+
+  build:
+    name: Build ${{ matrix.tech }}
+    needs: catalog
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        tech: ${{ fromJSON(needs.catalog.outputs.techs) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build:cli
+      - name: Scaffold and docker build
+        run: scripts/build-starter.sh "${{ matrix.tech }}" "$RUNNER_TEMP/starter"

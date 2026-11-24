@@ -345,3 +345,6 @@ export async function installBinary(binaryOrId: string): Promise<InstallResult> 
     output
   }
 }
+
+/** Pure helpers exported for unit tests (scripts/unit-tests.ts). */
+export const __test__ = { wingetCommand, shQuote, isSystemCommand, plannedAttempts, userBinDirs }

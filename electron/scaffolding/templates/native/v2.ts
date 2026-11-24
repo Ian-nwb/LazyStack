@@ -8,8 +8,8 @@ import { Files, GITIGNORE, json, NativeContext, readme, shell } from './context'
 type Starter = (c: NativeContext) => Files
 
 const VERSIONS = {
-  quarkus: '4.0.0',
-  micronaut: '5.2.8',
+  quarkus: '3.40.1.2',
+  micronaut: '4.10.25',
   javalin: '7.3.0',
   slf4j: '2.0.20',
   junit: '6.1.3',
@@ -297,6 +297,12 @@ const javalin: Starter = c => ({
       <groupId>io.javalin</groupId>
       <artifactId>javalin</artifactId>
       <version>${VERSIONS.javalin}</version>
+    </dependency>
+    <dependency>
+      <!-- ctx.json() needs a JSON mapper; Javalin picks up Jackson automatically. -->
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>2.23.0</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -1095,6 +1101,7 @@ const giraffe: Starter = c => ({
 `,
   'Program.fs': `open System
 open Microsoft.AspNetCore.Builder
+open Microsoft.AspNetCore.Hosting
 open Microsoft.Extensions.DependencyInjection
 open Giraffe
 

@@ -54,6 +54,15 @@ const WINDOWS_PATH_KEYS = [
   'HKCU\\Environment'
 ]
 
+/** Parses `reg query <key> /v Path` output into directories, expanding %VAR% from `env`. */
+export function parseRegQueryPath(output: string, env: Record<string, string | undefined>): string[] {
+  const match = output.match(/^\s*Path\s+REG_(?:EXPAND_)?SZ\s+(.*)$/im)
+  if (!match) return []
+  const lookup = (name: string) => env[name] ?? Object.entries(env).find(([key]) => key.toLowerCase() === name.toLowerCase())?.[1]
+  const expanded = match[1].trim().replace(/%([^%]+)%/g, (whole, name) => lookup(name) ?? whole)
+  return expanded.split(';').map(d => d.trim()).filter(Boolean)
+}
+
 /** Reads the machine and user PATH from the registry (Windows only), expanding %VAR% references. */
 function readWindowsRegistryPath(): string[] {
   if (process.platform !== 'win32') return []
@@ -66,10 +75,7 @@ function readWindowsRegistryPath(): string[] {
         windowsHide: true,
         stdio: ['ignore', 'pipe', 'ignore']
       })
-      const match = out.match(/^\s*Path\s+REG_(?:EXPAND_)?SZ\s+(.*)$/im)
-      if (!match) continue
-      const expanded = match[1].trim().replace(/%([^%]+)%/g, (whole, name) => process.env[name] ?? whole)
-      dirs.push(...expanded.split(';').map(d => d.trim()).filter(Boolean))
+      dirs.push(...parseRegQueryPath(out, process.env))
     } catch {
       // Key or value missing; nothing to add.
     }

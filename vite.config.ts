@@ -113,6 +113,14 @@ export default defineConfig({
           })
         })
 
+        // Mirrors the check-update IPC handler (browser-only dev mode).
+        server.middlewares.use('/api/check-update', async (_req, res) => {
+          const { checkForUpdate } = await import('./electron/environment/updates')
+          const { version } = JSON.parse(await import('node:fs').then(fs => fs.readFileSync('package.json', 'utf8')))
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify(await checkForUpdate(version)))
+        })
+
         server.middlewares.use('/api/audit', async (_req, res) => {
           try {
             const { auditEnvironment } = await import('./electron/environment/auditor')

@@ -12,6 +12,7 @@ import { runStack } from './environment/stack'
 import { auditEnvironment } from './environment/auditor'
 import { probePorts } from './environment/ports'
 import { installBinary, addDirectoryToPath } from './environment/installer'
+import { checkForUpdate, isReleaseUrl } from './environment/updates'
 import { ProjectSettings } from '../src/types'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -197,6 +198,11 @@ app.whenReady().then(() => {
     } catch (err: any) {
       return { port, available: false, error: err.message }
     }
+  })
+
+  ipcMain.handle('check-update', async () => checkForUpdate(app.getVersion()))
+  ipcMain.handle('open-release-page', async (_event, url: string) => {
+    if (isReleaseUrl(url)) await shell.openExternal(url)
   })
 
   ipcMain.handle('get-system-info', async () => {

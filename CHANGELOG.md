@@ -5,6 +5,51 @@ All notable changes to LazyStack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-11-24
+
+LazyStack 2.0 adds 24 frameworks, 13 developer services, reproducible toolchains and real deploy targets, and fixes images that had stopped working. The full scope, including what follows in 2.x, is in [docs/v2-plan.md](docs/v2-plan.md).
+
+### Fixed
+- **MinIO projects failed at `docker compose up`**: `minio/minio` was removed from Docker Hub. MinIO now uses the maintained Chainguard build (`cgr.dev/chainguard/minio`, same API and variables) with a healthcheck that needs only bash. SeaweedFS is available as an Apache-2.0 alternative.
+- **R (Plumber) Docker image never built**: `r-base:4.4-alpine` doesn't exist. It now uses `rocker/r-ver:4.4` with libsodium, and the build fails if plumber doesn't install (the old image would have started and crashed).
+- **.NET 9 reached end of support on 2026-11-10**: ASP.NET Core, Blazor and MAUI starters, their Docker images and the installer use .NET 10 LTS. A project named `app` no longer breaks Blazor (its `App` namespace collided with the `App` component).
+- **Yew and Leptos images**: `cargo install trunk` pulled trunk 0.22, which needs rustc 1.96; trunk is pinned to 0.21.14.
+- **Compose variables for hyphenated names**: service names like `my-api_postgres` produced `${MY-API_POSTGRES_PORT}`, which Compose reads as a default-value expression. Service names now use only letters, digits and `_`.
+- The importer no longer mistakes the Kafka UI image for a Kafka broker. Go images use Go 1.27; Kafka UI uses the maintained `kafbat/kafka-ui`.
+
+### Added: frameworks (118 to 142)
+- **New languages:** F# (Giraffe), Elm (Browser.element + Vite), Perl (Mojolicious).
+- **Java:** Quarkus, Micronaut, Javalin. **Go:** templ + HTMX. **Rust:** Rocket. **Swift:** Hummingbird 2. **Dart:** Dart Frog. **R:** Shiny.
+- **Python:** Django Ninja, Plotly Dash, FastHTML, MkDocs Material. **PHP:** Slim 4, WordPress (official image, starter theme, `WORDPRESS_DB_*` variables from the project's MySQL/MariaDB). **Ruby:** Sinatra. **.NET:** Razor Pages.
+- **JavaScript/TypeScript:** React + Tailwind CSS v4 + shadcn/ui (`components.json` ready for `npx shadcn add`), Alpine.js, Astro Starlight, Cloudflare Workers with Hono (`wrangler dev` runs workerd locally), and WXT browser extensions (Chrome, Edge, Firefox, Safari; host only).
+- Every new starter builds in Docker; the Go, Perl, Dart Frog and Workers images run their tests during the build. The importer recognizes all of them, and the Host Auditor checks Perl and cpanm.
+
+### Added: services (32 to 45)
+- **Keycloak**: imports a realm named after the project with one public OIDC client per app and a `dev`/`dev` user; apps get `OIDC_ISSUER_URL`, `OIDC_DISCOVERY_URL` and `OIDC_CLIENT_ID`.
+- **Mailpit** (SMTP + web inbox on :8025), **LocalStack** and **DynamoDB Local** (AWS, with `AWS_ENDPOINT_URL` and test credentials), **Grafana LGTM** (OpenTelemetry collector, Grafana on :3300, Loki, Tempo, Prometheus; apps get `OTEL_EXPORTER_OTLP_ENDPOINT` and `OTEL_SERVICE_NAME`), **Ollama**, **Typesense**, **Elasticsearch 9**, **SeaweedFS**, **Temporal** (UI on :8233).
+- **TimescaleDB** and **pgvector** (Postgres-compatible: same credentials, `DATABASE_URL`, Adminer/pgAdmin) and **Dragonfly** (Redis-compatible: `REDIS_URL`, Redis client examples, Redis Commander).
+- Verified: every service reaches healthy under `docker compose up --wait`, Keycloak issues tokens for the dev user, SeaweedFS stores and returns objects.
+
+### Added: generated projects
+- `mise.toml` pinning every toolchain the project needs, and `.devcontainer/devcontainer.json` (official features per ecosystem, Docker outside of Docker, mise).
+- Deploy targets: the GitHub deploy workflow now deploys over SSH with Docker Compose when the `DEPLOY_HOST` variable is set (it used to print a placeholder), a `fly.toml` in each Docker app, a Render Blueprint (`render.yaml`, with managed Postgres when the stack uses Postgres) and `.gitlab-ci.yml`.
+- `.editorconfig`, `lefthook.yml` (each toolchain's built-in formatter, scoped to the app that uses it) and `renovate.json`.
+
+### Added: release engineering
+- `lazystack list --json` prints the catalog. `scripts/build-starter.sh <tech>` scaffolds one framework and builds its Dockerfile.
+- Weekly workflow `starters.yml` builds every starter and checks that every referenced image still exists (`npm run check:images`), so removed images and dependency drift show up within a week.
+- Tag-triggered `release.yml` builds the Linux AppImage, Windows portable EXE and **unsigned macOS zips** (arm64 and x64) on GitHub's runners, publishes the GitHub release from this changelog, and publishes the CLI to npm with provenance.
+- Unit tests (`npm run test:unit`) for installer helpers, PATH parsing and generator invariants (every framework and preset scaffolds, every Compose variable is valid), and a Windows CI job that scaffolds, runs `doctor` and reads the registry PATH. CI runs on Node 22.
+- The app shows "vX available" in the header when a newer GitHub release exists (no auto-install; it opens the release page).
+
+### Changed
+- Node.js 22+ is required to build LazyStack from source (Node 20 reached end of life).
+- Windows downloads are named `LazyStack.<version>.exe`; macOS zips `LazyStack-<version>-mac-<arch>.zip`.
+
+### Not verified
+- The macOS build, the Windows CI job and the npm trusted-publishing path run for the first time with this release.
+- Ollama was only checked for image availability (its image is several GB); its healthcheck uses the bundled `ollama` CLI.
+
 ## [1.5.2] - 2026-11-24
 
 ### Fixed
