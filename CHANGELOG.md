@@ -47,16 +47,16 @@ LazyStack 2.0 adds 24 frameworks, 13 developer services, reproducible toolchains
 ### Added: release engineering
 - `lazystack list --json` prints the catalog. `scripts/build-starter.sh <tech>` scaffolds one framework and builds its Dockerfile.
 - Weekly workflow `starters.yml` builds every starter and checks that every referenced image still exists (`npm run check:images`), so removed images and dependency drift show up within a week.
-- Tag-triggered `release.yml` builds the Linux AppImage, Windows portable EXE and **unsigned macOS zips** (arm64 and x64) on GitHub's runners, publishes the GitHub release from this changelog, and publishes the CLI to npm with provenance.
+- Tag-triggered `release.yml` builds the Linux AppImage and Windows portable EXE on GitHub's runners, publishes the GitHub release from this changelog, and publishes the CLI to npm with provenance.
 - Unit tests (`npm run test:unit`) for installer helpers, PATH parsing and generator invariants (every framework and preset scaffolds, every Compose variable is valid), and a Windows CI job that scaffolds, runs `doctor` and reads the registry PATH. CI runs on Node 22.
 - The app shows "vX available" in the header when a newer GitHub release exists (no auto-install; it opens the release page).
 
 ### Changed
 - Node.js 22+ is required to build LazyStack from source (Node 20 reached end of life).
-- Windows downloads are named `LazyStack.<version>.exe`; macOS zips `LazyStack-<version>-mac-<arch>.zip`.
+- Windows downloads are named `LazyStack.<version>.exe`.
 
 ### Not verified
-- The macOS build, the Windows CI job and the npm trusted-publishing path run for the first time with this release.
+- The npm trusted-publishing path in `release.yml` is not set up yet (2.0.0 was published to npm by hand).
 - Ollama was only checked for image availability (its image is several GB); its healthcheck uses the bundled `ollama` CLI.
 
 ## [1.5.2] - 2026-11-24

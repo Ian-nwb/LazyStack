@@ -26,7 +26,6 @@
     "dist:linux": "npm run build && electron-builder --linux AppImage",
     "dist:deb": "npm run build && electron-builder --linux deb",
     "dist:win": "npm run build && electron-builder --win portable",
-    "dist:mac": "npm run build && electron-builder --mac zip",
     "dist:release": "npm run build && electron-builder --linux AppImage --win portable"
   },
   "keywords": [
@@ -72,21 +71,7 @@
         "portable"
       ],
       "artifactName": "${productName}.${version}.${ext}"
-    },
-    "mac": {
-      "target": [
-        {
-          "target": "zip",
-          "arch": [
-            "arm64",
-            "x64"
-          ]
-        }
-      ],
-      "category": "public.app-category.developer-tools",
-      "identity": null
-    },
-    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}"
+    }
   },
   "dependencies": {
     "clsx": "^2.1.1",

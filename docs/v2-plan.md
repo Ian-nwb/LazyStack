@@ -69,8 +69,8 @@ Status keys: **2.0** = shipped in 2.0.0 (2026-11-24), **2.x** = planned after 2.
 | Item | Status |
 | --- | --- |
 | Weekly + manual CI: scaffold and `docker build` every non-host-only starter, and check every referenced image exists | 2.0 |
-| Tag-triggered release workflow: Linux AppImage, Windows portable EXE, unsigned macOS zip, GitHub release, npm publish with provenance | 2.0 |
+| Tag-triggered release workflow: Linux AppImage, Windows portable EXE, GitHub release, npm publish with provenance | 2.0 |
 | Windows CI job: scaffold, `doctor`, installer and PATH unit tests | 2.0 |
 | Unit tests (`npm run test:unit`) for installer helpers and generator invariants | 2.0 |
 | In-app "new version available" banner from GitHub Releases | 2.0 |
-| Signed macOS builds | 2.x (needs an Apple developer account) |
+| macOS builds | 2.x (sponsor me a Macbook for app signature) |

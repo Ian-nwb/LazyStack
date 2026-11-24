@@ -36,7 +36,7 @@ LazyStack is a desktop app and a command-line tool for starting polyglot project
 | --- | --- |
 | Linux x64 | [`LazyStack-2.0.0.AppImage`](https://github.com/Ian-nwb/LazyStack/releases/download/v2.0.0/LazyStack-2.0.0.AppImage) |
 | Windows x64 | [`LazyStack.2.0.0.exe`](https://github.com/Ian-nwb/LazyStack/releases/download/v2.0.0/LazyStack.2.0.0.exe) (portable) |
-| macOS (Apple silicon / Intel) | [`LazyStack-2.0.0-mac-arm64.zip`](https://github.com/Ian-nwb/LazyStack/releases/download/v2.0.0/LazyStack-2.0.0-mac-arm64.zip) / [`-mac-x64.zip`](https://github.com/Ian-nwb/LazyStack/releases/download/v2.0.0/LazyStack-2.0.0-mac-x64.zip) (unsigned: right-click the app and choose Open the first time) |
+| macOS |package not yet available (sponsor me a Macbook for app signature) |
 
 The CLI is on npm: `npx lazystack --help`.
 
@@ -300,11 +300,10 @@ Package the desktop app:
 ```bash
 npm run dist:linux     # release/<version>/LazyStack-<version>.AppImage
 npm run dist:win       # release/<version>/LazyStack.<version>.exe (portable)
-npm run dist:mac       # release/<version>/LazyStack-<version>-mac-{arm64,x64}.zip (unsigned)
 npm run dist:release   # Linux + Windows
 ```
 
-Pushing a `v*` tag runs `.github/workflows/release.yml`, which builds all three on GitHub's runners, creates the GitHub release from `CHANGELOG.md` and publishes the CLI to npm.
+Pushing a `v*` tag runs `.github/workflows/release.yml`, which builds both on GitHub's runners, creates the GitHub release from `CHANGELOG.md` and publishes the CLI to npm.
 
 Checks:
 
@@ -331,7 +330,7 @@ showcase/            Project website
 
 ## Ideas under consideration
 
-Planned for 2.x (see [docs/v2-plan.md](docs/v2-plan.md)): ClojureScript, ReScript, PureScript, Scala.js and Compose Multiplatform; Analog, Waku, Ember, Nitro, Encore.ts, Loco.rs, Vaadin, Laravel + Inertia/Livewire and headless CMSs (Payload, Strapi, Directus, Medusa); per-app ORM and UI-kit choices; gRPC/GraphQL/AsyncAPI codegen; Zitadel and Authentik; environment profiles, secrets (Vault, 1Password), a template registry, an AI blueprint drafter, Pulumi export and signed macOS builds.
+Planned for 2.x (see [docs/v2-plan.md](docs/v2-plan.md)): ClojureScript, ReScript, PureScript, Scala.js and Compose Multiplatform; Analog, Waku, Ember, Nitro, Encore.ts, Loco.rs, Vaadin, Laravel + Inertia/Livewire and headless CMSs (Payload, Strapi, Directus, Medusa); per-app ORM and UI-kit choices; gRPC/GraphQL/AsyncAPI codegen; Zitadel and Authentik; environment profiles, secrets (Vault, 1Password), a template registry, an AI blueprint drafter, Pulumi export, and a macOS build (sponsor me a Macbook for app signature).
 
 ## Contributing
 

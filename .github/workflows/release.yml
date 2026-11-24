@@ -1,7 +1,7 @@
 name: Release
 
-# Push a tag like v2.0.0 to build the Linux AppImage, Windows portable EXE and unsigned macOS
-# zips on GitHub's runners, publish them as a GitHub release (notes from CHANGELOG.md), and
+# Push a tag like v2.0.0 to build the Linux AppImage and Windows portable EXE on GitHub's
+# runners, publish them as a GitHub release (notes from CHANGELOG.md), and
 # publish the CLI to npm with provenance.
 #
 # npm: either configure a Trusted Publisher for this repository and workflow on npmjs.com
@@ -30,10 +30,6 @@ jobs:
             os: windows-latest
             args: --win portable
             files: release/*/*.exe
-          - name: macOS zip (unsigned)
-            os: macos-latest
-            args: --mac zip
-            files: release/*/*.zip
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
