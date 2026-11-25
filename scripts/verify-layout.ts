@@ -90,6 +90,9 @@ for (const preset of ARCHITECTURE_PRESETS) {
       if (!dirs.has(dir.path)) fail(scope, `scaffold folder '${dir.path}' is not in the plan`)
       if (!plan.files[`${dir.path}/README.md`]) fail(scope, `scaffold folder '${dir.path}' has no README.md`)
     }
+    for (const doc of ['architecture.md', 'hosting.md']) {
+      if (!plan.files[`${paths.docsDir}/${doc}`]) fail(scope, `'${paths.docsDir}/${doc}' is not in the plan`)
+    }
 
     // 2. Apps land in the folder the preset card advertises for their role.
     const roleFolders = new Map(getRoleFolders(preset.config).flatMap(group => group.roles.map(role => [role, group.folder] as const)))

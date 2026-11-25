@@ -12,6 +12,7 @@ import { getDatabaseAdminUiOption } from '../../src/data/databaseAdminUis'
 import { TECH_CATALOG, isHostOnlyTech } from '../../src/data/frameworks'
 import { createScaffoldWriter, ScaffoldChanges, ScaffoldMode } from './writer'
 import { getAppDatabases } from '../../src/utils/databaseScope'
+import { isHostingType } from '../../src/data/hosting'
 import { describePortConflict, findPortConflicts, findReservedPortWarnings } from '../../src/utils/portCheck'
 
 export interface ScaffoldResult {
@@ -73,6 +74,9 @@ export async function scaffoldProject(inputSettings: ProjectSettings, options: S
         filesCreated: 0,
         error: `Invalid app folder name '${app.folderName}': ${appVal.error}`
       }
+    }
+    if (app.hosting !== undefined && !isHostingType(app.hosting)) {
+      return { success: false, targetDir: '', filesCreated: 0, error: `Unknown hosting '${app.hosting}' on '${app.folderName}'.` }
     }
   }
 
@@ -208,6 +212,7 @@ export async function scaffoldProject(inputSettings: ProjectSettings, options: S
     protectedDirs,
     // Generated infrastructure that must reflect the updated stack; originals are backed up first.
     regenerable: rel => rel === 'lazystack.json'
+      || rel === `${paths.docsDir.replace(/^\/+|\/+$/g, '')}/hosting.md`
       || rel === `${infraRoot}/docker-compose.yml`
       || rel === `${infraRoot}/docker-compose.dev.yml`
       || /^(nginx|apache|caddy|traefik)\//.test(rel.slice(infraRoot.length + 1)) && rel.startsWith(`${infraRoot}/`)

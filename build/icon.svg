@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <title>LazyStack</title>
+  <rect x="16" y="16" width="480" height="480" rx="112" fill="#050505"/>
+  <rect x="17.5" y="17.5" width="477" height="477" rx="110.5" fill="none" stroke="#262626" stroke-width="3"/>
+  <g transform="translate(79.2 89.6) scale(5.2)">
+    <path d="M6 46 30 58 54 46" fill="none" stroke="#ffffff" stroke-opacity=".38" stroke-width="4" stroke-linejoin="miter"/>
+    <path d="M14 32 38 44 62 32" fill="none" stroke="#ffffff" stroke-opacity=".7" stroke-width="4" stroke-linejoin="miter"/>
+    <path d="M30 6 40.2 11.1 30 16.2 19.8 11.1Z M43.8 12.9 54 18 43.8 23.1 33.6 18Z M16.2 12.9 26.4 18 16.2 23.1 6 18Z M30 19.8 40.2 24.9 30 30 19.8 24.9Z" fill="#ffffff"/>
+  </g>
+</svg>

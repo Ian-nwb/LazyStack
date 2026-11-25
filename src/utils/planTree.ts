@@ -58,6 +58,7 @@ function buildNotes(settings: ProjectSettings): Map<string, string> {
     ['.vscode', 'recommended editor settings'],
     [paths.docsDir, 'architecture documentation'],
     [`${paths.docsDir}/architecture.md`, 'service diagram and network topology (Mermaid)'],
+    [`${paths.docsDir}/hosting.md`, 'hosting plan per app (regenerated from the blueprint)'],
     [paths.infraDir, 'orchestration and cloud export'],
     [`${paths.infraDir}/docker-compose.yml`, 'production Compose file'],
     [`${paths.infraDir}/docker-compose.dev.yml`, 'development override'],

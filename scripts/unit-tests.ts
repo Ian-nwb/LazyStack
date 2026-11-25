@@ -17,7 +17,10 @@ import { getDbServiceName } from '../src/utils/stackTopology'
 import { DATABASE_CATALOG } from '../src/data/databases'
 import { TECH_CATALOG } from '../src/data/frameworks'
 import { STACK_PRESETS } from '../src/data/presets'
-import type { CartApp, ProjectSettings, SelectedDatabase } from '../src/types'
+import type { CartApp, HostingType, ProjectSettings, SelectedDatabase } from '../src/types'
+import { planHosting, resolveGeneratedFiles, suggestHosting } from '../src/utils/hostingPlanner'
+import { renderHostingMarkdown } from '../src/utils/hostingDoc'
+import { HOSTING_OPTIONS, HOSTING_TYPES, isHostingType } from '../src/data/hosting'
 
 const app = (overrides: Partial<CartApp> = {}): CartApp => ({
   id: 'a1', folderName: 'api', role: 'backend', techId: 'ts-express', port: 3000, runMode: 'docker', routePrefix: '/', ...overrides
@@ -151,4 +154,136 @@ test('update check compares versions numerically', async () => {
   assert.ok(!isNewerVersion('1.9.0', '2.0.0'))
   assert.ok(isReleaseUrl('https://github.com/Ian-nwb/LazyStack/releases/tag/v2.0.0'))
   assert.ok(!isReleaseUrl('https://evil.example/releases'))
+})
+
+// ---------------------------------------------------------------- hosting planner
+
+const techOf = (id: string) => TECH_CATALOG.find(tech => tech.id === id)!
+const suggest = (item: CartApp, settings: ProjectSettings = settingsWith([item])) => suggestHosting(item, techOf(item.techId), settings)
+const altTypes = (item: CartApp, settings?: ProjectSettings) => suggest(item, settings).alternatives.map(alt => alt.type)
+
+test('hosting: desktop, mobile and on-device apps are not hosted', () => {
+  for (const techId of ['tauri-app', 'electron-app', 'react-native-expo', 'capacitor-app', 'wxt-extension']) {
+    const result = suggest(app({ techId, role: techOf(techId).role }))
+    assert.equal(result.type, null, techId)
+    assert.deepEqual(result.alternatives, [], techId)
+  }
+  // Host-only *server* frameworks are still deployed somewhere.
+  assert.equal(suggest(app({ techId: 'meteor', role: 'fullstack', runMode: 'host' })).type, 'paas')
+})
+
+test('hosting: static sites and SPA builds go to a CDN', () => {
+  assert.equal(suggest(app({ techId: 'hugo', role: 'static-site' })).type, 'static')
+  assert.equal(suggest(app({ techId: 'react-vite', role: 'frontend' })).type, 'static')
+  assert.deepEqual(altTypes(app({ techId: 'react-vite', role: 'frontend' })), ['paas', 'vps'])
+  // A frontend whose only backend is a BaaS also gets the BaaS alternative.
+  const web = app({ techId: 'vue-vite', role: 'frontend' })
+  assert.deepEqual(altTypes(web, settingsWith([web], [{ type: 'supabase', enabled: true, port: 0 }])), ['baas', 'paas', 'vps'])
+})
+
+test('hosting: workers and broker consumers need an always-on process', () => {
+  assert.equal(suggest(app({ techId: 'bash-worker', role: 'worker' })).type, 'paas')
+  const consumer = app({ techId: 'go-gin', role: 'backend' })
+  const result = suggest(consumer, settingsWith([consumer], [{ type: 'kafka', enabled: true, port: 9092 }]))
+  assert.equal(result.type, 'paas')
+  assert.ok(result.reasons.some(reason => /Kafka/i.test(reason)), result.reasons.join(' '))
+  assert.deepEqual(result.alternatives.map(alt => alt.type), ['containers', 'vps', 'cloud-vm'])
+})
+
+test('hosting: full-stack apps use serverless when the framework has an adapter', () => {
+  const next = app({ techId: 'fullstack-nextjs', role: 'fullstack' })
+  assert.equal(suggest(next).type, 'serverless')
+  assert.deepEqual(altTypes(next), ['paas', 'containers', 'self-hosted-paas'])
+  assert.equal(suggest(app({ techId: 'qwik-city', role: 'frontend' })).type, 'serverless')
+  const django = app({ techId: 'python-django', role: 'fullstack' })
+  assert.equal(suggest(django).type, 'paas')
+  assert.deepEqual(altTypes(django), ['containers', 'self-hosted-paas', 'vps'])
+})
+
+test('hosting: an API with a database goes to a PaaS', () => {
+  const api = app({ techId: 'python-fastapi', role: 'backend' })
+  const settings = settingsWith([api], [{ type: 'postgres', enabled: true, port: 5432 }])
+  assert.equal(suggest(api, settings).type, 'paas')
+  assert.deepEqual(altTypes(api, settings), ['vps', 'cloud-vm', 'containers'])
+  // A cache alone is not a database.
+  assert.equal(suggest(api, settingsWith([api], [{ type: 'redis', enabled: true, port: 6379 }])).type, 'containers')
+})
+
+test('hosting: other Docker apps go to managed containers, or serverless when the runtime supports it', () => {
+  const axum = app({ techId: 'rust-axum', role: 'backend' })
+  assert.equal(suggest(axum).type, 'containers')
+  assert.deepEqual(altTypes(axum), ['paas', 'kubernetes', 'vps'])
+  assert.equal(suggest(app({ techId: 'ts-hono', role: 'backend' })).type, 'serverless')
+  assert.equal(suggest(app({ techId: 'cloudflare-workers', role: 'backend' })).type, 'serverless')
+})
+
+test('hosting: every catalog tech gets a suggestion with a reason', () => {
+  for (const tech of TECH_CATALOG) {
+    const result = suggest(app({ techId: tech.id, role: tech.role, runMode: tech.hostOnly ? 'host' : 'docker' }))
+    assert.ok(result.reasons.length > 0, tech.id)
+    assert.ok(result.type === null || isHostingType(result.type), tech.id)
+    for (const alt of result.alternatives) assert.notEqual(alt.type, result.type, `${tech.id} lists its own type as an alternative`)
+  }
+})
+
+test('hosting: no hosting field means local, and the suggestion is still reported', () => {
+  const plan = planHosting(settingsWith([app({ techId: 'react-vite', role: 'frontend', id: 'w', folderName: 'web', port: 5173 }), app({ id: 'd', folderName: 'desk', techId: 'tauri-app', role: 'desktop-mobile', port: 1420, runMode: 'host' })]))
+  assert.equal(plan.apps[0].override, undefined)
+  assert.equal(plan.apps[0].effective, 'local')
+  assert.equal(plan.apps[0].suggestion.type, 'static')
+  assert.equal(plan.apps[1].effective, null, 'device apps stay unhosted')
+  assert.ok(plan.notes[0].startsWith('Everything is local only'))
+})
+
+test('hosting: every type is accepted and the saved choice wins over the suggestion', () => {
+  assert.equal(HOSTING_TYPES.length, 11)
+  assert.equal(new Set(HOSTING_TYPES).size, 11)
+  for (const type of HOSTING_TYPES) {
+    const plan = planHosting(settingsWith([app({ techId: 'react-vite', role: 'frontend', hosting: type })]))
+    assert.equal(plan.apps[0].effective, type)
+    assert.equal(plan.apps[0].suggestion.type, 'static')
+    assert.ok(HOSTING_OPTIONS.find(option => option.id === type)!.examples.length > 0, type)
+  }
+  assert.ok(!isHostingType('mainframe'))
+  assert.ok(!isHostingType(undefined))
+})
+
+test('hosting: stack notes', () => {
+  const single = planHosting(settingsWith([app({ hosting: 'paas' })]))
+  assert.equal(single.notes.length, 1, 'only the hyperscaler note for one app and no databases')
+  assert.ok(single.notes.at(-1)!.startsWith('Already on AWS/GCP/Azure?'))
+  const many = planHosting(settingsWith(['a', 'b', 'c', 'd'].map((id, index) => app({ id, folderName: id, techId: 'go-gin', port: 4000 + index }))))
+  assert.ok(many.notes.some(note => note.startsWith('Whole stack on one bill')))
+  assert.ok(many.notes.some(note => note.startsWith('Kubernetes fits')))
+  assert.ok(many.notes.at(-1)!.startsWith('Already on AWS/GCP/Azure?'))
+})
+
+test('hosting: generated-file pointers name files the generator writes', async () => {
+  const api = app({ techId: 'python-fastapi', role: 'backend', folderName: 'api', port: 8000 })
+  const settings: ProjectSettings = { ...settingsWith([api], [{ type: 'postgres', enabled: true, port: 5432 }]), proxy: { type: 'caddy', httpPort: 8080 } }
+  const result = await scaffoldProject(settings, { dryRun: true })
+  assert.ok(result.success, result.error)
+  const created = result.changes!.created
+  const exists = (rel: string) => rel.endsWith('/') ? created.some(file => file.startsWith(rel)) : created.includes(rel)
+  for (const type of HOSTING_TYPES) {
+    for (const ref of resolveGeneratedFiles(type, settings, api)) {
+      if (ref.path) assert.ok(exists(ref.path), `${type}: ${ref.path} is not generated`)
+    }
+  }
+  assert.ok(exists('docs/hosting.md'))
+})
+
+test('hosting: validation rejects unknown values', async () => {
+  const result = await scaffoldProject(settingsWith([app({ hosting: 'mainframe' as HostingType })]), { dryRun: true })
+  assert.equal(result.success, false)
+  assert.match(result.error || '', /Unknown hosting/)
+})
+
+test('hosting: docs/hosting.md lists every app and type', () => {
+  const settings = settingsWith([app({ folderName: 'api', hosting: 'vps' }), app({ id: 'w', folderName: 'web', techId: 'react-vite', role: 'frontend', port: 5173 })])
+  const doc = renderHostingMarkdown(settings)
+  assert.match(doc, /\| api \| VPS \|/)
+  assert.match(doc, /\| web \| Local only \(default\) \| Static \/ CDN \|/)
+  for (const option of HOSTING_OPTIONS) assert.ok(doc.includes(`| ${option.label} |`), option.label)
+  assert.ok(doc.includes('https://flaviocopes.com/where-to-host/'))
 })

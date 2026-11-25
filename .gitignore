@@ -9,8 +9,10 @@ dist-electron/
 dist-cli/
 packages/cli/dist/
 release/
+!build/
 build/*
 !build/icon.png
+!build/icon.svg
 out/
 
 # Environment and Secret Files

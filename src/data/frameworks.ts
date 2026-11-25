@@ -167,6 +167,7 @@ export const TECH_CATALOG: TechItem[] = [
     category: 'frontend',
     role: 'frontend',
     defaultPort: 8080,
+    staticOutput: true,
     description: 'Component-based Rust framework for browser applications compiled to WebAssembly, built and served with Trunk.',
     badgeColor: 'bg-orange-500/20 text-orange-300 border-orange-500/40',
     requires: [
@@ -182,6 +183,7 @@ export const TECH_CATALOG: TechItem[] = [
     category: 'frontend',
     role: 'frontend',
     defaultPort: 8080,
+    staticOutput: true,
     description: 'Fine-grained reactive Rust framework for browser UIs, using the client-side rendering profile with Trunk.',
     badgeColor: 'bg-orange-500/20 text-orange-300 border-orange-500/40',
     requires: [
@@ -199,6 +201,7 @@ export const TECH_CATALOG: TechItem[] = [
     category: 'frontend',
     role: 'frontend',
     defaultPort: 3000,
+    staticOutput: true,
     description: 'Zero bundler, zero framework. Pure standard HTML5, CSS3, and JavaScript served statically.',
     badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40'
   },
@@ -286,6 +289,7 @@ export const TECH_CATALOG: TechItem[] = [
     category: 'fullstack',
     role: 'fullstack',
     defaultPort: 8000,
+    serverlessAdapter: true,
     description: 'Next-gen fullstack Deno web framework with instant loading and client islands.',
     badgeColor: 'bg-teal-500/20 text-teal-300 border-teal-500/40',
     supportsFlavor: true,
@@ -500,6 +504,7 @@ export const TECH_CATALOG: TechItem[] = [
     category: 'backend',
     role: 'backend',
     defaultPort: 3000,
+    serverlessAdapter: true,
     description: 'Ultrafast, lightweight standards-based web framework for Node, Bun, and Deno.',
     badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
     supportsFlavor: true,
@@ -517,6 +522,7 @@ export const TECH_CATALOG: TechItem[] = [
     category: 'fullstack',
     role: 'fullstack',
     defaultPort: 3000,
+    serverlessAdapter: true,
     description: 'Production React framework with SSR, Server Components, and API routes.',
     badgeColor: 'bg-sky-500/20 text-sky-300 border-sky-500/40',
     supportsFlavor: true,
@@ -532,6 +538,7 @@ export const TECH_CATALOG: TechItem[] = [
     category: 'fullstack',
     role: 'fullstack',
     defaultPort: 3000,
+    serverlessAdapter: true,
     description: 'The intuitive Vue meta-framework with auto-imports, file-based routing, and SSR.',
     badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
     supportsFlavor: true,
@@ -547,6 +554,7 @@ export const TECH_CATALOG: TechItem[] = [
     category: 'fullstack',
     role: 'fullstack',
     defaultPort: 3000,
+    serverlessAdapter: true,
     description: 'Fast, resilient React fullstack framework focused on web standards and nested loaders.',
     badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
     supportsFlavor: true,
@@ -562,6 +570,7 @@ export const TECH_CATALOG: TechItem[] = [
     category: 'fullstack',
     role: 'fullstack',
     defaultPort: 5173,
+    serverlessAdapter: true,
     description: 'Fullstack reactive framework with tiny bundles and zero-virtual-DOM overhead.',
     badgeColor: 'bg-orange-500/20 text-orange-300 border-orange-500/40',
     supportsFlavor: true,
@@ -577,6 +586,7 @@ export const TECH_CATALOG: TechItem[] = [
     category: 'fullstack',
     role: 'fullstack',
     defaultPort: 4321,
+    serverlessAdapter: true,
     description: 'Content-driven island architecture supporting React, Vue, and Svelte.',
     badgeColor: 'bg-fuchsia-500/20 text-fuchsia-300 border-fuchsia-500/40',
     supportsFlavor: true,
@@ -622,6 +632,7 @@ export const TECH_CATALOG: TechItem[] = [
     category: 'frontend',
     role: 'frontend',
     defaultPort: 5173,
+    staticOutput: true,
     description: 'Modern client-side React SPA with Vite, HMR, and Tailwind CSS utility styling.',
     badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
     supportsFlavor: true,
@@ -637,6 +648,7 @@ export const TECH_CATALOG: TechItem[] = [
     category: 'frontend',
     role: 'frontend',
     defaultPort: 5173,
+    staticOutput: true,
     description: 'React SPA powered by Google Material Design component library.',
     badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
     supportsFlavor: true,
@@ -652,6 +664,7 @@ export const TECH_CATALOG: TechItem[] = [
     category: 'frontend',
     role: 'frontend',
     defaultPort: 5173,
+    staticOutput: true,
     description: 'Composition API, Pinia state management, and blazing Vite dev server.',
     badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
     supportsFlavor: true,
@@ -667,6 +680,7 @@ export const TECH_CATALOG: TechItem[] = [
     category: 'frontend',
     role: 'frontend',
     defaultPort: 4200,
+    staticOutput: true,
     description: 'Enterprise TypeScript SPA with signals, hydration, and modular architecture.',
     badgeColor: 'bg-red-500/20 text-red-300 border-red-500/40',
     supportsFlavor: true,
@@ -682,6 +696,7 @@ export const TECH_CATALOG: TechItem[] = [
     category: 'frontend',
     role: 'frontend',
     defaultPort: 3000,
+    staticOutput: true,
     description: 'Fine-grained reactive frontend without virtual DOM, maximum runtime performance.',
     badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
     supportsFlavor: true,
@@ -697,6 +712,7 @@ export const TECH_CATALOG: TechItem[] = [
     category: 'frontend',
     role: 'frontend',
     defaultPort: 5173,
+    serverlessAdapter: true,
     description: 'Resumable, instant-loading web app architecture with zero-hydration cost.',
     badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40',
     supportsFlavor: true,
@@ -722,6 +738,7 @@ export const TECH_CATALOG: TechItem[] = [
     category: 'frontend',
     role: 'frontend',
     defaultPort: 5173,
+    staticOutput: true,
     description: 'Blazing-fast React-compatible UI library with the smallest bundle size and near-native DOM rendering speed. Drop-in alternative to React.',
     badgeColor: 'bg-red-500/20 text-red-300 border-red-500/40',
     supportsFlavor: true,
@@ -737,6 +754,7 @@ export const TECH_CATALOG: TechItem[] = [
     category: 'frontend',
     role: 'frontend',
     defaultPort: 8080,
+    staticOutput: true,
     description: 'Compile Kotlin to JavaScript for a browser-based frontend using the Kotlin Multiplatform Gradle plugin.',
     badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
     requires: [{ binary: 'java', label: 'Java JDK 17+', installHint: 'https://adoptium.net/' }, { binary: 'gradle', label: 'Gradle', installHint: 'https://gradle.org/install/' }]
@@ -1016,6 +1034,7 @@ export const TECH_CATALOG: TechItem[] = [
     category: 'fullstack',
     role: 'fullstack',
     defaultPort: 3000,
+    serverlessAdapter: true,
     description: 'Full-stack React framework powered by TanStack Router, Vite, and full-type RPC server functions.',
     badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
     isHighlighted: true,
@@ -1030,6 +1049,7 @@ export const TECH_CATALOG: TechItem[] = [
     category: 'fullstack',
     role: 'fullstack',
     defaultPort: 3000,
+    serverlessAdapter: true,
     description: 'Fine-grained reactive fullstack framework for SolidJS with streaming SSR and Vinxi bundler.',
     badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
     requires: [
@@ -1043,6 +1063,7 @@ export const TECH_CATALOG: TechItem[] = [
     category: 'frontend',
     role: 'frontend',
     defaultPort: 5173,
+    staticOutput: true,
     description: 'Google lightweight library for building fast, reactive, framework-agnostic native Web Components.',
     badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
     requires: [
@@ -1238,6 +1259,7 @@ export const TECH_CATALOG: TechItem[] = [
     category: 'frontend',
     role: 'frontend',
     defaultPort: 9000,
+    staticOutput: true,
     description: 'Vue-based framework with a rich component library for SPAs, PWAs, mobile and desktop targets.',
     badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
     requires: [
@@ -1252,6 +1274,7 @@ export const TECH_CATALOG: TechItem[] = [
     category: 'frontend',
     role: 'frontend',
     defaultPort: 5173,
+    staticOutput: true,
     description: 'Plain Svelte 5 single page app on Vite, without SvelteKit.',
     badgeColor: 'bg-orange-500/20 text-orange-300 border-orange-500/40',
     requires: [
@@ -1266,6 +1289,7 @@ export const TECH_CATALOG: TechItem[] = [
     category: 'frontend',
     role: 'frontend',
     defaultPort: 5173,
+    staticOutput: true,
     description: 'Lightweight 3 kB React alternative with the same modern API, on Vite.',
     badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
     requires: [
@@ -1280,6 +1304,7 @@ export const TECH_CATALOG: TechItem[] = [
     category: 'frontend',
     role: 'frontend',
     defaultPort: 8000,
+    staticOutput: true,
     description: 'React-based static site and SSR framework with a data layer and file-based routing.',
     badgeColor: 'bg-violet-500/20 text-violet-300 border-violet-500/40',
     requires: [
@@ -1294,6 +1319,7 @@ export const TECH_CATALOG: TechItem[] = [
     category: 'frontend',
     role: 'frontend',
     defaultPort: 3000,
+    serverlessAdapter: true,
     description: 'Flexible Vite-based SSR/SSG framework with file-based routing and full control over the stack.',
     badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
     requires: [
@@ -1308,6 +1334,7 @@ export const TECH_CATALOG: TechItem[] = [
     category: 'fullstack',
     role: 'fullstack',
     defaultPort: 8910,
+    serverlessAdapter: true,
     description: 'Opinionated fullstack framework: React web side, GraphQL and Prisma API side.',
     badgeColor: 'bg-red-500/20 text-red-300 border-red-500/40',
     requires: [
@@ -1322,6 +1349,7 @@ export const TECH_CATALOG: TechItem[] = [
     category: 'fullstack',
     role: 'fullstack',
     defaultPort: 3000,
+    serverlessAdapter: true,
     description: 'Fullstack Next.js toolkit with a zero-API data layer (RPC) and Prisma.',
     badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40',
     requires: [
@@ -1351,6 +1379,7 @@ export const TECH_CATALOG: TechItem[] = [
     category: 'fullstack',
     role: 'fullstack',
     defaultPort: 3000,
+    serverlessAdapter: true,
     description: 'Next.js App Router with an end-to-end typed tRPC API, the standalone core of the T3 stack.',
     badgeColor: 'bg-sky-500/20 text-sky-300 border-sky-500/40',
     requires: [
@@ -1502,6 +1531,7 @@ export const TECH_CATALOG: TechItem[] = [
     category: 'frontend',
     role: 'static-site',
     defaultPort: 1313,
+    staticOutput: true,
     description: 'Very fast static site generator written in Go. Docker builds the site, then serves it with nginx.',
     badgeColor: 'bg-pink-500/20 text-pink-300 border-pink-500/40',
     requires: [{ binary: 'hugo', label: 'Hugo', installHint: 'https://gohugo.io/installation/' }]
@@ -1513,6 +1543,7 @@ export const TECH_CATALOG: TechItem[] = [
     category: 'frontend',
     role: 'static-site',
     defaultPort: 4000,
+    staticOutput: true,
     description: 'Blog-aware static site generator in Ruby; the engine behind GitHub Pages.',
     badgeColor: 'bg-red-500/20 text-red-300 border-red-500/40',
     requires: [
@@ -1527,6 +1558,7 @@ export const TECH_CATALOG: TechItem[] = [
     category: 'frontend',
     role: 'static-site',
     defaultPort: 8080,
+    staticOutput: true,
     description: 'Simple, flexible static site generator for Node with many template languages.',
     badgeColor: 'bg-zinc-500/20 text-zinc-300 border-zinc-500/40',
     requires: [
@@ -1541,6 +1573,7 @@ export const TECH_CATALOG: TechItem[] = [
     category: 'frontend',
     role: 'static-site',
     defaultPort: 3000,
+    staticOutput: true,
     description: 'React-based documentation site generator with versioning and search.',
     badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
     requires: [
@@ -1555,6 +1588,7 @@ export const TECH_CATALOG: TechItem[] = [
     category: 'frontend',
     role: 'static-site',
     defaultPort: 5173,
+    staticOutput: true,
     description: 'Vite and Vue powered static site generator for documentation.',
     badgeColor: 'bg-teal-500/20 text-teal-300 border-teal-500/40',
     requires: [
@@ -1755,6 +1789,7 @@ export const TECH_CATALOG: TechItem[] = [
     category: 'frontend',
     role: 'static-site',
     defaultPort: 8000,
+    staticOutput: true,
     description: 'Documentation site with Material for MkDocs: search, navigation, admonitions and code copy.',
     badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
     requires: [
@@ -1901,6 +1936,7 @@ export const TECH_CATALOG: TechItem[] = [
     category: 'frontend',
     role: 'frontend',
     defaultPort: 5173,
+    staticOutput: true,
     description: 'Minimal reactive UI with Alpine.js directives (x-data, @click, x-for) in plain HTML, bundled by Vite.',
     badgeColor: 'bg-teal-500/20 text-teal-300 border-teal-500/40',
     requires: [
@@ -1915,6 +1951,7 @@ export const TECH_CATALOG: TechItem[] = [
     category: 'frontend',
     role: 'frontend',
     defaultPort: 5173,
+    staticOutput: true,
     description: 'React 19 on Vite with Tailwind CSS v4 and shadcn/ui components you own (components.json ready for `npx shadcn add`).',
     badgeColor: 'bg-zinc-500/20 text-zinc-200 border-zinc-500/40',
     requires: [
@@ -1929,6 +1966,7 @@ export const TECH_CATALOG: TechItem[] = [
     category: 'frontend',
     role: 'static-site',
     defaultPort: 4321,
+    staticOutput: true,
     description: 'Documentation framework on Astro with search, sidebar, dark mode and i18n.',
     badgeColor: 'bg-violet-500/20 text-violet-300 border-violet-500/40',
     requires: [
@@ -1943,6 +1981,7 @@ export const TECH_CATALOG: TechItem[] = [
     category: 'backend',
     role: 'backend',
     defaultPort: 8787,
+    serverlessAdapter: true,
     description: 'Edge API on Cloudflare Workers with Hono; `wrangler dev` runs the real workerd runtime locally, `wrangler deploy` ships it.',
     badgeColor: 'bg-orange-500/20 text-orange-300 border-orange-500/40',
     requires: [
@@ -1972,6 +2011,7 @@ export const TECH_CATALOG: TechItem[] = [
     category: 'frontend',
     role: 'frontend',
     defaultPort: 5173,
+    staticOutput: true,
     description: 'Purely functional frontend with The Elm Architecture, bundled by Vite with vite-plugin-elm.',
     badgeColor: 'bg-sky-500/20 text-sky-300 border-sky-500/40',
     requires: [

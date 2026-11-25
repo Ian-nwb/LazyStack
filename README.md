@@ -28,14 +28,14 @@
 
 LazyStack is a desktop app and a command-line tool for starting polyglot projects. Combine a React client, a FastAPI service, a Go worker and an Expo app with PostgreSQL and Redis, choose an architecture layout, and get a project where every app follows its framework's own conventions and the whole stack starts with `npm run dev`.
 
-**Current version: 2.0.1.** Docker builds now fail when an app's build or dependency install fails (they used to produce an image that crashed at runtime), which also fixes the Ruby on Rails and Symfony images. 2.0.0 added 24 frameworks (F#, Elm and Perl are new languages; Quarkus, Micronaut, Go templ + HTMX, Django Ninja, React + Tailwind + shadcn/ui, Cloudflare Workers and more), 13 services (Keycloak, Mailpit, LocalStack, Grafana LGTM, Ollama, Temporal and others), a dev container, `mise.toml` and real deploy targets. See the [changelog](CHANGELOG.md).
+**Current version: 2.1.0.** A [hosting planner](#hosting-planner) suggests what kind of hosting each app needs, with alternatives and example services, and LazyStack has a new logo. 2.0.1 made Docker builds fail when an app's build or dependency install fails (they used to produce an image that crashed at runtime), which also fixes the Ruby on Rails and Symfony images. 2.0.0 added 24 frameworks (F#, Elm and Perl are new languages; Quarkus, Micronaut, Go templ + HTMX, Django Ninja, React + Tailwind + shadcn/ui, Cloudflare Workers and more), 13 services (Keycloak, Mailpit, LocalStack, Grafana LGTM, Ollama, Temporal and others), a dev container, `mise.toml` and real deploy targets. See the [changelog](CHANGELOG.md).
 
 ## Download
 
 | Platform | Package |
 | --- | --- |
-| Linux x64 | [`LazyStack-2.0.1.AppImage`](https://github.com/Ian-nwb/LazyStack/releases/download/v2.0.1/LazyStack-2.0.1.AppImage) |
-| Windows x64 | [`LazyStack.2.0.1.exe`](https://github.com/Ian-nwb/LazyStack/releases/download/v2.0.1/LazyStack.2.0.1.exe) (portable) |
+| Linux x64 | [`LazyStack-2.1.0.AppImage`](https://github.com/Ian-nwb/LazyStack/releases/download/v2.1.0/LazyStack-2.1.0.AppImage) |
+| Windows x64 | [`LazyStack.2.1.0.exe`](https://github.com/Ian-nwb/LazyStack/releases/download/v2.1.0/LazyStack.2.1.0.exe) (portable) |
 | macOS |package not yet available (sponsor me a Macbook for app signature) |
 
 The CLI is on npm: `npx lazystack --help`.
@@ -53,9 +53,56 @@ To run the projects LazyStack generates you need Docker with Compose, plus the t
 - **Service connections.** Wire apps together with URLs, environment variable names, health checks and startup order.
 - **One command to run everything.** The generated dev orchestrator starts databases in Docker and every app on the host with hot reload and colour-coded output.
 - **Deployment files.** Docker Compose, Nginx/Apache/Caddy/Traefik config, Kubernetes manifests, a Helm chart, Terraform for AWS/GCP/DigitalOcean, a GitHub Actions workflow that builds images and deploys over SSH with Compose, a `fly.toml` per service, a Render Blueprint and GitLab CI.
+- **Hosting planner.** Suggests what kind of hosting each app needs (static/CDN, serverless, BaaS, PaaS, self-hosted PaaS, managed containers, Kubernetes, cloud VM, VPS or bare metal) from its role and connections, shows example services for each, and lets you choose. Apps stay **local only** until you do. The choice is saved in the Blueprint, written to `docs/hosting.md`, and printed by `lazystack hosting`. See [Hosting planner](#hosting-planner).
 - **Reproducible toolchains.** Every project gets `mise.toml` (run `mise install` to get the exact Node, Python, Go, Java, .NET, Rust... versions, no root needed) and a `.devcontainer` for VS Code and Codespaces, plus `.editorconfig`, Lefthook pre-commit formatters and Renovate.
 - **Existing projects.** Open a folder you already have: LazyStack detects its apps, databases and proxy, shows the stack as a diagram, and adds new services without touching your code.
 - **Testing tools per app.** Jest, Vitest, pytest, JUnit, Playwright, Cypress, k6, Pact, Storybook, OWASP ZAP and more, opt-in per app.
+
+## Hosting planner
+
+The Blueprint's **Hosting** tab (and `lazystack hosting`) suggests what kind of hosting each app needs, from its role, framework and connections, and lists the alternatives with example services and the LazyStack files that apply. Every app is **local only** until you choose a type: the project runs on your machine with the dev orchestrator and Compose. The planner is advice only. It never adds or changes deploy files; it points to the ones LazyStack already generates. Your choice is saved as `hosting` on the app in `lazystack.json` and written to `docs/hosting.md` in the generated project.
+
+| Type | What it is | Good for | Watch out for | Examples | Upkeep | LazyStack files |
+| --- | --- | --- | --- | --- | --- | --- |
+| Local only (default) | Runs on your machine; not deployed | Development, demos, personal and LAN-only tools | Not reachable from the internet; stops when your machine does | Docker Compose, `lazystack dev` | none | dev orchestrator, Compose, `.env` |
+| Static / CDN | Built files served from a global CDN, no server | SPAs, docs, marketing sites, static Astro/SvelteKit/Vite builds | Can't run server code; APIs live elsewhere | Cloudflare Pages, Netlify, GitHub Pages, S3 + CloudFront | none | – |
+| Serverless | Functions per request, scale to zero | SSR apps, light APIs, webhooks, spiky or low traffic | Cold starts, time limits, no long-lived connections, usage-based bills | Cloudflare Workers, Vercel, Netlify Functions, AWS Lambda, Google Cloud Functions, Azure Functions | none | – |
+| BaaS | A hosted backend (auth, database, storage, functions) you call from the client | Apps whose backend is mostly CRUD + auth; mobile and frontend-only teams | Lock-in to the provider's APIs; custom logic squeezed into their functions | Supabase, Firebase, Appwrite Cloud, PocketBase (hosted), Convex | none | cloud service clients, `.env` |
+| PaaS | Push code or a Dockerfile; the platform runs and scales it | Full-stack apps, APIs with a database, getting started fast | Always-on services bill when idle; managed databases cost extra | Railway, Render, Fly.io, Heroku, DigitalOcean App Platform, Koyeb | low | `fly.toml`, `render.yaml`, Terraform (DigitalOcean App Platform), Dockerfiles |
+| Self-hosted PaaS | PaaS-style git-push deploys running on your own server | Heroku-like workflow at VPS prices, many small apps on one box | You still own the server underneath | Coolify, Dokku, CapRover, Kamal | medium | Compose, Dockerfiles |
+| Managed containers | Your Docker image on a managed runtime, no cluster to run | Docker apps, polyglot stacks, scale-to-zero containers | More config than a PaaS | Google Cloud Run, AWS App Runner, AWS ECS Fargate, Azure Container Apps | low | Dockerfiles, Terraform (AWS ECS, GCP Cloud Run) |
+| Kubernetes | Managed cluster running your containers | Many services, autoscaling, teams already on K8s | Steep learning curve, cluster cost even when idle | GKE, EKS, AKS, DigitalOcean Kubernetes, Linode LKE | high | K8s manifests, Helm chart |
+| Cloud VM | A virtual machine from a hyperscaler, inside its network and IAM | Workloads that need the rest of AWS/GCP/Azure (private networking, managed DBs, IAM), compliance, reserved/spot pricing | Pricier than a VPS for the same size; egress and extras billed separately; you manage the OS | AWS EC2, Google Compute Engine, Azure Virtual Machines, Oracle Cloud | high | Compose, GitHub Actions SSH deploy, proxy config |
+| VPS | A simple virtual server at a flat monthly price | Lowest steady cost, full control, whole stack + DB on one box via Compose | You handle updates, backups, TLS, monitoring | Hetzner, DigitalOcean Droplets, Linode, Vultr, AWS Lightsail | high | Compose, proxy config, GitHub Actions SSH deploy |
+| Bare metal | A dedicated physical server (rented or your own/on-prem) | Heavy steady load, GPUs, data that must stay on your hardware | Hardware failures, no instant scaling, most upkeep of all | Hetzner dedicated, OVHcloud, Latitude.sh, your own homelab or on-prem servers | high | Compose, proxy config |
+
+**VPS vs cloud VM.** A VPS is a flat-priced box from a simple host; a cloud VM lives inside AWS/GCP/Azure with their networking, IAM and managed services, and bills per resource.
+
+**How it decides.** The first rule that matches wins.
+
+| # | When | Suggests | Alternatives |
+| --- | --- | --- | --- |
+| 1 | Desktop, mobile or other on-device app | Not hosted | – |
+| 2 | Static site, or a frontend that builds to static files (Vite SPAs, Angular, Elm, Yew, Gatsby...) | Static / CDN | BaaS (when the stack's only backend is Supabase, Firebase, Appwrite...), PaaS, VPS |
+| 3 | Worker, or an app connected to a broker or workflow engine (Kafka, NATS, RabbitMQ, Temporal...) | PaaS | Managed containers, VPS, cloud VM |
+| 4 | Full-stack or server-rendered app | Serverless when the framework has an adapter (Next.js, Nuxt, SvelteKit, Astro, Remix...), otherwise PaaS | PaaS or managed containers, self-hosted PaaS |
+| 5 | Backend connected to a database | PaaS | VPS, cloud VM, managed containers |
+| 6 | Any other app with a Dockerfile | Managed containers (serverless for Hono and Cloudflare Workers) | PaaS, Kubernetes, VPS |
+| 7 | Anything else | PaaS | VPS, cloud VM |
+
+The planner also adds stack-level notes: a VPS with the generated Compose files when there's more than one app or any database, Kubernetes once there are four or more server apps, and the generated Terraform if you're already on AWS or GCP.
+
+**Before you pick:**
+
+- Free tiers can be personal-use only, or go offline when credits run out.
+- Usage billing can overshoot: set spending alerts or caps.
+- Databases are usually a separate bill.
+- Cloud VMs and hyperscaler services charge for egress (data leaving their network).
+- PaaS, serverless and BaaS manage the servers for you; VPS, cloud VM and bare metal are yours to maintain.
+
+Prices and free tiers change often; check the provider's pricing page before you commit.
+
+Based on Flavio Copes's [Where to host your app](https://flaviocopes.com/where-to-host/).
 
 <!-- catalog:start (generated by `npm run docs:catalog`; do not edit by hand) -->
 
@@ -221,6 +268,7 @@ cd projects/my-api && npx lazystack dev                          # databases in 
 | `init` | Create a blueprint interactively or from a preset |
 | `list`, `presets`, `search <term>` | Browse the catalog (`search --json` for scripts) |
 | `validate`, `plan`, `doctor` | Check a blueprint, preview the services, check host toolchains |
+| `hosting` | Suggest hosting per app and show the saved choice (`--types` compares all types, `--json` for scripts) |
 | `export` | Write a preset as a blueprint you can edit |
 | `scaffold` | Generate a project (`--dry-run` to preview, `--force` to update a non-empty folder) |
 | `import`, `add`, `apply` | Read an existing project, add an app to it, or apply an edited blueprint (`--dry-run` supported) |
@@ -228,7 +276,7 @@ cd projects/my-api && npx lazystack dev                          # databases in 
 
 ## Generated projects
 
-Every project includes a root README, `.env` and `.env.example`, Docker Compose files under the infrastructure folder, `scripts/dev-orchestrator.mjs`, and an embedded `lazystack.json` so it can be opened again later.
+Every project includes a root README, `.env` and `.env.example`, Docker Compose files under the infrastructure folder, `scripts/dev-orchestrator.mjs`, `docs/architecture.md`, `docs/hosting.md` (the hosting plan, refreshed whenever the blueprint is applied again), and an embedded `lazystack.json` so it can be opened again later.
 
 <details>
 <summary><b>Dev orchestrator</b></summary>

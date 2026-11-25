@@ -7,6 +7,7 @@ import { getStarterFilesForTech } from './templates/appTemplates'
 import { generateMetaFiles, GeneratedDatabaseCredential, README_TREE_PLACEHOLDER } from './templates/meta'
 import { buildPlanTree, renderPlanTreeText } from '../../src/utils/planTree'
 import { renderArchitectureMarkdown } from '../../src/utils/architectureDoc'
+import { renderHostingMarkdown } from '../../src/utils/hostingDoc'
 import { DATABASE_CATALOG, isPostgresFamily, isRedisFamily } from '../../src/data/databases'
 import { generateCloudServiceFiles, generateCloudEnvVars } from './templates/cloudServices'
 import { resolveStructurePaths, resolvePresetScaffoldDirs } from '../../src/data/structurePresets'
@@ -458,6 +459,7 @@ export function planScaffold(settings: ProjectSettings, databaseCredentials: Rec
 
   // 8. Documentation: diagrams come from the same topology model as Compose and the Blueprint tabs.
   out.write(path.join(targetDir, paths.docsDir, 'architecture.md'), renderArchitectureMarkdown(settings), 'utf8')
+  out.write(path.join(targetDir, paths.docsDir, 'hosting.md'), renderHostingMarkdown(settings), 'utf8')
 
   // 9. Embedded blueprint: lets LazyStack reopen, visualize and extend this project later.
   //    Machine-specific locations are omitted; secrets live only in .env.

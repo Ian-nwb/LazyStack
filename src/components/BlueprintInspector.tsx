@@ -1,25 +1,28 @@
 import React, { useState, useRef } from 'react'
-import { FolderTree, Code, Network, FileText, Download, Upload, Sliders, Layers, Database, Share2, Cloud, Server, GitBranch } from 'lucide-react'
-import { ProjectSettings, SelectedDatabase, FolderStructureConfig } from '../types'
+import { FolderTree, Code, Network, FileText, Download, Upload, Sliders, Layers, Database, Share2, Cloud, Server, GitBranch, Globe } from 'lucide-react'
+import { ProjectSettings, SelectedDatabase, FolderStructureConfig, CartApp } from '../types'
 import { DATABASE_CATALOG } from '../data/databases'
 import { resolveStructurePaths } from '../data/structurePresets'
 import { StructureCustomizer } from './StructureCustomizer'
 import { resolveServiceConnectionUrl } from '../utils/serviceConnections'
 import { PlanTree } from './PlanTree'
+import { HostingPlanner } from './HostingPlanner'
 import { BlueprintMarkdownExport, ServiceDiagram, NetworkTopologyDiagram } from './BlueprintDiagrams'
 
 interface BlueprintInspectorProps {
   settings: ProjectSettings
   onImportBlueprint?: (imported: Partial<ProjectSettings>) => void
   onUpdateStructure?: (config: FolderStructureConfig) => void
+  onUpdateApp?: (id: string, updates: Partial<CartApp>) => void
 }
 
 export const BlueprintInspector: React.FC<BlueprintInspectorProps> = ({
   settings,
   onImportBlueprint,
-  onUpdateStructure
+  onUpdateStructure,
+  onUpdateApp
 }) => {
-  const [activeTab, setActiveTab] = useState<'structure' | 'tree' | 'compose' | 'terraform' | 'k8s' | 'cicd' | 'ports' | 'services' | 'topology' | 'env'>('structure')
+  const [activeTab, setActiveTab] = useState<'structure' | 'tree' | 'compose' | 'terraform' | 'k8s' | 'cicd' | 'ports' | 'services' | 'topology' | 'env' | 'hosting'>('structure')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const projectName = settings.projectName || 'my-monorepo'
@@ -522,6 +525,14 @@ ${settings.apps.map(a => `          - service: ${a.folderName}
             <Code className="w-3.5 h-3.5" /> docker-compose.yml
           </button>
           <button
+            onClick={() => setActiveTab('hosting')}
+            className={`px-3 py-1.5 rounded-md font-medium transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+              activeTab === 'hosting' ? 'bg-zinc-100 text-zinc-950 font-bold' : 'text-zinc-400 hover:text-white'
+            }`}
+          >
+            <Globe className="w-3.5 h-3.5" /> Hosting
+          </button>
+          <button
             onClick={() => setActiveTab('terraform')}
             className={`px-3 py-1.5 rounded-md font-medium transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
               activeTab === 'terraform' ? 'bg-zinc-100 text-zinc-950 font-bold' : 'text-zinc-400 hover:text-white'
@@ -627,6 +638,8 @@ ${settings.apps.map(a => `          - service: ${a.folderName}
             {generateComposePreview()}
           </pre>
         )}
+
+        {activeTab === 'hosting' && <HostingPlanner settings={settings} onUpdateApp={onUpdateApp} />}
 
         {activeTab === 'terraform' && (
           <pre className="bg-surface-900 border border-surface-700 rounded-xl p-5 text-zinc-200 overflow-x-auto selection:bg-zinc-700 selection:text-white">

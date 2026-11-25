@@ -1,6 +1,6 @@
 {
   "name": "lazystack",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "description": "Desktop app and CLI that scaffolds polyglot projects: 142 frameworks, 45 databases and services, Docker Compose, reverse proxy and a dev orchestrator from one blueprint.",
   "type": "module",
   "main": "dist-electron/main.js",
@@ -51,7 +51,7 @@
     "productName": "LazyStack",
     "icon": "build/icon.png",
     "directories": {
-      "output": "release/2.0.1"
+      "output": "release/2.1.0"
     },
     "files": [
       "dist/**/*",

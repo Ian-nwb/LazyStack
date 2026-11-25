@@ -17,6 +17,8 @@ import { STACK_PRESETS, StackPreset } from '../data/presets'
 import { ARCHITECTURE_PRESETS, normalizeStructureConfig } from '../data/structurePresets'
 import { ProjectSettings, CartApp } from '../types'
 import { TESTING_TOOLS } from '../data/testingTools'
+import { BEFORE_YOU_PICK, HOSTING_CREDIT, HOSTING_OPTIONS, HOSTING_TYPES, VPS_VS_CLOUD_VM_NOTE, isHostingType } from '../data/hosting'
+import { hostingLabel, planHosting } from '../utils/hostingPlanner'
 import cliPackage from '../../packages/cli/package.json'
 import { validateFolderName, validatePath, validateRelativeProjectPath } from '../utils/pathValidation'
 
@@ -42,6 +44,7 @@ COMMANDS:
   ports      Check a blueprint's ports for duplicates and for ports already in use on this machine
   validate   Check a blueprint without generating files
   plan       Preview the services and layout in a blueprint
+  hosting    Suggest what kind of hosting each app needs (advice only)
   import     Inspect an existing project folder and export its blueprint
   add        Add a framework app to an existing project (never overwrites your code)
   apply      Apply an edited blueprint to an existing project
@@ -88,6 +91,11 @@ OPTIONS FOR 'apply':
   --config, -c <file>   Edited blueprint to apply (default: <dir>/lazystack.json)
   --dry-run             Show the planned changes without writing
 
+OPTIONS FOR 'hosting':
+  --config, -c <file>   Blueprint to inspect (default: ./lazystack.json)
+  --types               Compare every hosting type instead
+  --json                Print the plan (or the types) as JSON
+
 OPTIONS FOR 'search':
   <query>               Search by name, language, description, or ID
   --json                Print matches as JSON
@@ -111,6 +119,9 @@ EXAMPLES:
 
   # List all available technologies and experimental status
   lazystack list
+
+  # Where should each app run? (local only until you choose)
+  lazystack hosting -c lazystack.json
 
   # Inspect an existing project, then add a Dioxus frontend to it
   lazystack import --dir ./my-project
@@ -196,6 +207,7 @@ function validateBlueprint(settings: ProjectSettings): string[] {
     if (typeof app.folderName !== 'string' || !validateFolderName(app.folderName, 'app').valid) errors.push(`Invalid folderName for service '${app.folderName ?? '(unnamed)'}'.`)
     const tech = TECH_CATALOG.find(t => t.id === app.techId)
     if (!tech) errors.push(`Unknown technology '${app.techId}' on '${app.folderName}'.`)
+    if (app.hosting !== undefined && !isHostingType(app.hosting)) errors.push(`Unknown hosting '${app.hosting}' on '${app.folderName}'. Use one of: ${HOSTING_TYPES.join(', ')}.`)
     const allowsZeroPort = tech?.defaultPort === 0 || app.role === 'worker' || app.role === 'desktop-mobile'
     if (!Number.isInteger(app.port) || (app.port === 0 ? !allowsZeroPort : (app.port < 1 || app.port > 65535))) errors.push(`Invalid port on '${app.folderName}'.`)
     else if (app.port > 0) {
@@ -420,6 +432,67 @@ export async function runCli(args: string[] = process.argv.slice(2)) {
     const busy = await reportMachinePorts(settings!)
     if (conflicts.length) process.exit(1)
     if (!busy) console.log('No port conflicts found.')
+    return
+  }
+
+  if (command === 'hosting') {
+    const json = args.includes('--json')
+    if (args.includes('--types')) {
+      if (json) { console.log(JSON.stringify({ types: HOSTING_OPTIONS, vpsVsCloudVm: VPS_VS_CLOUD_VM_NOTE, beforeYouPick: BEFORE_YOU_PICK }, null, 2)); return }
+      console.log(`\nHosting types (${HOSTING_OPTIONS.length}):\n`)
+      for (const option of HOSTING_OPTIONS) {
+        console.log(`${option.label} (${option.id}) · upkeep: ${option.upkeep}`)
+        console.log(`  ${option.summary}`)
+        console.log(`  Good for:      ${option.goodFor.join('; ')}`)
+        console.log(`  Watch out for: ${option.watchOutFor.join('; ')}`)
+        console.log(`  Examples:      ${option.examples.join(', ')}`)
+        console.log('')
+      }
+      console.log(`VPS vs cloud VM: ${VPS_VS_CLOUD_VM_NOTE}\n`)
+      console.log('Before you pick:')
+      for (const item of BEFORE_YOU_PICK) console.log(`  - ${item}`)
+      console.log(`\n${HOSTING_CREDIT.text}: ${HOSTING_CREDIT.url}`)
+      return
+    }
+    const configArg = parseConfigArg(args) ?? (await fs.pathExists(path.resolve('lazystack.json')) ? 'lazystack.json' : undefined)
+    const { settings } = await readBlueprint(configArg)
+    const errors = validateBlueprint(settings!)
+    if (errors.length) { console.error(`Cannot plan hosting for an invalid blueprint:\n${errors.map(error => `  - ${error}`).join('\n')}`); process.exit(1) }
+    const plan = planHosting(settings!)
+    if (json) {
+      console.log(JSON.stringify({
+        apps: plan.apps.map(item => ({
+          app: item.app.folderName, techId: item.app.techId,
+          suggested: item.suggestion.type, reasons: item.suggestion.reasons, alternatives: item.suggestion.alternatives,
+          override: item.override ?? null, effective: item.effective, files: item.files
+        })),
+        notes: plan.notes
+      }, null, 2))
+      return
+    }
+    const rows = plan.apps.map(item => [
+      item.app.folderName,
+      hostingLabel(item.suggestion.type),
+      item.suggestion.alternatives.map(alt => alt.type).join(', ') || '–',
+      item.override ? hostingLabel(item.override) : '–',
+      `${hostingLabel(item.effective)}${!item.override && item.effective === 'local' ? ' (default)' : ''}`
+    ])
+    const header = ['App', 'Suggested', 'Alternatives', 'Chosen', 'Effective']
+    const widths = header.map((title, column) => Math.max(title.length, ...rows.map(row => row[column].length)))
+    const line = (cells: string[]) => `  ${cells.map((value, column) => value.padEnd(widths[column])).join('  ')}`.trimEnd()
+    console.log(`\nHosting plan: ${settings!.projectName}\n`)
+    console.log(line(header))
+    console.log(line(widths.map(width => '-'.repeat(width))))
+    for (const row of rows) console.log(line(row))
+    console.log('\nWhy:')
+    for (const item of plan.apps) {
+      console.log(`  ${item.app.folderName}: ${item.suggestion.reasons.join(' ')}`)
+      for (const alt of item.suggestion.alternatives) console.log(`    or ${hostingLabel(alt.type)}: ${alt.why}`)
+      if (item.files.length) console.log(`    files for ${hostingLabel(item.effective)}: ${item.files.map(file => file.path || file.label).join(', ')}`)
+    }
+    console.log('\nNotes:')
+    for (const note of plan.notes) console.log(`  - ${note}`)
+    console.log(`\nSet "hosting" on an app in the blueprint to choose (${HOSTING_TYPES.join(', ')}). 'lazystack hosting --types' compares them.`)
     return
   }
 

@@ -13,6 +13,9 @@ import { ARCHITECTURE_PRESETS } from '../src/data/structurePresets'
 import { buildPlanTree, renderPlanTreeText } from '../src/utils/planTree'
 import { buildStackTopology } from '../src/utils/stackTopology'
 import { renderArchitectureMarkdown } from '../src/utils/architectureDoc'
+import { renderHostingMarkdown } from '../src/utils/hostingDoc'
+import { planHosting, resolveGeneratedFiles } from '../src/utils/hostingPlanner'
+import { HOSTING_TYPES } from '../src/data/hosting'
 import { serviceViewColumns, networkViewColumns, serviceNodeLines, networkNodeLines } from '../src/components/diagram/views'
 import type { CartApp, ProjectSettings } from '../src/types'
 
@@ -36,6 +39,9 @@ function exercise(label: string, settings: ProjectSettings) {
     networkViewColumns(topology)
     for (const node of topology.nodes) { serviceNodeLines(topology, settings)(node); networkNodeLines(settings)(node) }
     renderArchitectureMarkdown(settings)
+    renderHostingMarkdown(settings)
+    planHosting(settings)
+    for (const type of HOSTING_TYPES) resolveGeneratedFiles(type, settings)
     generateDockerCompose(settings)
   } catch (error) {
     const e = error as Error

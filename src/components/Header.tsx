@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { Layers, Terminal, Cpu, HardDrive, Trash2, Sun, Moon, FolderOpen, ArrowUpCircle } from 'lucide-react'
+import { Terminal, Cpu, HardDrive, Trash2, Sun, Moon, FolderOpen, ArrowUpCircle } from 'lucide-react'
+import { LazyStackMark } from './LazyStackMark'
 
 interface HeaderProps {
   onClearAll: () => void
@@ -35,7 +36,7 @@ export const Header: React.FC<HeaderProps> = ({ onClearAll, onOpenExisting, them
     <header className="min-h-14 px-3 sm:px-6 py-2 gap-2 border-b border-surface-700 bg-surface-900 flex items-center justify-between shrink-0">
       <div className="flex items-center space-x-3">
         <div className="w-8 h-8 rounded-lg bg-white text-zinc-950 flex items-center justify-center font-bold shadow-sm dark:bg-white dark:text-zinc-950">
-          <Layers className="w-4 h-4" />
+          <LazyStackMark className="w-5 h-5" />
         </div>
         <div>
           <h1 className="text-sm font-bold tracking-tight text-white uppercase">LazyStack</h1>

@@ -30,6 +30,8 @@ lazystack init --preset fastapi-react --name my-api
 lazystack validate --config lazystack.json
 lazystack plan --config lazystack.json
 lazystack doctor --config lazystack.json
+lazystack hosting --config lazystack.json
+lazystack hosting --types
 lazystack export --preset fastapi-react --name my-api --out lazystack.json
 lazystack scaffold --config lazystack.json --out ./generated
 lazystack scaffold --preset modern-mern --name my-app --out ./generated
@@ -42,9 +44,11 @@ lazystack add --dir ./my-project --tech java-swing --name desktop
 lazystack apply --dir ./my-project --config edited.json
 ```
 
-`import` reads a project's `lazystack.json`, or detects frameworks, Compose databases and the reverse proxy from its files. `add` and `apply` update an existing project without modifying existing app folders: new files are created, `.env` files only gain missing keys, and regenerated infrastructure files (Compose, proxy config, dev orchestrator, `lazystack.json`) are backed up to `.lazystack/backup/<timestamp>/` first. Use `--dry-run` to preview.
+`import` reads a project's `lazystack.json`, or detects frameworks, Compose databases and the reverse proxy from its files. `add` and `apply` update an existing project without modifying existing app folders: new files are created, `.env` files only gain missing keys, and regenerated files (Compose, proxy config, dev orchestrator, `docs/hosting.md`, `lazystack.json`) are backed up to `.lazystack/backup/<timestamp>/` first. Use `--dry-run` to preview.
 
 `init` creates a blueprint and refuses to replace an existing file. Edit the JSON to customize services, databases, and connections. `validate` checks the blueprint without creating files, `plan` previews its services and layout, and `doctor` checks local runtimes needed by the selected technologies. `doctor` reports available binaries; it does not install them or guarantee application builds.
+
+`hosting` suggests what kind of hosting each app needs (static/CDN, serverless, BaaS, PaaS, self-hosted PaaS, managed containers, Kubernetes, cloud VM, VPS or bare metal) from its role, framework and connections, with alternatives and the generated files that apply. Apps are `local` (running on your machine only) until you set `"hosting"` on them in the blueprint. `--types` compares every type, and `--json` prints the plan for scripts. It's advice only: it never changes the generated deploy files.
 
 Use `--native-only` to leave apps with their native language tooling and omit the root JavaScript workspace files. Use `--unified-workspace` to include the optional JavaScript/TypeScript workspace integration.
 

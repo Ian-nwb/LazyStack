@@ -5,6 +5,17 @@ All notable changes to LazyStack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-11-25
+
+### Added
+- **Hosting planner.** Suggests what kind of hosting each app needs: static/CDN, serverless, BaaS, PaaS, self-hosted PaaS, managed containers, Kubernetes, cloud VM, VPS or bare metal. The suggestion comes from the app's role, framework and connections (a Vite SPA → static, an API with a database → PaaS, a Kafka consumer → an always-on process), with reasons, alternatives, example services and the LazyStack files that apply. It's advice only and never changes the generated deploy files.
+  - Apps are **local only** (running on your machine) until you choose a type. The choice is saved as `hosting` on the app in the blueprint; blueprints without it stay valid, and unknown values are rejected.
+  - Shown in a new Blueprint **Hosting** tab, printed by `lazystack hosting` (`--types` compares every type, `--json` for scripts), and written to `docs/hosting.md` in generated projects, which `apply` and `add` refresh.
+  - Based on Flavio Copes's [Where to host your app](https://flaviocopes.com/where-to-host/).
+
+### Changed
+- **New logo and app icon**: two stack chevrons under a 2×2 plan grid, black and white only, in the app header, the desktop icon and the showcase.
+
 ## [2.0.1] - 2026-11-24
 
 ### Fixed

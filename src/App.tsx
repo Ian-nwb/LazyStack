@@ -576,6 +576,7 @@ export const App: React.FC = () => {
             settings={projectSettings}
             onImportBlueprint={handleImportBlueprint}
             onUpdateStructure={setStructureConfig}
+            onUpdateApp={(id, updates) => setApps(current => current.map(app => app.id === id ? { ...app, ...updates } : app))}
           />
         )}
 

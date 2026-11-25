@@ -1,5 +1,10 @@
 # LazyStack CLI changelog
 
+## 2.1.0
+
+- `lazystack hosting -c <blueprint>` suggests what kind of hosting each app needs, with reasons, alternatives and the generated files to use. Apps are `local` until you set `hosting` on them; `--types` compares all types and `--json` prints the plan. `validate` rejects unknown `hosting` values.
+- Generated projects include `docs/hosting.md`; `apply` and `add` regenerate it (after a backup) so it follows the blueprint.
+
 ## 2.0.1
 
 - Generated Dockerfiles fail when the app build or dependency install fails (Node, Ruby on Rails, Symfony) instead of producing a broken image; Rails images can build native gems and Symfony allows its runtime Composer plugin.

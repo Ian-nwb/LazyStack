@@ -39,7 +39,28 @@ export interface TechItem {
   requires?: TechRequirement[]
   /** Desktop/mobile/hosted apps that run on the host only and never get a Docker service */
   hostOnly?: boolean
+  /** Builds to plain files (HTML/JS/CSS) that a CDN can serve without a server process. */
+  staticOutput?: boolean
+  /** Has an official adapter or runtime for serverless/edge platforms (Vercel, Netlify, Cloudflare, Lambda). */
+  serverlessAdapter?: boolean
 }
+
+/**
+ * Where an app runs. `local` (the default when a blueprint omits it) means the project only runs
+ * on this machine; the other ten are deploy targets the hosting planner can suggest.
+ */
+export type HostingType =
+  | 'local'
+  | 'static'
+  | 'serverless'
+  | 'baas'
+  | 'paas'
+  | 'self-hosted-paas'
+  | 'containers'
+  | 'kubernetes'
+  | 'cloud-vm'
+  | 'vps'
+  | 'bare-metal'
 
 export interface CartApp {
   id: string
@@ -55,6 +76,8 @@ export interface CartApp {
   healthCheck?: AppHealthCheck
   testingTools?: string[]
   customTestingTools?: CustomTestingTool[]
+  /** Chosen hosting. Absent means `local`; the hosting planner's suggestion is advice only. */
+  hosting?: HostingType
 }
 
 export interface ServiceConnection {
