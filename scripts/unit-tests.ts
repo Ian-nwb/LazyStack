@@ -21,6 +21,9 @@ import type { CartApp, HostingType, ProjectSettings, SelectedDatabase } from '..
 import { planHosting, resolveGeneratedFiles, suggestHosting } from '../src/utils/hostingPlanner'
 import { renderHostingMarkdown } from '../src/utils/hostingDoc'
 import { upgradeProject } from '../electron/project/upgrade'
+import { DEV_ORCHESTRATOR_RUNTIME, renderDevOrchestrator } from '../electron/scaffolding/templates/devOrchestrator'
+import { spawn as spawnChild } from 'node:child_process'
+import net from 'node:net'
 import fsExtra from 'fs-extra'
 import { HOSTING_OPTIONS, HOSTING_TYPES, isHostingType } from '../src/data/hosting'
 
@@ -365,5 +368,74 @@ test('upgrade: projects without a recorded version need --from', async () => {
     assert.match(result.error || '', /--from/)
   } finally {
     await fsExtra.remove(work)
+  }
+})
+
+// ---------------------------------------------------------------- dev orchestrator
+
+test('dev orchestrator: runtime has no template placeholders and every preset generates valid JavaScript', async () => {
+  assert.ok(!DEV_ORCHESTRATOR_RUNTIME.includes('`') && !DEV_ORCHESTRATOR_RUNTIME.includes('${'))
+  const work = await fsExtra.mkdtemp(path.join(os.tmpdir(), 'lazystack-orch-'))
+  try {
+    for (const preset of STACK_PRESETS) {
+      const settings: ProjectSettings = { ...settingsWith(preset.apps.map((item, index) => ({ id: `p${index}`, ...item }) as CartApp), preset.databases as SelectedDatabase[]) }
+      const result = await scaffoldProject({ ...settings, projectName: preset.id, parentDir: work, targetDir: path.join(work, preset.id) })
+      assert.ok(result.success, result.error)
+      const file = path.join(work, preset.id, 'scripts/dev-orchestrator.mjs')
+      execFileSync(process.execPath, ['--check', file])
+      const config = JSON.parse((await fsExtra.readFile(file, 'utf8')).match(/const CONFIG = ([\s\S]*?);\n/)![1])
+      // Databases start in Docker; the apps themselves (and the gateway) run on the host.
+      for (const app of preset.apps) assert.ok(!config.compose?.services.includes(app.folderName), `${preset.id}: ${app.folderName} must not start in Docker`)
+      assert.ok(!config.compose?.services.includes('gateway'))
+      for (const name of config.compose?.services || []) assert.ok(!/_net$|_data$/.test(name), `${preset.id}: '${name}' is a network or volume, not a service`)
+      if (preset.databases.some(db => db.enabled)) assert.ok(config.compose.services.length > 0, `${preset.id}: databases start in Docker`)
+    }
+  } finally {
+    await fsExtra.remove(work)
+  }
+})
+
+const freePort = () => new Promise<number>(done => {
+  const server = net.createServer().listen(0, () => { const port = (server.address() as net.AddressInfo).port; server.close(() => done(port)) })
+})
+
+test('dev orchestrator: apps start in dependency order once their dependencies are healthy', { skip: process.platform === 'win32', timeout: 30000 }, async () => {
+  const work = await fsExtra.mkdtemp(path.join(os.tmpdir(), 'lazystack-orch-run-'))
+  const [apiPort, webPort] = [await freePort(), await freePort()]
+  // The API takes a moment before it answers /health; the web app must wait for it.
+  const server = (delay: number) => `setTimeout(() => require('http').createServer((q, s) => { s.statusCode = q.url === '/health' || q.url === '/' ? 200 : 404; s.end('ok') }).listen(Number(process.env.PORT), () => console.log('listening on ' + process.env.PORT)), ${delay})\n`
+  for (const [dir, delay] of [['api', 800], ['web', 0]] as const) {
+    await fsExtra.outputFile(path.join(work, 'apps', dir, 'server.cjs'), server(delay))
+  }
+  await fsExtra.outputFile(path.join(work, 'scripts/dev-orchestrator.mjs'), renderDevOrchestrator({
+    project: 'orch-test',
+    compose: null,
+    services: [
+      { name: 'web', role: 'frontend', port: webPort, path: 'apps/web', cmd: 'node server.cjs', dependsOn: ['api'], health: { type: 'tcp', port: webPort }, env: [{ key: 'API_URL', target: 'api' }], uses: [] },
+      { name: 'api', role: 'backend', port: apiPort, path: 'apps/api', cmd: 'node server.cjs', dependsOn: [], health: { type: 'http', url: `http://localhost:${apiPort}/health` }, env: [], uses: [] }
+    ]
+  }))
+  const child = spawnChild(process.execPath, ['scripts/dev-orchestrator.mjs', '--plain'], { cwd: work, stdio: ['ignore', 'pipe', 'pipe'] })
+  let output = ''
+  child.stdout.on('data', chunk => { output += chunk })
+  child.stderr.on('data', chunk => { output += chunk })
+  try {
+    const deadline = Date.now() + 20000
+    while (!/\[web\]\S* healthy/.test(output.replace(/\x1b\[[0-9;]*m/g, ''))) {
+      if (Date.now() > deadline) assert.fail(`web never became healthy:\n${output}`)
+      await new Promise(done => setTimeout(done, 100))
+    }
+    const plain = output.replace(/\x1b\[[0-9;]*m/g, '')
+    assert.ok(plain.indexOf('[web] waiting · for api') >= 0, plain)
+    assert.ok(plain.indexOf('[api] healthy') < plain.indexOf('[web] starting'), plain)
+  } finally {
+    const exited = new Promise(done => child.once('exit', done))
+    child.kill('SIGTERM')
+    await exited
+    await fsExtra.remove(work)
+  }
+  // Shutdown stops the app processes too, so their ports are free again.
+  for (const port of [apiPort, webPort]) {
+    await new Promise<void>((done, fail) => { const probe = net.createServer().once('error', fail).listen(port, () => probe.close(() => done())) })
   }
 })

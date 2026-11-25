@@ -38,7 +38,7 @@ COMMANDS:
   init       Create a blueprint file from a preset
   export     Export a complete lazystack.json blueprint configuration
   scaffold   Generate and scaffold a production-ready monorepo stack
-  dev        Start unified dev orchestrator (background databases + concurrent apps)
+  dev        Start the stack: databases in Docker, apps on the host in dependency order, with a dashboard
   search     Search frameworks, databases, presets, and testing tools
   list       List all supported frameworks, languages, and databases
   presets    List all available 1-click production stack presets
@@ -57,6 +57,8 @@ COMMANDS:
 OPTIONS FOR 'dev':
   --dir, -d <dir>       Target project directory (default: current working directory)
   --docker              Run full containerized stack via docker compose instead
+  --plain               Plain prefixed logs instead of the dashboard (automatic when not a terminal)
+                        Dashboard keys: ↑↓ or 0-9 select, r restart, / filter logs, e env wiring, q quit
 
 OPTIONS FOR 'export':
   --preset, -p <name>   Preset to export (t3-stack, fastapi-react, modern-mern, etc.)
@@ -881,7 +883,7 @@ export async function runCli(args: string[] = process.argv.slice(2)) {
 
     if (await fs.pathExists(orchestratorPath)) {
       console.log(`Starting LazyStack Dev Orchestrator in ${targetDir}...`)
-      const proc = spawnSync('node', [orchestratorPath], { cwd: targetDir, stdio: 'inherit' })
+      const proc = spawnSync('node', [orchestratorPath, ...(args.includes('--plain') ? ['--plain'] : [])], { cwd: targetDir, stdio: 'inherit' })
       process.exit(proc.status ?? 0)
     } else if (await fs.pathExists(devShPath)) {
       console.log(`Notice: scripts/dev-orchestrator.mjs not found. Invoking scripts/dev.sh in ${targetDir}...`)
