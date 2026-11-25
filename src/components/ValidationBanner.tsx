@@ -129,7 +129,6 @@ export const ValidationBanner: React.FC<ValidationBannerProps> = ({ settings, on
               : 'bg-surface-850 text-zinc-500 border border-surface-700 cursor-not-allowed opacity-90'
           }`}
         >
-          <span className="text-sm select-none shrink-0" role="img" aria-label="rocket">🚀</span>
           <span>{generateLabel || 'Scaffold Monorepo'}</span>
         </button>
       </div>
