@@ -656,7 +656,7 @@ export async function runCli(args: string[] = process.argv.slice(2)) {
       }
       try {
         const raw = await fs.readFile(resolvedConfig, 'utf-8')
-        settings = JSON.parse(raw)
+        settings = splitBlueprint(JSON.parse(raw)).settings
         if (projectName !== 'my-monorepo') {
           settings.projectName = projectName
         }

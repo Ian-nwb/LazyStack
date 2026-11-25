@@ -8,12 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.1.0] - 2026-11-25
 
 ### Added
+- **`lazystack dev` dashboard.** In a terminal, the dev orchestrator shows one row per service with its health (waiting, starting, healthy, unhealthy, failed), a log pane for all apps or one app with filtering, one-key restart, and which environment variable points to which service. `--plain` (and CI or piped output) keeps the prefixed logs.
+- **Dependency-ordered start.** Apps start after the apps they connect to answer their health check (the HTTP path from the app's health check, or its port accepting connections); databases and services start first with `docker compose up --wait`. An app whose dependency never becomes healthy starts after 120 seconds with a warning.
+- **`lazystack upgrade`** pulls template fixes from a newer LazyStack into a project you already generated, with a three-way merge like Copier and cruft. The base is your blueprint rendered by the version that generated the project (from npm), the target is the same blueprint rendered by this version: files you never changed are updated, your edits are kept, changes on both sides are merged with `git merge-file`, and overlapping edits get standard conflict markers. `.env` files only gain missing keys, changed files are backed up to `.lazystack/backup/`, `--dry-run` previews, and it refuses to run on uncommitted changes unless `--allow-dirty`. `lazystack.json` now records `$generator` (the LazyStack version); projects made before 2.1.0 pass `--from <version>`.
+- **User guide** in the README, covering the whole workflow from install to upgrade.
 - **Hosting planner.** Suggests what kind of hosting each app needs: static/CDN, serverless, BaaS, PaaS, self-hosted PaaS, managed containers, Kubernetes, cloud VM, VPS or bare metal. The suggestion comes from the app's role, framework and connections (a Vite SPA → static, an API with a database → PaaS, a Kafka consumer → an always-on process), with reasons, alternatives, example services and the LazyStack files that apply. It's advice only and never changes the generated deploy files.
   - Apps are **local only** (running on your machine) until you choose a type. The choice is saved as `hosting` on the app in the blueprint; blueprints without it stay valid, and unknown values are rejected.
   - Shown in a new Blueprint **Hosting** tab, printed by `lazystack hosting` (`--types` compares every type, `--json` for scripts), and written to `docs/hosting.md` in generated projects, which `apply` and `add` refresh.
   - Based on Flavio Copes's [Where to host your app](https://flaviocopes.com/where-to-host/).
 
+### Fixed
+- **`npm run dev` started every app twice**: `docker compose up -d` also started the app containers (and the gateway), and the orchestrator then started the same apps on the host on the same ports. It now starts only the databases and other infrastructure in Docker.
+
 ### Changed
+- **Apps started by the dev orchestrator run in their own process group**, so stopping or restarting one also stops what it spawned (npm, Vite, nodemon...).
 - **New logo and app icon**: two stack chevrons under a 2×2 plan grid, black and white only, in the app header, the desktop icon and the showcase.
 
 ## [2.0.1] - 2026-11-24

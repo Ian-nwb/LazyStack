@@ -2,6 +2,8 @@
 
 ## 2.1.0
 
+- `lazystack dev` shows a dashboard (service health, filterable logs, restart, environment wiring) and starts apps in dependency order once their dependencies are healthy; `--plain` keeps plain logs. Databases start with `docker compose up --wait`, and app containers are no longer started next to the same apps on the host.
+- `lazystack upgrade [--dir] [--from <version>] [--dry-run] [--allow-dirty]` pulls template fixes into a generated project with a three-way merge. `lazystack.json` records `$generator`.
 - `lazystack hosting -c <blueprint>` suggests what kind of hosting each app needs, with reasons, alternatives and the generated files to use. Apps are `local` until you set `hosting` on them; `--types` compares all types and `--json` prints the plan. `validate` rejects unknown `hosting` values.
 - Generated projects include `docs/hosting.md`; `apply` and `add` regenerate it (after a backup) so it follows the blueprint.
 

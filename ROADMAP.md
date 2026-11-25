@@ -8,7 +8,7 @@ the template format.
 
 # 2.x: LazyStack stays useful after day one
 
-## Hosting planner and new logo (2.1)
+## Shipped in 2.1.0: hosting planner, new logo, `lazystack upgrade`, `lazystack dev` dashboard
 
 Full plan: [docs/roadmap/v2.1.0.md](docs/roadmap/v2.1.0.md).
 
@@ -30,7 +30,7 @@ static suggested for the frontend and PaaS for the API, and overrides survive va
 
 ## Lifecycle
 
-### `lazystack upgrade`: template updates as a three-way merge
+### `lazystack upgrade` (shipped in 2.1.0): template updates as a three-way merge
 **Problem.** Today a project is generated once. When we fix the Blitz Dockerfile or the deploy
 workflow, existing projects never get the fix.
 **Proposal.** Record the LazyStack version and per-file template hashes in `lazystack.json`.
@@ -45,7 +45,7 @@ with 2.0.0 using one command.
 overlay. Secrets are stored encrypted with SOPS + age (committable), or as 1Password / Vault
 references that are resolved at start. The dev orchestrator and the deploy job pick a profile.
 
-### `lazystack dev` as a real dashboard
+### `lazystack dev` as a real dashboard (shipped in 2.1.0)
 **Proposal.** Replace interleaved logs with a terminal UI: one pane per service, with health
 state, restart and log filtering. Start services in dependency order using healthchecks (the
 Compose topology already knows the graph), and show which `.env` variable points where.
@@ -59,11 +59,9 @@ the URL on the PR. The environment is torn down when the PR closes.
 
 | Release | Focus | Why this order |
 | --- | --- | --- |
-| **2.1** | Hosting planner, new logo and app icon | Self-contained and advice-only, so it ships without touching generated output |
-| **2.2** | `lazystack upgrade` | Every later fix reaches existing projects through it |
-| **2.3** | Environment profiles and secrets | The deploy and preview work needs per-environment config |
-| **2.4** | Dev dashboard | Daily-use quality for the local loop |
-| **2.5** | Preview environments | Builds on profiles and the generated deploy workflow |
+| **2.1** | Hosting planner, new logo, `lazystack upgrade`, dev dashboard | **Shipped in 2.1.0** |
+| **2.2** | Environment profiles and secrets | The deploy and preview work needs per-environment config |
+| **2.3** | Preview environments | Builds on profiles and the generated deploy workflow |
 
 ---
 

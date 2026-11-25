@@ -19,6 +19,7 @@
 <p align="center">
   <a href="https://github.com/Ian-nwb/LazyStack/releases/latest"><b>Download</b></a> ·
   <a href="https://lazystack-showcase.vercel.app">Website</a> ·
+  <a href="#user-guide">User guide</a> ·
   <a href="#cli">CLI</a> ·
   <a href="CHANGELOG.md">Changelog</a> ·
   <a href=".github/CONTRIBUTING.md">Contributing</a>
@@ -28,7 +29,7 @@
 
 LazyStack is a desktop app and a command-line tool for starting polyglot projects. Combine a React client, a FastAPI service, a Go worker and an Expo app with PostgreSQL and Redis, choose an architecture layout, and get a project where every app follows its framework's own conventions and the whole stack starts with `npm run dev`.
 
-**Current version: 2.1.0.** A [hosting planner](#hosting-planner) suggests what kind of hosting each app needs, with alternatives and example services, and LazyStack has a new logo. 2.0.1 made Docker builds fail when an app's build or dependency install fails (they used to produce an image that crashed at runtime), which also fixes the Ruby on Rails and Symfony images. 2.0.0 added 24 frameworks (F#, Elm and Perl are new languages; Quarkus, Micronaut, Go templ + HTMX, Django Ninja, React + Tailwind + shadcn/ui, Cloudflare Workers and more), 13 services (Keycloak, Mailpit, LocalStack, Grafana LGTM, Ollama, Temporal and others), a dev container, `mise.toml` and real deploy targets. See the [changelog](CHANGELOG.md).
+**Current version: 2.1.0.** `lazystack dev` is now a dashboard that starts apps in dependency order once their dependencies are healthy, `lazystack upgrade` pulls template fixes into projects you already generated, a [hosting planner](#hosting-planner) suggests what kind of hosting each app needs, and LazyStack has a new logo. 2.0.1 made Docker builds fail when an app's build or dependency install fails (they used to produce an image that crashed at runtime), which also fixes the Ruby on Rails and Symfony images. 2.0.0 added 24 frameworks (F#, Elm and Perl are new languages; Quarkus, Micronaut, Go templ + HTMX, Django Ninja, React + Tailwind + shadcn/ui, Cloudflare Workers and more), 13 services (Keycloak, Mailpit, LocalStack, Grafana LGTM, Ollama, Temporal and others), a dev container, `mise.toml` and real deploy targets. See the [changelog](CHANGELOG.md).
 
 ## Download
 
@@ -51,10 +52,11 @@ To run the projects LazyStack generates you need Docker with Compose, plus the t
 - **15 architecture layouts.** Standard monorepo, microservices, modular monolith, Polyglot, event-driven, serverless, DDD, hexagonal, clean architecture, CQRS, JAMstack and edge, mobile and cross-platform, data platform, AI/ML, or your own folder structure. The Blueprint shows the exact resulting tree.
 - **Port-conflict check.** Duplicate ports (including fixed extras such as RabbitMQ's management UI) block scaffolding; a live banner offers Auto-fix, and `lazystack ports` also reports ports already in use on your machine.
 - **Service connections.** Wire apps together with URLs, environment variable names, health checks and startup order.
-- **One command to run everything.** The generated dev orchestrator starts databases in Docker and every app on the host with hot reload and colour-coded output.
+- **One command to run everything.** `npm run dev` (or `lazystack dev`) starts the databases in Docker, then every app on the host in dependency order, each one once the apps it calls answer their health check. In a terminal it's a dashboard: one row per service with its health, a log pane you can filter, restart with one key, and which `.env` variable points where.
 - **Deployment files.** Docker Compose, Nginx/Apache/Caddy/Traefik config, Kubernetes manifests, a Helm chart, Terraform for AWS/GCP/DigitalOcean, a GitHub Actions workflow that builds images and deploys over SSH with Compose, a `fly.toml` per service, a Render Blueprint and GitLab CI.
 - **Hosting planner.** Suggests what kind of hosting each app needs (static/CDN, serverless, BaaS, PaaS, self-hosted PaaS, managed containers, Kubernetes, cloud VM, VPS or bare metal) from its role and connections, shows example services for each, and lets you choose. Apps stay **local only** until you do. The choice is saved in the Blueprint, written to `docs/hosting.md`, and printed by `lazystack hosting`. See [Hosting planner](#hosting-planner).
 - **Reproducible toolchains.** Every project gets `mise.toml` (run `mise install` to get the exact Node, Python, Go, Java, .NET, Rust... versions, no root needed) and a `.devcontainer` for VS Code and Codespaces, plus `.editorconfig`, Lefthook pre-commit formatters and Renovate.
+- **Template upgrades.** `lazystack upgrade` brings fixes from a newer LazyStack into a project you already generated with a three-way merge: files you never touched update, your edits are kept, overlapping changes get standard conflict markers, and every changed file is backed up first.
 - **Existing projects.** Open a folder you already have: LazyStack detects its apps, databases and proxy, shows the stack as a diagram, and adds new services without touching your code.
 - **Testing tools per app.** Jest, Vitest, pytest, JUnit, Playwright, Cypress, k6, Pact, Storybook, OWASP ZAP and more, opt-in per app.
 
@@ -253,6 +255,109 @@ One-click starting points, also available as `lazystack scaffold --preset <id>`.
 | ![Manual setup steps](showcase/assets/screens/manual-setup.webp) | ![Install packages](showcase/assets/screens/install.webp) |
 | **Manual setup.** Steps LazyStack can't do for you, listed after scaffolding. | **Install Packages.** Every ecosystem's dependencies, with live progress. |
 
+## User guide
+
+This guide walks through the whole workflow: install, design a stack, generate it, run it, choose hosting, change it later, upgrade it and deploy it. Each step works in the desktop app and in the CLI.
+
+### 1. Install
+
+- **Desktop app:** download the AppImage (Linux) or the portable `.exe` (Windows) from [Download](#download). Nothing else is needed to design and generate projects.
+- **CLI:** `npx lazystack help` (Node.js 22+). Install it globally with `npm install -g lazystack` if you use it often.
+- **To run generated projects** you need Docker (for databases and services) and the toolchains of the frameworks you pick (Node.js, Python, Go, Rust, the JDK, .NET...). The **Host Auditor** tab and `lazystack doctor` show what's missing and how to install it. Every project also gets a `mise.toml` (`mise install` fetches the exact versions) and a dev container.
+
+### 2. Design a stack (desktop app)
+
+1. **Project name and parent directory** at the top. The destination folder is `<parent>/<name>`.
+2. **App Stack:** start from a preset (T3, FastAPI + React, MERN, Go + Vue, Rust + Axum) or add frameworks from the catalog. For each app, set its folder name, port and run mode (Docker or host). Open **Service options** to add:
+   - **connections** to other apps (an environment variable such as `API_URL` with the target's URL; the target starts first),
+   - a **health check** (HTTP path or command), used by Compose and by the dev dashboard,
+   - **testing tools** (Jest, pytest, Playwright, k6, Pact...),
+   - a **starter profile** where one exists (for example FastAPI's API service with CRUD, auth and migrations).
+3. **Databases:** add self-hosted databases, brokers and developer services (they run in Compose with generated credentials) or cloud providers (SDK clients and env vars). Set each one's scope (global or one app) and an optional admin UI.
+4. **Proxy:** Nginx, Apache, Caddy, Traefik or none, and the route prefix for each app.
+5. **Blueprint:** check the result before anything is written: the architecture layout and folders, the exact file tree, Compose, Terraform, Kubernetes, CI/CD, ports, diagrams, `.env`, and **Hosting** (see step 5). **Export** saves the whole design as a `lazystack.json` blueprint; **Import** loads one.
+6. The bar at the bottom lists problems (such as duplicate ports, with **Auto-fix ports**). **Check ports** also finds ports already in use on your machine. **Scaffold Monorepo** writes the project.
+
+After scaffolding, the app shows each app's manual first-run steps (if any) and buttons to open the folder, VS Code or a terminal, **Install Packages** for every ecosystem, and **Start Stack (Docker)**.
+
+### 3. Design a stack (CLI)
+
+```bash
+npx lazystack init --preset fastapi-react --name shop          # writes ./lazystack.json
+# edit lazystack.json: apps, databases, connections, healthCheck, hosting...
+npx lazystack validate -c lazystack.json                       # catches mistakes without writing files
+npx lazystack plan -c lazystack.json                           # services and the folder tree
+npx lazystack doctor -c lazystack.json                         # toolchains this stack needs
+npx lazystack ports -c lazystack.json                          # duplicates and ports busy on this machine
+npx lazystack scaffold -c lazystack.json --out ~/projects      # --out is the parent folder
+```
+
+`lazystack search <term>`, `list` and `presets` browse the catalog.
+
+### 4. Run it
+
+```bash
+cd ~/projects/shop
+lazystack dev          # or: npm run dev (unified workspace), ./scripts/dev.sh, .\scripts\dev.ps1
+```
+
+Databases start in Docker and wait until they're healthy; then the apps start on the host, each one after the apps it depends on. In the dashboard, press `2` to see the second app's logs, `/` to filter (for example `error`), `e` to see which environment variable points where, `r` to restart the selected app (or all of them from row `0`), and `q` to stop. Use `lazystack dev --plain` for plain logs, and `lazystack dev --docker` to run the whole stack in containers instead.
+
+Each app also has its own README with its native commands (`uvicorn`, `go run`, `cargo run`...).
+
+### 5. Choose hosting
+
+Every app is **local only** until you choose where it runs. The Blueprint **Hosting** tab and `lazystack hosting -c lazystack.json` show a suggestion per app (static/CDN, serverless, PaaS, managed containers...) with the reason, alternatives, example services and the generated files to use. Pick a type in the tab or set `"hosting": "paas"` on the app in `lazystack.json`. The choice is written to `docs/hosting.md`. See [Hosting planner](#hosting-planner).
+
+### 6. Change a project you already have
+
+- **Desktop:** **Open Existing Project** reads the folder (its `lazystack.json`, or detects frameworks, Compose databases and the proxy). Edit the stack, then **Review & Apply Changes** shows every file that will be created or regenerated before anything is written.
+- **CLI:**
+
+  ```bash
+  lazystack import --dir ./shop                                 # what LazyStack sees
+  lazystack add --dir ./shop --tech go-gin --name billing --dry-run
+  lazystack import --dir ./shop --out edited.json               # edit it, then:
+  lazystack apply --dir ./shop --config edited.json --dry-run
+  ```
+
+Your app code is never overwritten: new files are created, `.env` files only gain missing keys, and regenerated files (Compose, proxy config, dev orchestrator, `docs/hosting.md`, `lazystack.json`) are copied to `.lazystack/backup/<timestamp>/` first.
+
+### 7. Upgrade to a newer LazyStack
+
+When a LazyStack release fixes a template (a Dockerfile, a workflow, a starter), pull the fix into your project:
+
+```bash
+git commit -am "before upgrade"        # upgrade refuses to run on uncommitted changes
+lazystack upgrade --dir ./shop --dry-run
+lazystack upgrade --dir ./shop
+git diff                               # review; search for <<<<<<< yours if it reported conflicts
+```
+
+It renders your blueprint with the version that generated the project (fetched from npm with `npx lazystack@<version>`) and with the current version, then merges each file three ways: files you never changed take the new template, your own edits are kept, and changes on both sides are merged, with standard conflict markers where they overlap. `.env` files only gain missing keys. Projects made before 2.1.0 don't record their version: add `--from 2.0.0` (or the version you used).
+
+### 8. Deploy
+
+Generated projects include Compose files, Kubernetes manifests, a Helm chart, Terraform (AWS ECS, GCP Cloud Run, DigitalOcean App Platform), `fly.toml` per app, a Render Blueprint, GitLab CI, and a GitHub Actions workflow that pushes images to GHCR and, when you set the `DEPLOY_HOST` variable, deploys over SSH with Compose. The hosting planner tells you which of these to use for each app.
+
+### 9. Troubleshooting
+
+| Problem | What to do |
+| --- | --- |
+| A port is already in use | `lazystack ports -c lazystack.json`, or **Check ports** / **Auto-fix ports** in the app |
+| A toolchain is missing | **Host Auditor** tab (install from there) or `lazystack doctor` |
+| An app shows ✕ failed in the dashboard | Select it to read its logs; install its dependencies (see its README), then press `r` |
+| Docker isn't running | The dashboard says so and starts the apps anyway; start Docker and restart them |
+| Upgrade reported conflicts | Edit the files with `<<<<<<< yours` markers, keep what you want, and commit |
+| You want an old file back | Every regenerated or upgraded file is in `.lazystack/backup/<timestamp>/` |
+
+### 10. Files LazyStack keeps in your project
+
+- `lazystack.json`: the blueprint (apps, databases, connections, layout, hosting) plus `$lazystack` (format) and `$generator` (the LazyStack version that generated or last upgraded the project). Edit it and run `lazystack apply` to change the project.
+- `.lazystack/backup/`: copies of files LazyStack replaced (ignored by git).
+- `scripts/dev-orchestrator.mjs`: the dev dashboard. Its `CONFIG` block is regenerated when the blueprint changes.
+- `docs/architecture.md` and `docs/hosting.md`: diagrams and the hosting plan.
+
 ## CLI
 
 The `lazystack` CLI uses the same generator as the desktop app.
@@ -272,7 +377,8 @@ cd projects/my-api && npx lazystack dev                          # databases in 
 | `export` | Write a preset as a blueprint you can edit |
 | `scaffold` | Generate a project (`--dry-run` to preview, `--force` to update a non-empty folder) |
 | `import`, `add`, `apply` | Read an existing project, add an app to it, or apply an edited blueprint (`--dry-run` supported) |
-| `dev` | Start a generated project's stack (`--docker` to run everything in containers) |
+| `dev` | Start a generated project's stack with the dashboard (`--plain` for plain logs, `--docker` to run everything in containers) |
+| `upgrade` | Pull template fixes from this version into a generated project (`--dry-run`, `--from <version>` for projects made before 2.1.0) |
 
 ## Generated projects
 
@@ -283,11 +389,12 @@ Every project includes a root README, `.env` and `.env.example`, Docker Compose 
 
 `npm run dev` (or `lazystack dev`) in a generated project:
 
-1. Starts the databases and brokers in Docker with `docker compose up -d`.
-2. Runs every app on the host with its native command (`uvicorn`, `go run`, `cargo run`, `mvn spring-boot:run`, `npx expo start`, ...).
-3. Prefixes each line of output with the app's name in its own colour.
-4. Passes the root `.env` to every process.
-5. Stops all child processes on Ctrl+C.
+1. Starts the databases, brokers and other services in Docker (`docker compose up -d --wait`) and waits for their healthchecks. App containers and the gateway are not started; in dev the apps run on the host.
+2. Runs first-boot migrations (Django, Laravel, Prisma).
+3. Starts every app on the host with its native command (`uvicorn`, `go run`, `cargo run`, `mvn spring-boot:run`, `npx expo start`, ...) in dependency order: an app waits until the apps it connects to answer their health check (the HTTP path you set, or the port accepting connections).
+4. Shows a dashboard in a terminal: one row per service (○ waiting, ◐ starting, ● healthy, ▲ unhealthy, ✕ failed), the logs of all apps or one app, and the environment wiring. Keys: `↑`/`↓` or `0`–`9` select, `/` filter the logs, `e` environment variables, `r` restart, `c` clear, `q` quit.
+5. Prints plain, colour-prefixed logs instead when the output isn't a terminal, in CI, or with `--plain`.
+6. Passes the root `.env` to every process and stops every app (and what it spawned) on `q` or Ctrl+C. The databases keep running.
 
 `npm run dev:docker` runs the whole stack in containers instead.
 </details>

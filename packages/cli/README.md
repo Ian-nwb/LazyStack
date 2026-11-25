@@ -42,11 +42,19 @@ lazystack import --dir ./my-project --out edited.json
 lazystack add --dir ./my-project --tech rust-dioxus --name dashboard --dry-run
 lazystack add --dir ./my-project --tech java-swing --name desktop
 lazystack apply --dir ./my-project --config edited.json
+
+# Run and upgrade a generated project
+lazystack dev --dir ./my-project                 # dashboard; --plain for plain logs
+lazystack upgrade --dir ./my-project --dry-run   # --from 2.0.0 for projects made before 2.1.0
 ```
 
 `import` reads a project's `lazystack.json`, or detects frameworks, Compose databases and the reverse proxy from its files. `add` and `apply` update an existing project without modifying existing app folders: new files are created, `.env` files only gain missing keys, and regenerated files (Compose, proxy config, dev orchestrator, `docs/hosting.md`, `lazystack.json`) are backed up to `.lazystack/backup/<timestamp>/` first. Use `--dry-run` to preview.
 
 `init` creates a blueprint and refuses to replace an existing file. Edit the JSON to customize services, databases, and connections. `validate` checks the blueprint without creating files, `plan` previews its services and layout, and `doctor` checks local runtimes needed by the selected technologies. `doctor` reports available binaries; it does not install them or guarantee application builds.
+
+`dev` starts the databases in Docker (waiting for their healthchecks), then the apps on the host in dependency order, and shows a dashboard: `↑`/`↓` or `0`-`9` select a service, `/` filters its logs, `e` shows its environment wiring, `r` restarts it, `q` stops everything. Output that isn't a terminal, CI, or `--plain` gets plain prefixed logs.
+
+`upgrade` brings template fixes from this LazyStack version into a generated project with a three-way merge: the base is the project's blueprint rendered by the version that generated it (`npx lazystack@<version>`), so files you never changed update, your edits stay, and overlapping changes get standard conflict markers. `.env` files only gain keys and changed files are backed up to `.lazystack/backup/`. Commit first: it refuses to run on uncommitted changes unless `--allow-dirty`.
 
 `hosting` suggests what kind of hosting each app needs (static/CDN, serverless, BaaS, PaaS, self-hosted PaaS, managed containers, Kubernetes, cloud VM, VPS or bare metal) from its role, framework and connections, with alternatives and the generated files that apply. Apps are `local` (running on your machine only) until you set `"hosting"` on them in the blueprint. `--types` compares every type, and `--json` prints the plan for scripts. It's advice only: it never changes the generated deploy files.
 
