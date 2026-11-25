@@ -78,3 +78,8 @@ dist-scripts/
 
 # Runtime crash dumps
 erl_crash.dump
+
+# Impeccable design working files (screenshots, decision sketches)
+.impeccable/review/
+.impeccable/mocks/
+.impeccable/decision-payload*.json
