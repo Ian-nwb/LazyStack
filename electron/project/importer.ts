@@ -1,4 +1,5 @@
 import path from 'path'
+import { splitBlueprint } from '../../src/utils/blueprintMeta'
 import fs from 'fs-extra'
 import { CartApp, DatabaseType, FolderStructureConfig, ProjectSettings, ProxyType, SelectedDatabase } from '../../src/types'
 import { TECH_CATALOG, isHostOnlyTech } from '../../src/data/frameworks'
@@ -392,7 +393,7 @@ export async function importProject(projectDir: string): Promise<ImportResult> {
   const blueprintPath = path.join(root, 'lazystack.json')
   if (await fs.pathExists(blueprintPath)) {
     try {
-      const { $lazystack: _version, ...blueprint } = await fs.readJson(blueprintPath)
+      const { settings: blueprint } = splitBlueprint(await fs.readJson(blueprintPath))
       const settings: ProjectSettings = { ...blueprint, projectName: blueprint.projectName || projectName, parentDir, targetDir: root }
       if (!Array.isArray(settings.apps) || !Array.isArray(settings.databases) || !settings.proxy) throw new Error('missing apps, databases or proxy')
       return { success: true, source: 'blueprint', settings, detected: [], unrecognized: [], warnings: [] }

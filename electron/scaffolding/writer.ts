@@ -23,7 +23,7 @@ export interface WriterOptions {
 const toPosix = (value: string) => value.split(path.sep).join('/')
 const MERGEABLE_ENV = /(^|\/)\.env(\.example)?$/
 
-function mergeEnv(existing: string, generated: string): string {
+export function mergeEnv(existing: string, generated: string): string {
   const keys = new Set(existing.split(/\r?\n/).map(line => line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=/)?.[1]).filter(Boolean))
   const additions = generated.split(/\r?\n/).filter(line => {
     const key = line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=/)?.[1]

@@ -8,6 +8,7 @@ import { generateMetaFiles, GeneratedDatabaseCredential, README_TREE_PLACEHOLDER
 import { buildPlanTree, renderPlanTreeText } from '../../src/utils/planTree'
 import { renderArchitectureMarkdown } from '../../src/utils/architectureDoc'
 import { renderHostingMarkdown } from '../../src/utils/hostingDoc'
+import { GENERATOR_VERSION, splitBlueprint } from '../../src/utils/blueprintMeta'
 import { DATABASE_CATALOG, isPostgresFamily, isRedisFamily } from '../../src/data/databases'
 import { generateCloudServiceFiles, generateCloudEnvVars } from './templates/cloudServices'
 import { resolveStructurePaths, resolvePresetScaffoldDirs } from '../../src/data/structurePresets'
@@ -464,7 +465,7 @@ export function planScaffold(settings: ProjectSettings, databaseCredentials: Rec
   // 9. Embedded blueprint: lets LazyStack reopen, visualize and extend this project later.
   //    Machine-specific locations are omitted; secrets live only in .env.
   const { parentDir: _parentDir, targetDir: _targetDir, ...portableSettings } = settings
-  out.write(path.join(targetDir, 'lazystack.json'), JSON.stringify({ $lazystack: BLUEPRINT_VERSION, ...portableSettings }, null, 2) + '\n')
+  out.write(path.join(targetDir, 'lazystack.json'), JSON.stringify({ $lazystack: BLUEPRINT_VERSION, $generator: GENERATOR_VERSION, ...splitBlueprint(portableSettings).settings }, null, 2) + '\n')
 
   // The README's directory tree is rendered from the finished plan, so it cannot drift from the files written.
   const readme = files['README.md']
