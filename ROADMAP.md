@@ -1,15 +1,81 @@
-# LazyStack roadmap (after 2.0.1)
+# LazyStack roadmap
+
+The roadmap has two parts. **2.x** adds a hosting planner and makes LazyStack useful for the
+whole life of a project, not only on day one. **3.0** collects the larger work on starter quality, service wiring and
+the template format.
+
+---
+
+# 2.x: LazyStack stays useful after day one
+
+## Hosting planner and new logo (2.1)
+
+Full plan: [docs/roadmap/v2.1.0.md](docs/roadmap/v2.1.0.md).
+
+### New logo and app icon
+**Proposal.** A black-and-white mark (two stack chevrons under a 2×2 plan grid) replaces the
+current logo in the app header, the desktop app icon and the showcase. No color anywhere.
+Reference: [docs/roadmap/v2.1.0-icon.png](docs/roadmap/v2.1.0-icon.png).
+
+### Hosting planner
+**Proposal.** Suggest what kind of hosting each app needs (static/CDN, serverless, BaaS, PaaS,
+self-hosted PaaS, managed containers, Kubernetes, cloud VM, VPS or bare metal) from its role,
+tech and connections, with alternatives, example services and the generated files that apply.
+The user can override the choice per app (`app.hosting` in the blueprint). It's shown in a
+Blueprint **Hosting** tab, printed by `lazystack hosting`, and written to `docs/hosting.md`.
+It gives advice only and generates no new deploy files.
+**Done when.** `lazystack hosting -c` on the fastapi-react preset shows the frontend as static
+and the API as PaaS, and overrides survive validate → scaffold → import.
+
+## Lifecycle
+
+### `lazystack upgrade`: template updates as a three-way merge
+**Problem.** Today a project is generated once. When we fix the Blitz Dockerfile or the deploy
+workflow, existing projects never get the fix.
+**Proposal.** Record the LazyStack version and per-file template hashes in `lazystack.json`.
+`lazystack upgrade` regenerates the project with the new version and three-way-merges each file
+(old template → new template → the user's file), the way Copier and cruft do. Files the user
+never touched update silently; conflicts get standard conflict markers, plus a summary.
+**Done when.** Users can pull fixes like the 2.0.1 Dockerfile change into a project generated
+with 2.0.0 using one command.
+
+### Environment profiles and secrets
+**Proposal.** `dev`, `staging` and `prod` profiles in the blueprint, each with its own `.env`
+overlay. Secrets are stored encrypted with SOPS + age (committable), or as 1Password / Vault
+references that are resolved at start. The dev orchestrator and the deploy job pick a profile.
+
+### `lazystack dev` as a real dashboard
+**Proposal.** Replace interleaved logs with a terminal UI: one pane per service, with health
+state, restart and log filtering. Start services in dependency order using healthchecks (the
+Compose topology already knows the graph), and show which `.env` variable points where.
+
+### Preview environments
+**Proposal.** The generated GitHub workflow deploys each pull request to a throwaway
+environment (Fly.io or Render preview, or a namespace on the Kubernetes target) and comments
+the URL on the PR. The environment is torn down when the PR closes.
+
+## Suggested order (2.x)
+
+| Release | Focus | Why this order |
+| --- | --- | --- |
+| **2.1** | Hosting planner, new logo and app icon | Self-contained and advice-only, so it ships without touching generated output |
+| **2.2** | `lazystack upgrade` | Every later fix reaches existing projects through it |
+| **2.3** | Environment profiles and secrets | The deploy and preview work needs per-environment config |
+| **2.4** | Dev dashboard | Daily-use quality for the local loop |
+| **2.5** | Preview environments | Builds on profiles and the generated deploy workflow |
+
+---
+
+# 3.0: projects that are known to work, and keep working
 
 2.0 roughly doubled the catalog. Building every starter for 2.0 found **14 broken templates**
 (Yew, Leptos, Blitz, Qwik, Inferno, Kotlin/JS, Crystal, Qwik City, Lit, RedwoodJS, Rails,
 Symfony, Javalin, and the R image), plus MinIO's image disappearing from Docker Hub. None of
 them showed up in normal CI. The catalog grows faster than anyone can check it by hand.
 
-So the theme of this roadmap is **from "generates files" to "generates projects that are
+So the theme of 3.0 is **from "generates files" to "generates projects that are
 known to work, and keep working"**. The items are grouped by why they matter. Each item has
 the problem we actually saw, the proposal, and how we'd know it worked.
-
----
 
 ## 1. Trust: every starter is proven, continuously
 
@@ -48,6 +114,8 @@ badge, or a warning when a starter's last build failed.
 
 ---
 
+---
+
 ## 2. Depth: services that are *wired*, not just *configured*
 
 ### 2.1 Integration code, not only environment variables
@@ -79,45 +147,11 @@ incompatibly. For the event-driven layout, an AsyncAPI document for the broker t
 
 ---
 
-## 3. Lifecycle: LazyStack stays useful after day one
-
-### 3.1 `lazystack upgrade`: template updates as a three-way merge
-**Problem.** Today a project is generated once. When we fix the Blitz Dockerfile or the deploy
-workflow, existing projects never get the fix.
-**Proposal.** Record the LazyStack version and per-file template hashes in `lazystack.json`.
-`lazystack upgrade` regenerates the project with the new version and three-way-merges each file
-(old template → new template → the user's file), the way Copier and cruft do. Files the user
-never touched update silently; conflicts get standard conflict markers, plus a summary.
-**Done when.** Users can pull fixes like the 2.0.1 Dockerfile change into a project generated
-with 2.0.0 using one command.
-
-### 3.2 Environment profiles and secrets
-**Proposal.** `dev`, `staging` and `prod` profiles in the blueprint, each with its own `.env`
-overlay. Secrets are stored encrypted with SOPS + age (committable), or as 1Password / Vault
-references that are resolved at start. The dev orchestrator and the deploy job pick a profile.
-
-### 3.3 Preview environments
-**Proposal.** The generated GitHub workflow deploys each pull request to a throwaway
-environment (Fly.io or Render preview, or a namespace on the Kubernetes target) and comments
-the URL on the PR. The environment is torn down when the PR closes.
-
 ---
 
-## 4. Experience: the dev loop
+## 3. Templates and authoring
 
-### 4.1 `lazystack dev` as a real dashboard
-**Proposal.** Replace interleaved logs with a terminal UI: one pane per service, with health
-state, restart and log filtering. Start services in dependency order using healthchecks (the
-Compose topology already knows the graph), and show which `.env` variable points where.
-
-### 4.2 Blueprint from a description (AI)
-**Proposal.** "A SaaS with a Next.js frontend, a Go API, Postgres, background jobs and email" →
-a `ProjectSettings` draft, produced by the Claude API with structured output validated against
-the blueprint JSON schema, then shown in the existing Blueprint view for review. Nothing is
-generated without the user confirming. A local model through Ollama could be offered as a
-private option.
-
-### 4.3 Templates as files, community template packs
+### 3.1 Templates as files, community template packs
 **Problem.** Starters live in TypeScript template literals. Escaping caused bugs during 2.0 (a
 `${'$'}`, a backtick in a comment), and contributors can't open a template in their editor
 with syntax highlighting.
@@ -126,9 +160,16 @@ placeholder syntax, with `meta.json` for catalog data. The same format becomes t
 **template packs** that third parties can publish (`lazystack add-pack github:org/pack`), each
 verified by the same build-and-boot checks before it is listed.
 
+### 3.2 Blueprint from a description (AI)
+**Proposal.** "A SaaS with a Next.js frontend, a Go API, Postgres, background jobs and email" →
+a `ProjectSettings` draft, produced by the Claude API with structured output validated against
+the blueprint JSON schema, then shown in the existing Blueprint view for review. Nothing is
+generated without the user confirming. A local model through Ollama could be offered as a
+private option.
+
 ---
 
-## 5. Safety defaults in generated projects
+## 4. Safety defaults in generated projects
 
 - **Non-root containers.** Most generated Dockerfiles run as root. Add a `USER` per ecosystem,
   and make the boot tests prove the app still starts.
@@ -141,7 +182,7 @@ verified by the same build-and-boot checks before it is listed.
 
 ---
 
-## 6. Reach
+## 5. Reach
 
 - **Distribution of LazyStack itself:** winget and Scoop manifests, an AUR package and a Flathub
   build, so users can install and update with their package manager. (macOS is still waiting
@@ -155,17 +196,15 @@ verified by the same build-and-boot checks before it is listed.
 
 ---
 
-## Suggested order
+## Suggested order (3.x)
 
 | Release | Focus | Why first |
 | --- | --- | --- |
-| **2.1** | Boot tests (1.1), versions file + Renovate (1.3), non-root and digest pinning (5) | Stops template rot at the source; everything after builds on it |
-| **2.2** | Service wiring: OIDC + OpenTelemetry (2.1), stack tests (1.2), verified badges (1.4) | Turns the 2.0 services from configuration into working features |
-| **2.3** | `lazystack upgrade` (3.1), environment profiles and secrets (3.2) | Makes LazyStack useful for the whole life of a project |
-| **2.4** | Dev dashboard (4.1), ORM choice (2.2), contracts (2.3) | Daily-use quality once the foundations hold |
-| **3.0** | Templates as files + template packs (4.3), AI blueprint drafting (4.2), preview environments (3.3) | Opens the catalog to contributors without lowering the bar |
+| **3.0** | Boot tests (1.1), versions file + Renovate (1.3), non-root and digest pinning (4), templates as files (3.1) | Stops template rot at the source; everything after builds on it |
+| **3.1** | Service wiring: OIDC + OpenTelemetry (2.1), stack tests (1.2), verified badges (1.4) | Turns the 2.0 services from configuration into working features |
+| **3.2** | ORM choice (2.2), contracts (2.3), template packs (3.1), AI blueprint drafting (3.2) | Opens the catalog to contributors without lowering the bar |
 
 **What to measure:**
+- how many generated projects run `lazystack upgrade` successfully;
 - the share of starters that build *and* boot each week (target 100%);
-- the time from a broken upstream release to a fixed template;
-- how many generated projects run `lazystack upgrade` successfully.
+- the time from a broken upstream release to a fixed template.

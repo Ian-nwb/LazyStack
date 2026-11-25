@@ -330,7 +330,7 @@ showcase/            Project website
 
 ## Ideas under consideration
 
-See [ROADMAP.md](ROADMAP.md) for the plan after 2.0.1: boot and stack tests for every starter, services wired into app code (OIDC, OpenTelemetry), `lazystack upgrade`, environment profiles and secrets, and community template packs. Catalog additions under consideration: ClojureScript, ReScript, PureScript, Scala.js and Compose Multiplatform; Analog, Waku, Ember, Nitro, Encore.ts, Loco.rs, Vaadin, Laravel + Inertia/Livewire and headless CMSs (Payload, Strapi, Directus, Medusa); per-app ORM and UI-kit choices; gRPC/GraphQL/AsyncAPI codegen; Zitadel and Authentik; environment profiles, secrets (Vault, 1Password), a template registry, an AI blueprint drafter, Pulumi export, and a macOS build (sponsor me a Macbook for app signature).
+See [ROADMAP.md](ROADMAP.md). 2.x: `lazystack upgrade` (three-way template merges), environment profiles and secrets, a `lazystack dev` dashboard and per-PR preview environments. 3.0: boot and stack tests for every starter, services wired into app code (OIDC, OpenTelemetry), templates as files and community template packs. Catalog additions under consideration: ClojureScript, ReScript, PureScript, Scala.js and Compose Multiplatform; Analog, Waku, Ember, Nitro, Encore.ts, Loco.rs, Vaadin, Laravel + Inertia/Livewire and headless CMSs (Payload, Strapi, Directus, Medusa); per-app ORM and UI-kit choices; gRPC/GraphQL/AsyncAPI codegen; Zitadel and Authentik; environment profiles, secrets (Vault, 1Password), a template registry, an AI blueprint drafter, Pulumi export, and a macOS build (sponsor me a Macbook for app signature).
 
 ## Contributing
 
