@@ -23,9 +23,10 @@ self-hosted PaaS, managed containers, Kubernetes, cloud VM, VPS or bare metal) f
 tech and connections, with alternatives, example services and the generated files that apply.
 The user can override the choice per app (`app.hosting` in the blueprint). It's shown in a
 Blueprint **Hosting** tab, printed by `lazystack hosting`, and written to `docs/hosting.md`.
-It gives advice only and generates no new deploy files.
-**Done when.** `lazystack hosting -c` on the fastapi-react preset shows the frontend as static
-and the API as PaaS, and overrides survive validate → scaffold → import.
+The default is **local only** (running on your machine, not deployed); the suggestion
+is shown as advice for when you deploy. It gives advice only and generates no new deploy files.
+**Done when.** `lazystack hosting -c` on the fastapi-react preset shows both apps as local, with
+static suggested for the frontend and PaaS for the API, and overrides survive validate → scaffold → import.
 
 ## Lifecycle
 
