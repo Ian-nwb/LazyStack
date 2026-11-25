@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ main ]
 
+env:
+  # Maven 3.9 reads MAVEN_ARGS; retry Central's 429/503 responses instead of failing the job.
+  MAVEN_ARGS: -Daether.connector.http.retryHandler.count=5 -Daether.connector.http.retryHandler.serviceUnavailable=429,503 -Daether.connector.http.retryHandler.interval=5000
+
 jobs:
   build_and_typecheck:
     name: Build & TypeScript Validation
@@ -214,7 +218,8 @@ jobs:
         if: matrix.preset == 'go-vue'
         run: |
           cd ./matrix-output/test-go-vue/apps/service
-          go mod tidy
+          # proxy.golang.org / sum.golang.org occasionally drop streams; retry before failing.
+          for i in 1 2 3; do go mod tidy && break; [ "$i" = 3 ] && exit 1; sleep $((i * 10)); done
           go test ./...
           go build ./...
 
