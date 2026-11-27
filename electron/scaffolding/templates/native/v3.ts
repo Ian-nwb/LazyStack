@@ -708,15 +708,15 @@ const payload: Starter = c => ({
       payload: 'payload'
     },
     dependencies: {
-      '@payloadcms/db-sqlite': '^3.50.0',
-      '@payloadcms/next': '^3.50.0',
-      '@payloadcms/richtext-lexical': '^3.50.0',
-      '@payloadcms/ui': '^3.50.0',
+      '@payloadcms/db-sqlite': '3.94.2',
+      '@payloadcms/next': '3.94.2',
+      '@payloadcms/richtext-lexical': '3.94.2',
+      '@payloadcms/ui': '3.94.2',
       graphql: '^16.11.0',
       next: '~15.4.11',
-      payload: '^3.50.0',
-      react: '19.1.1',
-      'react-dom': '19.1.1',
+      payload: '3.94.2',
+      react: '~19.1.10',
+      'react-dom': '~19.1.10',
       sharp: '0.34.3'
     },
     devDependencies: { '@types/node': '^22.0.0', '@types/react': '19.1.10', '@types/react-dom': '19.1.7', typescript: '5.9.2' }
