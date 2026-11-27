@@ -153,7 +153,7 @@ One continuous vertical rule runs down the lifecycle stages (Pick, Generate, Run
 A strictly achromatic palette: near-black ink, pure white paper, and a short zinc ramp that only ever describes structure or state.
 
 ### Primary
-- **Poster White** (paper): all type on the sheet, the mark, the 2px heavy rules under table heads and over ordered lists, the lifecycle rule's filled part, and the fill of the one action block per viewport. Also the selection highlight and the reading-progress bar.
+- **Poster White** (paper): all type on the sheet, the mark, the 2px heavy rules under table heads and over ordered lists, rule's filled part, and the fill of the one action block per viewport. Also the selection highlight and the reading-progress bar.
 
 ### Neutral
 - **Night Sheet** (ink): the background of every section, output panels and stage marks. Also the text colour on the white action block.
@@ -165,7 +165,7 @@ A strictly achromatic palette: near-black ink, pure white paper, and a short zin
 - **Module Line** (module-line): the lamp tint flashed in the hosting types keyframe. (The visible module grid overlay was removed in 3.0; the grid stays a layout system, not a drawing.)
 - **Lit Cell** (lit): the hosting type cell the walking lamp currently sits on.
 - **Row Hover** (row-hover): the hover tint of a ruled table row.
-- **Unfilled Rule** (rule-unfilled): the not-yet-read part of the lifecycle rule.
+- **Unfilled Rule** (rule-unfilled): reserved; the lifecycle line was removed in 3.0.
 
 ### Named Rules
 **The Black Sheet Rule.** Every section background is ink. There are no white or grey section bands; the earlier alternating-sheet idea was dropped by the user.
@@ -210,7 +210,7 @@ Vertical rhythm: sections are separated by a 1px top hairline and padded clamp(7
 
 Breakpoints:
 - **≤1100px**: nav hides; hero stacks to full width with the screenshot below the actions; statements drop beneath headlines; bodies span 2–12 with the 36px indent; hosting types reflow to 4 columns; closing actions go full width.
-- **≤640px**: the lifecycle rule moves to the margin (marks shrink to 32px) and content indents 34px; tables become stacked rows with inline `data-label`s; hosting types go to 2 columns; lists go single column.
+- **≤640px**: the stage marks move to the margin and shrink to 32px and content indents 34px; tables become stacked rows with inline `data-label`s; hosting types go to 2 columns; lists go single column.
 
 ## Elevation & Depth
 
@@ -221,7 +221,7 @@ Flat. There are no shadows, gradients or layered surfaces; depth is conveyed onl
 
 ## Shapes
 
-Square corners everywhere (0px); there is no radius token. Recurring geometry: full-width horizontal rules, the 2px vertical lifecycle rule, 40px square stage marks, 1px framed figures whose right border is removed where the figure bleeds off the page edge, and the 8px square "now" marker. The mark itself is two chevrons under a 2×2 rhombus grid, white only.
+Square corners everywhere (0px); there is no radius token. Recurring geometry: full-width horizontal rules, 40px square stage marks, 1px framed figures whose right border is removed where the figure bleeds off the page edge, and the 8px square "now" marker. The mark itself is two chevrons under a 2×2 rhombus grid, white only.
 
 ## Components
 
@@ -245,8 +245,8 @@ Real screenshots inside a 1px Zinc Hairline frame, bleeding off the right page m
 ### Output panels
 Recorded terminal output and generated files in mono on ink with a 1px hairline border and 22px 24px padding; body in Output White, comments in Unlit Grey, emphasis in bold white. Diffs show deletions in Zinc Caption with a strike-through and additions in bold white. Panels scroll horizontally rather than wrap.
 
-### Lifecycle rule and stage marks (signature)
-A 2px vertical rule through every lifecycle stage, centred in the first gutter, filling white from top as the reader scrolls (Unfilled Rule below the fill). Each stage carries a 40px ink square with a 1px white outline and its stage number in 800 weight; the square pops in when the fill reaches it.
+### Stage marks (signature)
+No vertical line runs through the stages (removed in 3.0). Each stage carries a 40px ink square with a 1px white outline and its stage number in 800 weight; the square pops in when the fill reaches it.
 
 ### Run timeline
 An ordered list of timed steps beside the recorded `lazystack dev` panel; both are driven by one frame list. Steps not yet reached are Unlit Grey, reached steps turn white, and the current step carries an 8px white square that blinks three times, then stays.
@@ -268,7 +268,7 @@ Motion is opt-in: a head script adds `html.motion` only when reduced motion is n
 - `wipe` / `show` / `settle`: a zinc (#3f3f46) block sweeps across a figure and leaves the screenshot behind, which settles from 1.08 scale. Never white: the action block stays the only white block.
 - `print`: output panels print top-down in 24 steps.
 - `lamp`: hosting type cells light up in sequence.
-- `markpop`: a stage mark pops onto the lifecycle rule.
+- `markpop`: a stage mark pops in as its stage arrives.
 - `nudge`: the download arrow nudges down twice, then rests.
 - `blink` on the current Run step's square: three blinks, then solid.
 - `blink`: the typing caret, eight blinks, then solid. Every loop on the page is finite except the hosting-types lamp, which walks only while that row is on screen.

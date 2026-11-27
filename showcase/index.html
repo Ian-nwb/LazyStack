@@ -120,12 +120,8 @@ code, pre, kbd, samp { font-family: var(--mono); }
 }
 .copy:hover { background: var(--paper); color: var(--ink); }
 
-/* ── The life of one project: one continuous rule down the page ─────────── */
+/* ── The life of one project: numbered stages ───────────────────────────── */
 .stage { padding-top: clamp(72px, 11vh, 140px); padding-bottom: clamp(72px, 11vh, 132px); position: relative; border-top: 1px solid var(--rule); }
-.stage::before {
-  content: ""; position: absolute; top: 0; bottom: 0; width: 2px; background: currentColor;
-  left: calc(var(--m) + (100% - 2 * var(--m) - 11 * var(--g)) / 12 + var(--g) / 2 - 1px);
-}
 .stage .mark {
   position: absolute; top: clamp(72px, 11vh, 140px); width: 40px; height: 40px; background: var(--ink); border: 1px solid currentColor;
   left: calc(var(--m) + (100% - 2 * var(--m) - 11 * var(--g)) / 12 + var(--g) / 2 - 20px);
@@ -266,7 +262,6 @@ pre.out .b { color: var(--paper); font-weight: 700; }
   .hero { min-height: auto; }
   .hero h1 .n { font-size: clamp(7.5rem, 44vw, 11rem); }
   .dl, .alt, .npx { grid-column: span 6; }
-  .stage::before { left: calc(var(--m) + 3px); }
   .stage .mark { left: calc(var(--m) - 14px); width: 32px; height: 32px; }
   .stage h2, .stage .say, .tree, .fig-diagram, .fig-pick, .timeline, .term, .upgrade .report, .upgrade .diff, .host .body > .table { grid-column: 1 / 13; padding-left: 34px; }
   .types { grid-column: 1 / 13; margin-left: 34px; grid-template-columns: 1fr 1fr; }
@@ -368,7 +363,6 @@ pre.out { position: relative; }
 .motion .rv.in .npx { animation: lift .9s var(--ease) calc(var(--d, .2s) + .32s) both; }
 
 /* The lifecycle rule fills as you read; each stage mark pops when the fill reaches it. */
-.stage::before { background: linear-gradient(to bottom, currentColor calc(var(--p, 1) * 100%), #2a2a2e calc(var(--p, 1) * 100%)); }
 .motion .stage:not(.lit) .mark { opacity: 0; transform: scale(.2) rotate(-135deg); }
 .motion .stage.lit .mark { animation: markpop .9s var(--ease) both; }
 
@@ -881,7 +875,7 @@ Backups: .lazystack/backup/upgrade-2026-11-25T01-02-14Z</pre>
     seen.observe(row)
   }
 
-  // ── Scroll: reading progress, and the lifecycle rule filling stage by stage.
+  // ── Scroll: reading progress, and each stage's number popping in as it arrives.
   const stages = [...document.querySelectorAll('.stage')]
   let queued = false
   const onScroll = () => {
@@ -891,7 +885,6 @@ Backups: .lazystack/backup/upgrade-2026-11-25T01-02-14Z</pre>
     for (const stage of stages) {
       const r = stage.getBoundingClientRect()
       const p = Math.min(1, Math.max(0, (innerHeight * .62 - r.top) / r.height))
-      stage.style.setProperty('--p', p.toFixed(4))
       if (p > .03) stage.classList.add('lit')
     }
   }
