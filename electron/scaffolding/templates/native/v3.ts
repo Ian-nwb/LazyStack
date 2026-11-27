@@ -339,7 +339,6 @@ const cakephp: Starter = c => ({
     name: `lazystack/${c.name}`,
     type: 'project',
     require: { php: '^8.2', 'cakephp/app': '^5.1' },
-    'require-dev': { 'cakephp/debug_kit': '^5.0' },
     autoload: { 'psr-4': { 'App\\': 'src/' } },
     scripts: { 'post-install-cmd': ['@php setup.php'], 'post-update-cmd': ['@php setup.php'] },
     config: { 'optimize-autoloader': true, 'sort-packages': true, 'allow-plugins': { 'cakephp/plugin-installer': true } }
@@ -714,7 +713,7 @@ const payload: Starter = c => ({
       '@payloadcms/richtext-lexical': '^3.50.0',
       '@payloadcms/ui': '^3.50.0',
       graphql: '^16.11.0',
-      next: '15.4.7',
+      next: '~15.4.11',
       payload: '^3.50.0',
       react: '19.1.1',
       'react-dom': '19.1.1',
