@@ -1,5 +1,6 @@
 import { devServiceCompose, isDevService } from './devServices'
 import { getV2Dockerfile } from './native/v2'
+import { getV3Dockerfile } from './native/v3'
 import { ProjectSettings } from '../../../src/types'
 import { resolveStructurePaths } from '../../../src/data/structurePresets'
 import { getDatabaseAdminUiOption } from '../../../src/data/databaseAdminUis'
@@ -413,6 +414,8 @@ function buildThenServeDockerfile(build: StaticSiteBuild, port: number): string 
 
 export function getDockerfileForTech(techId: string, port: number, folderName = 'app', starterProfile?: string): { dockerfile: string, dockerignore: string } {
   let dockerignore = `node_modules\n.git\n.env\n*.log\ndist\nbuild\ntmp\n`
+  const v3 = getV3Dockerfile(techId, port, folderName)
+  if (v3) return v3
   const v2 = getV2Dockerfile(techId, port, folderName)
   if (v2) return v2
 

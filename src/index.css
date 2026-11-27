@@ -1,14 +1,22 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "Archivo";
+  src: url("./assets/fonts/archivo-latin.woff2") format("woff2");
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  font-display: swap;
+}
+
 :root {
-  --surface-950: #09090b;
-  --surface-900: #0e0e11;
-  --surface-850: #141418;
-  --surface-800: #18181c;
-  --surface-750: #202025;
-  --surface-700: #27272e;
-  --surface-650: #32323b;
-  --surface-600: #3f3f4a;
+  --surface-950: #050505;
+  --surface-900: #0a0a0a;
+  --surface-850: #111112;
+  --surface-800: #161618;
+  --surface-750: #1e1e21;
+  --surface-700: #27272a;
+  --surface-650: #3f3f46;
+  --surface-600: #52525b;
 
   --text-primary: #f4f4f5;
   --text-secondary: #d4d4d8;
@@ -17,24 +25,24 @@
 }
 
 /* ==============================================================
-   WARM CREAM PALETTE (ZERO COLD GREY)
+   LIGHT PALETTE: PAPER AND INK (matches the showcase)
    ============================================================== */
 body.light-mode {
-  /* Warm harmonious cream, linen, and toasted biscuit surfaces */
-  --surface-950: #faf6ed;  /* Warm ivory cream canvas */
-  --surface-900: #f2ebdc;  /* Rich clotted cream panels & headers */
-  --surface-850: #e8deca;  /* Elevated warm parchment boxes */
-  --surface-800: #dfd3bd;  /* Warm biscuit buttons & pills */
-  --surface-750: #d4c5ab;  /* Warm dividers */
-  --surface-700: #c7b499;  /* Toasted caramel borders */
-  --surface-650: #baa486;  /* Input borders */
-  --surface-600: #ab9374;
+  
+  --surface-950: #ffffff;  
+  --surface-900: #fafafa;  
+  --surface-850: #f4f4f5;  
+  --surface-800: #e4e4e7;  
+  --surface-750: #d4d4d8;  /* Warm dividers */
+  --surface-700: #d4d4d8;  
+  --surface-650: #a1a1aa;  /* Input borders */
+  --surface-600: #a1a1aa;
 
-  /* Warm Espresso & Dark Roast text hierarchy (NO COLD GREY) */
-  --text-primary: #1f1a16;    /* Deep warm dark espresso */
-  --text-secondary: #352b22;  /* Rich warm dark roast */
-  --text-muted: #4e4033;      /* Warm dark umber */
-  --text-subtle: #6e5c4a;     /* Warm hazelnut subtext */
+  
+  --text-primary: #050505;    
+  --text-secondary: #27272a;  
+  --text-muted: #52525b;      
+  --text-subtle: #71717a;     
 }
 
 @theme {
@@ -47,12 +55,12 @@ body.light-mode {
   --color-surface-650: var(--surface-650);
   --color-surface-600: var(--surface-600);
 
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --font-sans: 'Archivo', system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Mono', 'DejaVu Sans Mono', Menlo, Consolas, monospace;
 }
 
 * {
-  border-color: #27272e;
+  border-color: #27272a;
 }
 
 body {
@@ -62,181 +70,181 @@ body {
 }
 
 /* ==============================================================
-   LIGHT MODE: PURE CREAM & WARM ESPRESSO (ZERO COLD GREY)
+   LIGHT MODE: WHITE PAPER, BLACK INK
    ============================================================== */
 body.light-mode {
-  background-color: #faf6ed !important;
-  color: #1f1a16 !important;
+  background-color: #ffffff !important;
+  color: #050505 !important;
 }
 
 body.light-mode * {
-  border-color: #c7b499;
+  border-color: #d4d4d8;
 }
 
 /* Surface backgrounds (including any slash opacity variants) */
 body.light-mode .bg-surface-950,
 body.light-mode [class*="bg-surface-950"] {
-  background-color: #faf6ed !important;
+  background-color: #ffffff !important;
 }
 
 body.light-mode .bg-surface-900,
 body.light-mode [class*="bg-surface-900"] {
-  background-color: #f2ebdc !important;
+  background-color: #fafafa !important;
 }
 
 body.light-mode .bg-surface-850,
 body.light-mode [class*="bg-surface-850"] {
-  background-color: #e8deca !important;
+  background-color: #f4f4f5 !important;
 }
 
 body.light-mode .bg-surface-800,
 body.light-mode [class*="bg-surface-800"] {
-  background-color: #dfd3bd !important;
+  background-color: #e4e4e7 !important;
 }
 
 body.light-mode .bg-surface-750,
 body.light-mode [class*="bg-surface-750"] {
-  background-color: #d4c5ab !important;
+  background-color: #d4d4d8 !important;
 }
 
 body.light-mode .border-surface-700 {
-  border-color: #c7b499 !important;
+  border-color: #d4d4d8 !important;
 }
 
 body.light-mode .border-surface-750 {
-  border-color: #d4c5ab !important;
+  border-color: #d4d4d8 !important;
 }
 
 body.light-mode .border-surface-650 {
-  border-color: #baa486 !important;
+  border-color: #a1a1aa !important;
 }
 
 body.light-mode .border-surface-800 {
-  border-color: #c7b499 !important;
+  border-color: #d4d4d8 !important;
 }
 
 /* ==============================================================
-   TEXT HIERARCHY — WARM ESPRESSO / NO GREY
+   TEXT HIERARCHY — INK AND ZINC
    ============================================================== */
 body.light-mode .text-white {
-  color: #1a1512 !important; /* Pure warm dark espresso */
+  color: #050505 !important; 
 }
 
 body.light-mode .text-zinc-100 {
-  color: #1a1512 !important;
+  color: #050505 !important;
 }
 
 body.light-mode .text-zinc-200 {
-  color: #2a221b !important;
+  color: #18181b !important;
 }
 
 body.light-mode .text-zinc-300 {
-  color: #3d3227 !important; /* Warm dark roast */
+  color: #3f3f46 !important; 
 }
 
 body.light-mode .text-zinc-400 {
-  color: #4e4033 !important; /* Warm dark umber, NEVER grey */
+  color: #52525b !important; 
 }
 
 body.light-mode .text-zinc-500 {
-  color: #685746 !important; /* Warm cinnamon hazelnut, NEVER grey */
+  color: #52525b !important; 
 }
 
 body.light-mode .text-zinc-600 {
-  color: #826e5a !important; /* Warm toasted almond */
+  color: #71717a !important; 
 }
 
 /* Mono labels */
 body.light-mode code,
 body.light-mode .font-mono {
-  color: #241c15 !important;
+  color: #18181b !important;
 }
 
 /* ==============================================================
-   INPUTS, SELECTS, AND TEXTAREAS — WARM LINEN BOND
+   INPUTS, SELECTS, AND TEXTAREAS
    ============================================================== */
 body.light-mode input,
 body.light-mode select,
 body.light-mode textarea {
-  background-color: #fffdf9 !important;
-  border-color: #c7b499 !important;
-  color: #1f1a16 !important;
-  box-shadow: 0 1px 2px rgba(45, 30, 15, 0.05);
+  background-color: #ffffff !important;
+  border-color: #d4d4d8 !important;
+  color: #050505 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 body.light-mode input:focus,
 body.light-mode select:focus,
 body.light-mode textarea:focus {
-  border-color: #1f1a16 !important;
+  border-color: #050505 !important;
   outline: none;
 }
 
 body.light-mode input::placeholder,
 body.light-mode select::placeholder {
-  color: #8a7864 !important;
+  color: #71717a !important;
 }
 
 /* ==============================================================
    BUTTONS AND INTERACTIVE PILLS
    ============================================================== */
 body.light-mode .bg-white {
-  background-color: #1f1a16 !important;
-  color: #faf6ed !important;
-  border-color: #1f1a16 !important;
+  background-color: #050505 !important;
+  color: #ffffff !important;
+  border-color: #050505 !important;
 }
 
 body.light-mode .bg-white .text-zinc-950,
 body.light-mode .bg-white span,
 body.light-mode .bg-white svg {
-  color: #faf6ed !important;
+  color: #ffffff !important;
 }
 
 body.light-mode .bg-white:hover {
-  background-color: #2e261f !important;
+  background-color: #27272a !important;
 }
 
 body.light-mode .bg-zinc-800 {
-  background-color: #e8deca !important;
-  color: #1f1a16 !important;
-  border-color: #c7b499 !important;
+  background-color: #f4f4f5 !important;
+  color: #050505 !important;
+  border-color: #d4d4d8 !important;
 }
 
 body.light-mode .bg-zinc-800:hover {
-  background-color: #dfd3bd !important;
-  color: #1a1512 !important;
+  background-color: #e4e4e7 !important;
+  color: #050505 !important;
 }
 
 body.light-mode .bg-zinc-800 * {
-  color: #1f1a16 !important;
+  color: #050505 !important;
 }
 
 body.light-mode .bg-zinc-200 {
-  background-color: #1f1a16 !important;
-  color: #faf6ed !important;
+  background-color: #050505 !important;
+  color: #ffffff !important;
 }
 
 body.light-mode .bg-zinc-200 * {
-  color: #faf6ed !important;
+  color: #ffffff !important;
 }
 
 body.light-mode .text-zinc-950 {
-  color: #faf6ed !important;
+  color: #ffffff !important;
 }
 
 /* Active navigation tab button */
 body.light-mode .bg-zinc-100 {
-  background-color: #1f1a16 !important;
-  color: #faf6ed !important;
+  background-color: #050505 !important;
+  color: #ffffff !important;
 }
 
 body.light-mode .bg-zinc-100 * {
-  color: #faf6ed !important;
+  color: #ffffff !important;
 }
 
 body.light-mode .bg-zinc-100 .bg-surface-950 {
-  background-color: #352b22 !important;
-  color: #faf6ed !important;
-  border-color: #4e4033 !important;
+  background-color: #27272a !important;
+  color: #ffffff !important;
+  border-color: #52525b !important;
 }
 
 /* ==============================================================
@@ -455,26 +463,26 @@ body.light-mode .border-rose-500\/40 {
 
 body.light-mode .text-slate-300,
 body.light-mode .text-slate-400 {
-  color: #352b22 !important;
+  color: #27272a !important;
 }
 body.light-mode .bg-slate-500\/20 {
-  background-color: #ede4d6 !important;
-  border-color: #c7b499 !important;
+  background-color: #f4f4f5 !important;
+  border-color: #d4d4d8 !important;
 }
 body.light-mode .border-slate-500\/40 {
-  border-color: #c7b499 !important;
+  border-color: #d4d4d8 !important;
 }
 
 body.light-mode .text-zinc-300,
 body.light-mode .text-zinc-400 {
-  color: #352b22 !important;
+  color: #27272a !important;
 }
 body.light-mode .bg-zinc-500\/20 {
-  background-color: #ede4d6 !important;
-  border-color: #c7b499 !important;
+  background-color: #f4f4f5 !important;
+  border-color: #d4d4d8 !important;
 }
 body.light-mode .border-zinc-500\/40 {
-  border-color: #c7b499 !important;
+  border-color: #d4d4d8 !important;
 }
 
 /* ==============================================================
@@ -523,13 +531,13 @@ body.light-mode .bg-amber-950\/60 * {
 }
 
 body.light-mode ::-webkit-scrollbar-track {
-  background: #faf6ed;
+  background: #ffffff;
 }
 body.light-mode ::-webkit-scrollbar-thumb {
-  background: #c7b499;
+  background: #d4d4d8;
 }
 body.light-mode ::-webkit-scrollbar-thumb:hover {
-  background: #ab9374;
+  background: #a1a1aa;
 }
 
 .glass-panel {
@@ -562,4 +570,9 @@ body.light-mode .bg-surface-850 {
   60% { width: 65%; }
   80% { width: 80%; }
   100% { width: 95%; }
+}
+
+/* Switches: light mode turns an "on" track black, so its knob turns white. */
+body.light-mode [role="switch"] > span.bg-zinc-950 {
+  background-color: #ffffff !important;
 }

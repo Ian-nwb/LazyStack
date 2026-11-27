@@ -2,6 +2,7 @@ import { ProjectSettings } from '../../../src/types'
 import { DATABASE_CATALOG, isPostgresFamily } from '../../../src/data/databases'
 import { keycloakRealm, keycloakRealmJson } from './devServices'
 import { v2DevCommand, v2ReadmeRunCommand } from './native/v2'
+import { v3DevCommand, v3ReadmeRunCommand } from './native/v3'
 import { generateProjectTooling } from './projectTooling'
 import { resolveStructurePaths } from '../../../src/data/structurePresets'
 import { getDbServiceName, generateDockerCompose } from './docker'
@@ -44,6 +45,8 @@ export function generateMetaFiles(settings: ProjectSettings, credentials: Record
   const paths = resolveStructurePaths(settings)
   const useUnifiedWorkspace = settings.useUnifiedWorkspace !== false
   const nativeRunCommand = (app: ProjectSettings['apps'][number]) => {
+    const v3Run = v3ReadmeRunCommand(app.techId, app.port)
+    if (v3Run) return v3Run
     const v2Run = v2ReadmeRunCommand(app.techId, app.port)
     if (v2Run) return v2Run
     if (app.techId === 'python-fastapi') return `python -m venv .venv && source .venv/bin/activate\npip install -r requirements.txt${app.starterProfile === 'api-service' ? '\nalembic upgrade head' : ''}\nuvicorn main:app --reload --port ${app.port}`
@@ -179,6 +182,8 @@ mongo_data/
     const isWin = hostPlatform === 'win32'
     const pyBin = isWin ? '.venv\\\\Scripts\\\\python.exe' : '.venv/bin/python'
     const uvicornBin = isWin ? '.venv\\\\Scripts\\\\uvicorn.exe' : '.venv/bin/uvicorn'
+    const v3Dev = v3DevCommand(app.techId, app.port, pyBin)
+    if (v3Dev) return v3Dev
     const v2Dev = v2DevCommand(app.techId, app.port, pyBin)
     if (v2Dev) return v2Dev
 

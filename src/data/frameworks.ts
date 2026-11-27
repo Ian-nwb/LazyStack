@@ -2015,6 +2015,291 @@ export const TECH_CATALOG: TechItem[] = [
       { binary: 'node', label: 'Node.js 22+', installHint: 'https://nodejs.org' },
       { binary: 'npm', label: 'npm', installHint: 'Installed with Node.js' }
     ]
+  },
+  // --- Added in 3.0 ---
+  {
+    id: 'node-nitro',
+    name: 'Nitro (UnJS)',
+    language: 'JS / TS',
+    category: 'backend',
+    role: 'backend',
+    supportsFlavor: true,
+    serverlessAdapter: true,
+    defaultPort: 3000,
+    description: 'Universal server toolkit behind Nuxt: file-based routes, auto-imports, and one build for Node, Docker or any serverless/edge target.',
+    badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+    requires: [
+      { binary: 'node', label: 'Node.js 22+', installHint: 'https://nodejs.org' },
+      { binary: 'npm', label: 'npm', installHint: 'Installed with Node.js' }
+    ]
+  },
+  {
+    id: 'node-hapi',
+    name: 'hapi',
+    language: 'JS / TS',
+    category: 'backend',
+    role: 'backend',
+    supportsFlavor: true,
+    defaultPort: 3000,
+    description: 'Configuration-centric Node.js framework for APIs: route config, plugins, validation and server.inject() testing.',
+    badgeColor: 'bg-orange-500/20 text-orange-300 border-orange-500/40',
+    requires: [
+      { binary: 'node', label: 'Node.js 22+', installHint: 'https://nodejs.org' },
+      { binary: 'npm', label: 'npm', installHint: 'Installed with Node.js' }
+    ]
+  },
+  {
+    id: 'node-directus',
+    name: 'Directus (headless CMS)',
+    language: 'JS / TS',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 8055,
+    description: 'Headless CMS and data platform: instant REST + GraphQL API and an admin app over SQL (SQLite by default, PostgreSQL/MySQL ready).',
+    badgeColor: 'bg-violet-500/20 text-violet-300 border-violet-500/40',
+    requires: [
+      { binary: 'node', label: 'Node.js 22+', installHint: 'https://nodejs.org' },
+      { binary: 'npm', label: 'npm', installHint: 'Installed with Node.js' }
+    ]
+  },
+  {
+    id: 'python-quart',
+    name: 'Python (Quart)',
+    language: 'Python',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 5000,
+    description: 'The async reimplementation of Flask: the familiar Flask API on ASGI, served by Hypercorn, with an async test client.',
+    badgeColor: 'bg-sky-500/20 text-sky-300 border-sky-500/40',
+    requires: [
+      { binary: 'python3', label: 'Python 3.10+', installHint: 'https://www.python.org/downloads/' }
+    ]
+  },
+  {
+    id: 'python-falcon',
+    name: 'Python (Falcon)',
+    language: 'Python',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 8000,
+    description: 'Minimal, fast ASGI framework for REST APIs and microservices: resource classes, no magic, served by Uvicorn.',
+    badgeColor: 'bg-teal-500/20 text-teal-300 border-teal-500/40',
+    requires: [
+      { binary: 'python3', label: 'Python 3.10+', installHint: 'https://www.python.org/downloads/' }
+    ]
+  },
+  {
+    id: 'go-beego',
+    name: 'Go (Beego)',
+    language: 'Go',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 8080,
+    description: 'Full-featured MVC framework for Go: router, controllers, config files and an ORM, common in large enterprise services.',
+    badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
+    requires: [
+      { binary: 'go', label: 'Go 1.24+', installHint: 'https://go.dev/dl/' }
+    ]
+  },
+  {
+    id: 'java-vertx',
+    name: 'Java (Eclipse Vert.x)',
+    language: 'Java',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 8080,
+    description: 'Reactive, event-driven toolkit on the JVM: a non-blocking web router, a JUnit 5 + vertx-junit5 test and a shaded jar.',
+    badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
+    requires: [
+      { binary: 'java', label: 'JDK 21+', installHint: 'https://adoptium.net' },
+      { binary: 'mvn', label: 'Maven', installHint: 'https://maven.apache.org/download.cgi' }
+    ]
+  },
+  {
+    id: 'java-jakarta',
+    name: 'Java (Jakarta EE / WildFly)',
+    language: 'Java',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 8080,
+    description: 'Jakarta EE 10 REST (JAX-RS) packaged as a WAR and served by WildFly; deployable to any Jakarta EE server.',
+    badgeColor: 'bg-orange-500/20 text-orange-300 border-orange-500/40',
+    requires: [
+      { binary: 'java', label: 'JDK 21+', installHint: 'https://adoptium.net' },
+      { binary: 'mvn', label: 'Maven', installHint: 'https://maven.apache.org/download.cgi' }
+    ]
+  },
+  {
+    id: 'java-vaadin',
+    name: 'Java (Vaadin Flow)',
+    language: 'Java',
+    category: 'fullstack',
+    role: 'fullstack',
+    defaultPort: 8080,
+    description: 'Full-stack web UI written entirely in Java on Spring Boot: server-side components, routing and a production frontend build.',
+    badgeColor: 'bg-sky-500/20 text-sky-300 border-sky-500/40',
+    requires: [
+      { binary: 'java', label: 'JDK 21+', installHint: 'https://adoptium.net' },
+      { binary: 'mvn', label: 'Maven', installHint: 'https://maven.apache.org/download.cgi' }
+    ]
+  },
+  {
+    id: 'php-codeigniter',
+    name: 'PHP (CodeIgniter 4)',
+    language: 'PHP',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 8080,
+    description: 'Lightweight PHP MVC framework with a tiny footprint: the official app skeleton, routes and a JSON controller.',
+    badgeColor: 'bg-orange-500/20 text-orange-300 border-orange-500/40',
+    requires: [
+      { binary: 'php', label: 'PHP 8.2+ (intl, mbstring)', installHint: 'https://www.php.net/downloads' },
+      { binary: 'composer', label: 'Composer', installHint: 'https://getcomposer.org/download/' }
+    ]
+  },
+  {
+    id: 'php-cakephp',
+    name: 'PHP (CakePHP 5)',
+    language: 'PHP',
+    category: 'fullstack',
+    role: 'fullstack',
+    defaultPort: 8765,
+    description: 'Convention-over-configuration PHP framework: the official cakephp/app skeleton with ORM, bake and a JSON controller.',
+    badgeColor: 'bg-red-500/20 text-red-300 border-red-500/40',
+    requires: [
+      { binary: 'php', label: 'PHP 8.2+ (intl, mbstring)', installHint: 'https://www.php.net/downloads' },
+      { binary: 'composer', label: 'Composer', installHint: 'https://getcomposer.org/download/' }
+    ]
+  },
+  {
+    id: 'ruby-hanami',
+    name: 'Ruby (Hanami 2)',
+    language: 'Ruby',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 2300,
+    description: 'Modern Ruby framework built on dry-rb: actions per endpoint, slices, a routes DSL and an RSpec request spec.',
+    badgeColor: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
+    requires: [
+      { binary: 'ruby', label: 'Ruby 3.2+', installHint: 'https://www.ruby-lang.org/en/downloads/' },
+      { binary: 'bundle', label: 'Bundler', installHint: 'gem install bundler' }
+    ]
+  },
+  {
+    id: 'ember-app',
+    name: 'Ember.js (Octane)',
+    language: 'JS / TS',
+    category: 'frontend',
+    role: 'frontend',
+    staticOutput: true,
+    defaultPort: 4200,
+    description: 'Batteries-included SPA framework: ember-cli, Glimmer components, tracked state and a router, built to static files.',
+    badgeColor: 'bg-orange-500/20 text-orange-300 border-orange-500/40',
+    requires: [
+      { binary: 'node', label: 'Node.js 22+', installHint: 'https://nodejs.org' },
+      { binary: 'npm', label: 'npm', installHint: 'Installed with Node.js' }
+    ]
+  },
+  {
+    id: 'php-laravel-inertia',
+    name: 'Laravel + Inertia (React)',
+    language: 'PHP',
+    category: 'fullstack',
+    role: 'fullstack',
+    defaultPort: 8000,
+    description: 'Laravel 12 with Inertia.js and React: server-side routing and controllers with React pages, no separate API.',
+    badgeColor: 'bg-red-500/20 text-red-300 border-red-500/40',
+    requires: [
+      { binary: 'php', label: 'PHP 8.2+', installHint: 'https://www.php.net/downloads' },
+      { binary: 'composer', label: 'Composer', installHint: 'https://getcomposer.org/download/' },
+      { binary: 'node', label: 'Node.js 22+', installHint: 'https://nodejs.org' }
+    ]
+  },
+  {
+    id: 'php-laravel-livewire',
+    name: 'Laravel + Livewire',
+    language: 'PHP',
+    category: 'fullstack',
+    role: 'fullstack',
+    defaultPort: 8000,
+    description: 'Laravel 12 with Livewire 3: reactive full-page components written in PHP and Blade, no JavaScript build.',
+    badgeColor: 'bg-pink-500/20 text-pink-300 border-pink-500/40',
+    requires: [
+      { binary: 'php', label: 'PHP 8.2+', installHint: 'https://www.php.net/downloads' },
+      { binary: 'composer', label: 'Composer', installHint: 'https://getcomposer.org/download/' }
+    ]
+  },
+  {
+    id: 'node-strapi',
+    name: 'Strapi 5 (headless CMS)',
+    language: 'JS / TS',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 1337,
+    description: 'The most popular open-source headless CMS: content-type builder, admin panel, REST and GraphQL APIs, on SQLite.',
+    badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40',
+    requires: [
+      { binary: 'node', label: 'Node.js 20–24', installHint: 'https://nodejs.org' },
+      { binary: 'npm', label: 'npm', installHint: 'Installed with Node.js' }
+    ]
+  },
+  {
+    id: 'node-payload',
+    name: 'Payload 3 (headless CMS)',
+    language: 'TypeScript',
+    category: 'fullstack',
+    role: 'fullstack',
+    defaultPort: 3000,
+    description: 'Code-first headless CMS running inside Next.js: typed collections, admin at /admin, REST and GraphQL, on SQLite.',
+    badgeColor: 'bg-zinc-500/20 text-zinc-200 border-zinc-500/40',
+    requires: [
+      { binary: 'node', label: 'Node.js 20+', installHint: 'https://nodejs.org' },
+      { binary: 'npm', label: 'npm', installHint: 'Installed with Node.js' }
+    ]
+  },
+  {
+    id: 'rust-loco',
+    name: 'Rust (Loco)',
+    language: 'Rust',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 5150,
+    description: 'Rails-like productivity for Rust on Axum: conventions, generators, workers and a CLI, as a lightweight service.',
+    badgeColor: 'bg-orange-500/20 text-orange-300 border-orange-500/40',
+    requires: [
+      { binary: 'cargo', label: 'Rust (cargo)', installHint: 'https://rustup.rs' }
+    ]
+  },
+  {
+    id: 'kotlin-compose-desktop',
+    name: 'Compose Multiplatform (Desktop)',
+    language: 'Kotlin',
+    category: 'mobile-desktop',
+    role: 'desktop-mobile',
+    hostOnly: true,
+    defaultPort: 0,
+    description: 'JetBrains Compose Multiplatform: one declarative Kotlin UI for Windows, macOS and Linux, packaged as native installers.',
+    badgeColor: 'bg-violet-500/20 text-violet-300 border-violet-500/40',
+    requires: [
+      { binary: 'java', label: 'JDK 21+', installHint: 'https://adoptium.net' },
+      { binary: 'gradle', label: 'Gradle 8.10+', installHint: 'https://gradle.org/install/' }
+    ]
+  },
+  {
+    id: 'android-compose',
+    name: 'Android (Jetpack Compose)',
+    language: 'Kotlin',
+    category: 'mobile-desktop',
+    role: 'desktop-mobile',
+    hostOnly: true,
+    defaultPort: 0,
+    description: 'Native Android app in Kotlin with Jetpack Compose and Material 3, in the Android Studio project layout.',
+    badgeColor: 'bg-green-500/20 text-green-300 border-green-500/40',
+    requires: [
+      { binary: 'java', label: 'JDK 17+', installHint: 'https://adoptium.net' },
+      { binary: 'gradle', label: 'Gradle 8.9+', installHint: 'https://gradle.org/install/' },
+      { binary: 'adb', label: 'Android SDK (platform-tools)', installHint: 'https://developer.android.com/studio' }
+    ]
   }
 ]
 

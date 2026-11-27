@@ -33,7 +33,7 @@ function createWindow() {
     height: 900,
     minWidth: 1080,
     minHeight: 700,
-    backgroundColor: '#0c0d12',
+    backgroundColor: '#050505',
     frame: true,
     webPreferences: {
       preload,

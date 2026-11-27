@@ -55,6 +55,7 @@ const NPM_RULES: Rule[] = [
   [/"@adonisjs\/core"/, 'ts-adonis'],
   [/"koa"/, 'ts-koa'],
   [/"@types\/bun"/, 'bun-native'],
+  [/"payload"/, 'node-payload'],
   [/"@trpc\/server"[\s\S]*"next"|"next"[\s\S]*"@trpc\/server"/, 'nextjs-trpc'],
   [/"@tanstack\/(react-)?start"/, 'tanstack-start'],
   [/"@solidjs\/start"/, 'solid-start'],
@@ -70,6 +71,11 @@ const NPM_RULES: Rule[] = [
   [/"expo"/, 'react-native-expo'],
   [/"@capacitor\/core"/, 'capacitor-app'],
   [/"electron"/, 'electron-app'],
+  [/"directus"/, 'node-directus'],
+  [/"@strapi\/strapi"/, 'node-strapi'],
+  [/"nitropack"/, 'node-nitro'],
+  [/"@hapi\/hapi"/, 'node-hapi'],
+  [/"ember-source"/, 'ember-app'],
   [/"@nestjs\/core"/, 'ts-nestjs'],
   [/"elysia"/, 'ts-elysia'],
   [/"hono"/, 'ts-hono'],
@@ -88,6 +94,7 @@ const NPM_RULES: Rule[] = [
   [/"@google\/clasp"/, 'google-apps-script']
 ]
 const CARGO_RULES: Rule[] = [
+  [/^\s*loco-rs\s*=/m, 'rust-loco'],
   [/^\s*rocket\s*=/m, 'rust-rocket'],
   [/^\s*dioxus\s*=/m, 'rust-dioxus'],
   [/^\s*slint\s*=/m, 'rust-slint'],
@@ -102,6 +109,7 @@ const CARGO_RULES: Rule[] = [
 const GO_RULES: Rule[] = [
   [/a-h\/templ/, 'go-templ-htmx'],
   [/goravel\/framework/, 'go-goravel'],
+  [/beego\/beego/, 'go-beego'],
   [/gin-gonic\/gin/, 'go-gin'],
   [/gofiber\/fiber/, 'go-fiber'],
   [/labstack\/echo/, 'go-echo'],
@@ -115,6 +123,8 @@ const PY_RULES: Rule[] = [
   [/^\s*streamlit\b/im, 'python-streamlit'],
   [/^\s*gradio\b/im, 'python-gradio'],
   [/^\s*litestar\b/im, 'python-litestar'],
+  [/^\s*quart\b/im, 'python-quart'],
+  [/^\s*falcon\b/im, 'python-falcon'],
   [/^\s*sanic\b/im, 'python-sanic'],
   [/^\s*tornado\b/im, 'python-tornado'],
   [/^\s*pyramid\b/im, 'python-pyramid'],
@@ -130,8 +140,13 @@ const JVM_RULES: Rule[] = [
   [/io\.quarkus/, 'java-quarkus'],
   [/io\.micronaut/, 'java-micronaut'],
   [/io\.javalin/, 'java-javalin'],
+  [/io\.vertx/, 'java-vertx'],
+  [/com\.vaadin/, 'java-vaadin'],
+  [/jakarta\.jakartaee-api|jakarta\.platform/, 'java-jakarta'],
   [/spring-boot/, 'java-springboot'],
   [/org\.openjfx|javafx/, 'java-javafx'],
+  [/com\.android\.application[\s\S]*kotlin\.plugin\.compose|androidx\.compose/, 'android-compose'],
+  [/org\.jetbrains\.compose/, 'kotlin-compose-desktop'],
   [/io\.ktor/, 'kotlin-ktor'],
   [/kotlin\("js"\)|kotlin\("multiplatform"\)[\s\S]*js\s*\(/, 'kotlin-js']
 ]
@@ -227,11 +242,16 @@ async function detectApp(dir: string, entries: string[]): Promise<{ techId: stri
   if (has('deps.edn') || has('project.clj')) return /ring/.test(await file('deps.edn') + await file('project.clj')) ? { techId: 'clojure-ring', confidence: 'high', evidence: 'Ring dependency' } : null
   if (has('composer.json')) {
     const composer = await file('composer.json')
+    if (/laravel\/framework/.test(composer) && /inertiajs\/inertia-laravel/.test(composer)) return { techId: 'php-laravel-inertia', confidence: 'high', evidence: 'composer requires Laravel and Inertia' }
+    if (/laravel\/framework/.test(composer) && /livewire\/livewire/.test(composer)) return { techId: 'php-laravel-livewire', confidence: 'high', evidence: 'composer requires Laravel and Livewire' }
     if (/laravel\/framework/.test(composer)) return { techId: 'fullstack-laravel', confidence: 'high', evidence: 'composer requires laravel/framework' }
     if (/symfony\/framework-bundle/.test(composer)) return { techId: 'php-symfony', confidence: 'high', evidence: 'composer requires symfony/framework-bundle' }
     if (/slim\/slim/.test(composer)) return { techId: 'php-slim', confidence: 'high', evidence: 'composer requires slim/slim' }
+    if (/codeigniter4\/framework/.test(composer)) return { techId: 'php-codeigniter', confidence: 'high', evidence: 'composer requires codeigniter4/framework' }
+    if (/cakephp\/(app|cakephp)/.test(composer)) return { techId: 'php-cakephp', confidence: 'high', evidence: 'composer requires CakePHP' }
     return { techId: 'vanilla-php', confidence: 'medium', evidence: 'composer.json without a known framework' }
   }
+  if (has('Gemfile') && /\bhanami\b/.test(await file('Gemfile'))) return { techId: 'ruby-hanami', confidence: 'high', evidence: 'Gemfile requires hanami' }
   if (has('Gemfile') && /\bjekyll\b/.test(await file('Gemfile'))) return { techId: 'jekyll', confidence: 'high', evidence: 'Gemfile requires jekyll' }
   if (has('Gemfile') && /\bsinatra\b/.test(await file('Gemfile')) && !/\brails\b/.test(await file('Gemfile'))) return { techId: 'ruby-sinatra', confidence: 'high', evidence: 'Gemfile requires sinatra' }
   if (has('Gemfile')) return /\brails\b/.test(await file('Gemfile')) ? { techId: 'ruby-rails', confidence: 'high', evidence: 'Gemfile requires rails' } : null

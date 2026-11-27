@@ -22,17 +22,17 @@ export default {
           950: '#1e1b4b',
         },
         surface: {
-          900: '#0c0d12',
-          850: '#11131a',
-          800: '#161922',
-          750: '#1c202c',
-          700: '#232838',
-          600: '#32394e',
+          900: '#0a0a0a',
+          850: '#111112',
+          800: '#161618',
+          750: '#1e1e21',
+          700: '#27272a',
+          600: '#52525b',
         }
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-        mono: ['JetBrains Mono', 'Fira Code', 'monospace']
+        sans: ['Archivo', 'system-ui', '-apple-system', 'sans-serif'],
+        mono: ['ui-monospace', 'SF Mono', 'Cascadia Mono', 'DejaVu Sans Mono', 'Menlo', 'Consolas', 'monospace']
       }
     },
   },

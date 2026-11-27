@@ -1509,14 +1509,14 @@ export const v2Starters: Record<string, Starter> = {
   'elm-app': elm
 }
 
-const nginxStatic = (port: number, buildStage: string, output: string) => `${buildStage}
+export const nginxStatic = (port: number, buildStage: string, output: string) => `${buildStage}
 FROM nginx:alpine
 COPY --from=build /app/${output} /usr/share/nginx/html
 RUN printf 'server {\\n  listen ${port};\\n  root /usr/share/nginx/html;\\n  location / { try_files $uri $uri/ /index.html; }\\n  location = /health { default_type application/json; return 200 "{\\\\"status\\\\":\\\\"healthy\\\\"}"; }\\n}\\n' > /etc/nginx/conf.d/default.conf
 EXPOSE ${port}
 `
 
-const nodeBuild = (extra = '') => `FROM node:24-alpine AS build
+export const nodeBuild = (extra = '') => `FROM node:24-alpine AS build
 WORKDIR /app
 COPY package*.json ./
 RUN npm install --no-audit --no-fund
