@@ -2,7 +2,8 @@ name: Release
 
 # Push a tag like v2.0.0 to build the Linux AppImage and Windows portable EXE on GitHub's
 # runners, publish them as a GitHub release (notes from CHANGELOG.md), and
-# publish the CLI to npm with provenance.
+# publish the CLI to npm with provenance and to GitHub Packages as @<owner>/lazystack
+# (GitHub Packages uses the built-in GITHUB_TOKEN; nothing to configure).
 #
 # npm: either configure a Trusted Publisher for this repository and workflow on npmjs.com
 # (no secret needed), or add an NPM_TOKEN repository secret.
@@ -105,4 +106,36 @@ jobs:
             echo "lazystack@$version is already on npm"
           else
             npm publish --provenance --access public
+          fi
+
+  github-packages:
+    name: Publish CLI to GitHub Packages
+    runs-on: ubuntu-latest
+    # Same build as the npm job, published as @<owner>/lazystack so the repo's Packages box tracks releases.
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://npm.pkg.github.com
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build:cli
+      - name: Publish
+        working-directory: packages/cli
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          # GitHub's npm registry only accepts names scoped to the (lowercase) repository owner.
+          name="@${OWNER,,}/lazystack"
+          version=$(node -p "require('./package.json').version")
+          npm pkg set name="$name" publishConfig.registry=https://npm.pkg.github.com publishConfig.access=public
+          if npm view "$name@$version" version >/dev/null 2>&1; then
+            echo "$name@$version is already on GitHub Packages"
+          else
+            npm publish
           fi
