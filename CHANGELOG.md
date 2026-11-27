@@ -5,6 +5,19 @@ All notable changes to LazyStack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- Every generated app README now has a **Run locally** section (prerequisites and the exact commands) when its starter didn't already show one; 36 frameworks gained it, including Haskell, C, C++, Zig, .NET, Rails, Phoenix, Laravel, Flutter and Deno.
+- `lazystack dev` creates each Python app's `.venv` and installs `requirements.txt` on first run, so a fresh project starts without manual setup.
+
+### Changed
+- Python instructions use one cross-platform virtualenv snippet (`python3 -m venv .venv`, with the Windows `py` and `.venv\Scripts\activate` forms inline); `vanilla-python` now uses a venv too.
+- The project README gives a concrete local command for all 170 frameworks; none fall back to "see the app-local README" any more.
+
+### Fixed
+- The SwiftUI client starter wrote its view to a folder literally named `Sources/${folderName}`.
+
 ## [3.0.0] - 2026-11-27
 
 LazyStack 3.0 adds 28 frameworks, real JavaScript variants, a startup screen and a black-and-white look across the app, and fixes starters that crashed in JavaScript.

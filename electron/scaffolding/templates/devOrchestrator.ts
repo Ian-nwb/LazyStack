@@ -101,7 +101,29 @@ function startInfrastructure() {
   });
 }
 
-// ── 2. First-boot migrations ──────────────────────────────────────────────
+// ── 2. Python virtualenvs ─────────────────────────────────────────────────
+// Python apps run from their own .venv. On first boot, create it and install requirements.txt,
+// so a fresh clone works without any manual setup. Later runs reuse it.
+function preparePythonEnvs() {
+  for (const service of CONFIG.services) {
+    const dir = resolve(rootDir, service.path);
+    if (!existsSync(resolve(dir, 'requirements.txt'))) continue;
+    const venvPython = resolve(dir, isWin ? '.venv\\Scripts\\python.exe' : '.venv/bin/python');
+    if (existsSync(venvPython)) continue;
+    say('Creating a Python virtualenv for ' + service.name + ' (.venv) and installing requirements.txt...');
+    const launchers = isWin ? ['py -3', 'python'] : ['python3', 'python'];
+    let created = false;
+    for (const launcher of launchers) {
+      try { execSync(launcher + ' -m venv .venv', { cwd: dir, stdio: 'inherit' }); created = true; break; }
+      catch (error) { /* try the next launcher */ }
+    }
+    if (!created) { say('Notice: could not create a virtualenv for ' + service.name + '; install Python 3 and run it again.'); continue; }
+    try { execSync('"' + venvPython + '" -m pip install -r requirements.txt', { cwd: dir, stdio: 'inherit' }); }
+    catch (error) { say('Notice: pip install failed for ' + service.name + ': ' + error.message); }
+  }
+}
+
+// ── 3. First-boot migrations ──────────────────────────────────────────────
 function runMigrations() {
   for (const service of CONFIG.services) {
     const dir = resolve(rootDir, service.path);
@@ -123,7 +145,7 @@ function runMigrations() {
   }
 }
 
-// ── 3. Apps ───────────────────────────────────────────────────────────────
+// ── 4. Apps ───────────────────────────────────────────────────────────────
 const services = CONFIG.services.map((service, index) => Object.assign({}, service, {
   color: COLORS[index % COLORS.length], state: 'waiting', detail: '', child: null, logs: [],
   queuedAt: Date.now(), startedAt: 0, restarts: 0, fails: 0, timer: null, restarting: false
@@ -434,6 +456,7 @@ process.on('uncaughtException', error => { leaveDashboard(); console.error('[orc
 async function main() {
   console.log(C.bold + 'LazyStack dev · ' + CONFIG.project + C.reset);
   await startInfrastructure();
+  preparePythonEnvs();
   runMigrations();
   if (!services.length) { say('No apps to start.'); return; }
   if (!PLAIN) enterDashboard();

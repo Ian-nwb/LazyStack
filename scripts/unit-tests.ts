@@ -472,3 +472,27 @@ test('javascript flavor: a framework that offers JavaScript writes no TypeScript
   }
   assert.deepEqual(offenders, [], 'drop supportsFlavor for TypeScript-only starters, or give them a JavaScript variant')
 })
+
+test('app READMEs: every framework says how to run it locally, and Python ones set up a .venv', async () => {
+  const { getStarterFilesForTech } = await import('../electron/scaffolding/templates/appTemplates')
+  const { localRunCommand } = await import('../electron/scaffolding/templates/runCommands')
+  const generic: string[] = [], silent: string[] = [], noVenv: string[] = []
+  for (const tech of TECH_CATALOG) {
+    const commands = localRunCommand(tech.id, tech.defaultPort || 3000, 'minimal')
+    if (/app-local README/.test(commands)) generic.push(tech.id)
+    const files = getStarterFilesForTech(tech.id, 'app', tech.defaultPort || 3000) as Record<string, string>
+    const launch = commands.split('\n').filter(line => line.trim() && !line.trim().startsWith('#')).pop()?.replace(/\s+#.*$/, '').trim()
+    if (launch && !files['README.md'].includes(launch)) silent.push(tech.id)
+    if ('requirements.txt' in files && !/python3? -m venv \.venv/.test(files['README.md'])) noVenv.push(tech.id)
+  }
+  assert.deepEqual(generic, [], 'give these frameworks a real command in runCommands.ts')
+  assert.deepEqual(silent, [], 'these app READMEs never show their launch command')
+  assert.deepEqual(noVenv, [], 'these Python READMEs skip the virtualenv')
+})
+
+test('dev orchestrator: creates a Python app virtualenv before migrations and launches', () => {
+  const main = DEV_ORCHESTRATOR_RUNTIME.slice(DEV_ORCHESTRATOR_RUNTIME.indexOf('async function main()'))
+  assert.ok(DEV_ORCHESTRATOR_RUNTIME.includes("' -m venv .venv'"), 'runtime creates .venv')
+  assert.ok(DEV_ORCHESTRATOR_RUNTIME.includes('-m pip install -r requirements.txt'), 'runtime installs requirements')
+  assert.ok(main.indexOf('preparePythonEnvs()') > -1 && main.indexOf('preparePythonEnvs()') < main.indexOf('runMigrations()'), 'venv is ready before Django migrations run')
+})

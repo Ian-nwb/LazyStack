@@ -1,6 +1,6 @@
 import { Files, GITIGNORE, NativeContext, readme, shell } from './context'
 
-const venv = 'python -m venv .venv && source .venv/bin/activate\npip install -r requirements.txt'
+const venv = 'python3 -m venv .venv            # Windows: py -m venv .venv\nsource .venv/bin/activate        # Windows: .venv\\Scripts\\activate\npip install -r requirements.txt'
 
 function fastapi(c: NativeContext): Files {
   return {

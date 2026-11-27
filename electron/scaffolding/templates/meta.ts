@@ -1,8 +1,9 @@
 import { ProjectSettings } from '../../../src/types'
 import { DATABASE_CATALOG, isPostgresFamily } from '../../../src/data/databases'
 import { keycloakRealm, keycloakRealmJson } from './devServices'
-import { v2DevCommand, v2ReadmeRunCommand } from './native/v2'
-import { v3DevCommand, v3ReadmeRunCommand } from './native/v3'
+import { v2DevCommand } from './native/v2'
+import { v3DevCommand } from './native/v3'
+import { localRunCommand } from './runCommands'
 import { generateProjectTooling } from './projectTooling'
 import { resolveStructurePaths } from '../../../src/data/structurePresets'
 import { getDbServiceName, generateDockerCompose } from './docker'
@@ -44,45 +45,7 @@ export function generateMetaFiles(settings: ProjectSettings, credentials: Record
   const activeDbs = settings.databases.filter(d => d.enabled)
   const paths = resolveStructurePaths(settings)
   const useUnifiedWorkspace = settings.useUnifiedWorkspace !== false
-  const nativeRunCommand = (app: ProjectSettings['apps'][number]) => {
-    const v3Run = v3ReadmeRunCommand(app.techId, app.port)
-    if (v3Run) return v3Run
-    const v2Run = v2ReadmeRunCommand(app.techId, app.port)
-    if (v2Run) return v2Run
-    if (app.techId === 'python-fastapi') return `python -m venv .venv && source .venv/bin/activate\npip install -r requirements.txt${app.starterProfile === 'api-service' ? '\nalembic upgrade head' : ''}\nuvicorn main:app --reload --port ${app.port}`
-    if (app.techId === 'python-django') return `python -m venv .venv && source .venv/bin/activate\npip install -r requirements.txt\npython manage.py migrate\npython manage.py runserver 0.0.0.0:${app.port}`
-    if (app.techId === 'python-flask') return `python -m venv .venv && source .venv/bin/activate\npip install -r requirements.txt\ngunicorn --bind 0.0.0.0:${app.port} app:app`
-    if (app.techId === 'python-streamlit') return `python -m venv .venv && source .venv/bin/activate\npip install -r requirements.txt\nstreamlit run app.py --server.port ${app.port}`
-    if (app.techId === 'hugo') return `hugo server --bind 0.0.0.0 --port ${app.port}`
-    if (app.techId === 'jekyll') return `bundle install\nbundle exec jekyll serve --host 0.0.0.0 --port ${app.port}`
-    if (app.techId === 'gleam-wisp') return 'gleam run'
-    if (app.techId === 'v-vweb') return 'v run .'
-    if (app.techId === 'dart-shelf') return 'dart pub get\ndart run bin/server.dart'
-    if (app.techId === 'dart-serverpod') return './setup.sh'
-    if (app.techId === 'dart-jaspr') return 'dart pub get\ndart run bin/main.dart'
-    if (app.techId === 'goose-app') return 'goose src/main.goose'
-    if (app.techId === 'goose-http') return 'goose build -o build/server src/main.goose\n./build/server'
-    if (app.techId === 'bun-native') return 'bun install\nbun run dev'
-    if (app.techId === 'meteor') return `npm install\nmeteor run --port ${app.port}`
-    if (app.techId.startsWith('python-')) return `python -m venv .venv && source .venv/bin/activate\npip install -r requirements.txt\npython main.py`
-    if (app.techId.startsWith('go-')) return 'go mod tidy\ngo run .'
-    if (app.techId === 'rust-dioxus') return `cargo install dioxus-cli\ndx serve --port ${app.port}`
-    if (app.techId === 'rust-yew' || app.techId === 'rust-leptos') return `rustup target add wasm32-unknown-unknown\ntrunk serve --port ${app.port}`
-    if (app.techId === 'java-javafx') return 'mvn javafx:run'
-    if (app.techId === 'java-swing') return 'mvn compile exec:java'
-    if (app.techId.startsWith('rust-')) return 'cargo run'
-    if (app.techId === 'java-springboot') return 'mvn spring-boot:run'
-    if (app.techId === 'java-javafx') return 'mvn javafx:run'
-    if (app.techId === 'java-swing') return 'mvn compile exec:java'
-    if (app.techId === 'kotlin-ktor') return 'gradle run'
-    if (app.techId === 'vanilla-php') return `php -S 0.0.0.0:${app.port} -t public`
-    if (app.techId === 'vanilla-go') return 'go run .'
-    if (app.techId === 'vanilla-python') return 'python3 main.py'
-    if (app.techId === 'vanilla-node') return 'npm install\nnpm run dev'
-    const language = TECH_CATALOG.find(tech => tech.id === app.techId)?.language || ''
-    if (/^(JS \/ TS|JavaScript|TypeScript|Node\.js)$/.test(language)) return 'npm install\nnpm run dev'
-    return 'See the app-local README for framework-specific commands.'
-  }
+  const nativeRunCommand = (app: ProjectSettings['apps'][number]) => localRunCommand(app.techId, app.port, app.starterProfile)
   const jsApps = settings.apps.filter(app => {
     const language = TECH_CATALOG.find(tech => tech.id === app.techId)?.language || ''
     return /^(JS \/ TS|JavaScript|TypeScript|Node\.js)$/.test(language)
@@ -1345,7 +1308,7 @@ ${activeDbs.map(d => {
 
 ## Native development commands
 
-Run each service with its language toolchain from the service directory. Configure environment values from that service's \`.env\` file before starting it.
+Run each service with its language toolchain from the service directory. Configure environment values from that service's \`.env\` file before starting it. To run every service at once instead, use \`npx lazystack dev\` from the project root: it starts the databases, creates each Python app's \`.venv\` and installs its requirements on first run, then starts the apps in dependency order.
 
 ${settings.apps.map(app => `### ${app.folderName} · ${app.techId}
 
