@@ -2300,6 +2300,114 @@ export const TECH_CATALOG: TechItem[] = [
       { binary: 'gradle', label: 'Gradle 8.9+', installHint: 'https://gradle.org/install/' },
       { binary: 'adb', label: 'Android SDK (platform-tools)', installHint: 'https://developer.android.com/studio' }
     ]
+  },
+  {
+    id: 'node-feathers',
+    name: 'Feathers 5',
+    language: 'JS / TS',
+    category: 'backend',
+    role: 'backend',
+    supportsFlavor: true,
+    defaultPort: 3030,
+    description: 'Real-time API framework on Koa: services as the building block, exposed over REST (and websockets), with hooks.',
+    badgeColor: 'bg-violet-500/20 text-violet-300 border-violet-500/40',
+    requires: [
+      { binary: 'node', label: 'Node.js 22+', installHint: 'https://nodejs.org' },
+      { binary: 'npm', label: 'npm', installHint: 'Installed with Node.js' }
+    ]
+  },
+  {
+    id: 'rust-warp',
+    name: 'Rust (Warp)',
+    language: 'Rust',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 3030,
+    description: 'Composable, filter-based web server on hyper and Tokio, with warp::test request tests.',
+    badgeColor: 'bg-orange-500/20 text-orange-300 border-orange-500/40',
+    requires: [
+      { binary: 'cargo', label: 'Rust (cargo)', installHint: 'https://rustup.rs' }
+    ]
+  },
+  {
+    id: 'rust-salvo',
+    name: 'Rust (Salvo)',
+    language: 'Rust',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 5800,
+    description: 'Simple yet powerful Rust web framework: tree routing, handlers as functions, HTTP/3 ready.',
+    badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+    requires: [
+      { binary: 'cargo', label: 'Rust (cargo)', installHint: 'https://rustup.rs' }
+    ]
+  },
+  {
+    id: 'go-iris',
+    name: 'Go (Iris)',
+    language: 'Go',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 8080,
+    description: 'Feature-rich, fast Go web framework with MVC, sessions and an httptest helper.',
+    badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
+    requires: [
+      { binary: 'go', label: 'Go 1.24+', installHint: 'https://go.dev/dl/' }
+    ]
+  },
+  {
+    id: 'python-aiohttp',
+    name: 'Python (aiohttp)',
+    language: 'Python',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 8080,
+    description: 'Asynchronous HTTP client/server for asyncio: route tables, middleware and a pytest-aiohttp test.',
+    badgeColor: 'bg-sky-500/20 text-sky-300 border-sky-500/40',
+    requires: [
+      { binary: 'python3', label: 'Python 3.10+', installHint: 'https://www.python.org/downloads/' }
+    ]
+  },
+  {
+    id: 'python-bottle',
+    name: 'Python (Bottle)',
+    language: 'Python',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 8080,
+    description: 'Fast, simple single-file WSGI micro-framework with no dependencies beyond the standard library.',
+    badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+    requires: [
+      { binary: 'python3', label: 'Python 3.10+', installHint: 'https://www.python.org/downloads/' }
+    ]
+  },
+  {
+    id: 'ruby-roda',
+    name: 'Ruby (Roda)',
+    language: 'Ruby',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 9292,
+    description: 'Routing-tree web toolkit for Ruby: fast, plugin-based and simple, with a Rack::Test test.',
+    badgeColor: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
+    requires: [
+      { binary: 'ruby', label: 'Ruby 3.2+', installHint: 'https://www.ruby-lang.org/en/downloads/' },
+      { binary: 'bundle', label: 'Bundler', installHint: 'gem install bundler' }
+    ]
+  },
+  {
+    id: 'kotlin-spring',
+    name: 'Kotlin (Spring Boot)',
+    language: 'Kotlin',
+    category: 'backend',
+    role: 'backend',
+    defaultPort: 8080,
+    description: 'Spring Boot 3 in Kotlin with the Gradle Kotlin DSL: the start.spring.io layout, a REST controller and a JUnit 5 test.',
+    badgeColor: 'bg-green-500/20 text-green-300 border-green-500/40',
+    requires: [
+      { binary: 'java', label: 'JDK 21+', installHint: 'https://adoptium.net' },
+      { binary: 'gradle', label: 'Gradle 8.10+', installHint: 'https://gradle.org/install/' }
+    ]
   }
 ]
 

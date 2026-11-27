@@ -65,7 +65,11 @@ the URL on the PR. The environment is torn down when the PR closes.
 
 ---
 
-# 3.0: projects that are known to work, and keep working
+# Shipped in 3.0.0
+
+28 frameworks (Strapi, Payload, Directus, Laravel + Inertia/Livewire, CodeIgniter, CakePHP, Jakarta EE, Vaadin, Vert.x, Spring Boot in Kotlin, Android/Jetpack Compose, Compose Multiplatform, Nitro, hapi, Feathers, Ember, Quart, Falcon, aiohttp, Bottle, Beego, Iris, Loco, Warp, Salvo, Hanami, Roda), 170 in total, real JavaScript variants, a startup screen and a black-and-white app theme. See the [changelog](CHANGELOG.md).
+
+# Next (3.x): projects that are known to work, and keep working
 
 2.0 roughly doubled the catalog. Building every starter for 2.0 found **14 broken templates**
 (Yew, Leptos, Blitz, Qwik, Inferno, Kotlin/JS, Crystal, Qwik City, Lit, RedwoodJS, Rails,
@@ -199,9 +203,9 @@ private option.
 
 | Release | Focus | Why first |
 | --- | --- | --- |
-| **3.0** | Boot tests (1.1), versions file + Renovate (1.3), non-root and digest pinning (4), templates as files (3.1) | Stops template rot at the source; everything after builds on it |
-| **3.1** | Service wiring: OIDC + OpenTelemetry (2.1), stack tests (1.2), verified badges (1.4) | Turns the 2.0 services from configuration into working features |
-| **3.2** | ORM choice (2.2), contracts (2.3), template packs (3.1), AI blueprint drafting (3.2) | Opens the catalog to contributors without lowering the bar |
+| **3.1** | Boot tests (1.1), versions file + Renovate (1.3), non-root and digest pinning (4), templates as files (3.1) | Stops template rot at the source; everything after builds on it |
+| **3.2** | Service wiring: OIDC + OpenTelemetry (2.1), stack tests (1.2), verified badges (1.4) | Turns the 2.0 services from configuration into working features |
+| **3.3** | ORM choice (2.2), contracts (2.3), template packs (3.1), AI blueprint drafting (3.2) | Opens the catalog to contributors without lowering the bar |
 
 **What to measure:**
 - how many generated projects run `lazystack upgrade` successfully;

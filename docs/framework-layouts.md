@@ -86,6 +86,24 @@ The architecture root does not turn every service into a JavaScript package. A G
 | Cloudflare Workers (2.0) | `wrangler.jsonc`, `src/index.ts` (Hono), `src/index.test.ts` |
 | WXT browser extension (2.0) | `wxt.config.ts`, `entrypoints/` (background, popup), `utils/`; host only |
 | Vanilla HTML, Node, Go, Python, Java | simple runtime entrypoints without a framework-imposed workspace |
+| Nitro / hapi (3.0) | `server/routes/` (file-based) + `nitro.config.*`; hapi: `src/server.*` factory, `src/index.*`, `src/server.test.*` (both have a JavaScript variant) |
+| Directus / Strapi (3.0) | Directus: `package.json`, `.env.example`, `extensions/`, `data/`; Strapi 5: `config/` (server, database, admin, middlewares, plugins), `src/index.js`, `src/api/` |
+| Payload 3 (3.0) | Next.js app: `src/payload.config.ts`, `src/collections/`, `src/app/(payload)/` (admin + REST/GraphQL routes), `src/app/(frontend)/` |
+| Laravel + Inertia / Livewire (3.0) | `composer.json` + `setup.php` (copies the laravel/laravel skeleton after install), `routes/web.php`; Inertia: `resources/js/Pages/`, `HandleInertiaRequests`; Livewire: `app/Livewire/`, `resources/views/livewire/` |
+| CodeIgniter 4 / CakePHP 5 (3.0) | `composer.json` + `setup.php` (copies the official skeleton); CodeIgniter: `app/Config/Routes.php`, `app/Controllers/`; CakePHP: `config/routes.php`, `src/Controller/` |
+| Quart / Falcon (3.0) | `requirements.txt`, `app.py`, `tests/` (pytest) |
+| Beego (3.0) | `go.mod`, `main.go`, `controllers/`, `conf/app.conf` |
+| Vert.x / Jakarta EE / Vaadin (3.0) | `pom.xml`, `src/main/java/<pkg>/` (`App` router; JAX-RS `RestApplication` + resource packaged as `app.war`; Vaadin `Application` + `MainView` + `/health` controller) |
+| Hanami 2 (3.0) | `Gemfile`, `config.ru`, `config/` (app, routes, settings, puma), `app/action.rb`, `app/actions/`, `spec/requests/` |
+| Ember.js (3.0) | `ember-cli-build.js`, `config/environment.js`, `app/` (app, router, templates, components), built to `dist/` |
+| Loco (3.0) | `Cargo.toml`, `src/app.rs` (Hooks), `src/controllers/`, `src/bin/main.rs`, `config/{development,production,test}.yaml` |
+| Compose Multiplatform / Android (3.0) | `settings.gradle.kts`, `build.gradle.kts`, `src/main/kotlin/Main.kt` (desktop); Android: `app/build.gradle.kts`, `app/src/main/AndroidManifest.xml`, `app/src/main/java/<pkg>/MainActivity.kt`; host only |
+| Feathers 5 (3.0) | `src/app.*` (Koa app factory with a `messages` service), `src/index.*`, `src/app.test.*` (JavaScript variant too) |
+| Warp / Salvo (3.0) | `Cargo.toml`, `src/main.rs` (routes, server, Warp test module) |
+| Iris (3.0) | `go.mod`, `main.go` (`newApp()`), `main_test.go` (`iris/httptest`) |
+| aiohttp / Bottle (3.0) | `requirements.txt`, `app.py`, `tests/` (pytest-aiohttp, WebTest) |
+| Roda (3.0) | `Gemfile`, `config.ru`, `app.rb` (routing tree), `test/app_test.rb`, `Rakefile` |
+| Spring Boot, Kotlin (3.0) | `settings.gradle.kts`, `build.gradle.kts`, `src/main/kotlin/<pkg>/Application.kt`, `src/test/kotlin/`, `src/main/resources/application.properties` |
 
 Desktop, mobile, browser-extension and hosted apps (GPUI, Slint, Bevy, Dioxus, JavaFX, Swing, Electron, Tauri, Flutter, SwiftUI, WXT, Anvil, Apps Script) always run on the host and never get a Docker service.
 

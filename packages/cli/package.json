@@ -1,6 +1,6 @@
 {
   "name": "lazystack",
-  "version": "2.1.0",
+  "version": "3.0.0",
   "description": "Scaffold polyglot projects and monorepos from a JSON blueprint: 142 frameworks, 45 databases and services, Docker Compose and a dev orchestrator.",
   "type": "module",
   "bin": {

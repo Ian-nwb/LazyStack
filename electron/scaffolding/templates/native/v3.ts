@@ -297,7 +297,7 @@ WORKDIR /app
 COPY . .
 RUN composer install --no-interaction --no-progress --prefer-dist --ignore-platform-req=ext-intl
 ${extra}
-FROM php:8.3-cli-alpine
+FROM php:8.4-cli-alpine
 RUN apk add --no-cache icu-dev && docker-php-ext-install intl
 WORKDIR /app
 COPY --from=vendor /app /app
@@ -315,7 +315,16 @@ const codeigniter: Starter = c => ({
     scripts: { 'post-install-cmd': ['@php setup.php'], 'post-update-cmd': ['@php setup.php'] },
     config: { 'optimize-autoloader': true, 'sort-packages': true }
   }),
-  'setup.php': skeletonCopier(['vendor/codeigniter4/framework/app=>app', 'vendor/codeigniter4/framework/public=>public', 'vendor/codeigniter4/framework/writable=>writable', 'vendor/codeigniter4/framework/spark=>spark', 'vendor/codeigniter4/framework/env=>env']),
+  'setup.php': skeletonCopier(
+    ['vendor/codeigniter4/framework/app=>app', 'vendor/codeigniter4/framework/public=>public', 'vendor/codeigniter4/framework/writable=>writable', 'vendor/codeigniter4/framework/spark=>spark', 'vendor/codeigniter4/framework/env=>env'],
+    `// The framework repo's Paths.php points at its own ../../system; in a project, system/ is under vendor/.
+$paths = __DIR__ . '/app/Config/Paths.php';
+if (file_exists($paths)) {
+    $text = file_get_contents($paths);
+    $fixed = str_replace("__DIR__ . '/../../system'", "__DIR__ . '/../../vendor/codeigniter4/framework/system'", $text);
+    if ($fixed !== $text) file_put_contents($paths, $fixed);
+}
+`),
   'app/Config/Routes.php': `<?php\n\nuse CodeIgniter\\Router\\RouteCollection;\n\n/**\n * @var RouteCollection $routes\n */\n$routes->get('/', 'Home::index');\n$routes->get('health', 'Home::health');\n`,
   'app/Controllers/Home.php': `<?php\n\nnamespace App\\Controllers;\n\nclass Home extends BaseController\n{\n    public function index()\n    {\n        return $this->response->setJSON(['service' => '${c.name}', 'framework' => 'CodeIgniter 4', 'status' => 'online']);\n    }\n\n    public function health()\n    {\n        return $this->response->setJSON(['status' => 'healthy']);\n    }\n}\n`,
   '.gitignore': GITIGNORE.php + '/writable/cache/*\n/writable/logs/*\n/writable/session/*\n.env\n',
@@ -330,6 +339,7 @@ const cakephp: Starter = c => ({
     name: `lazystack/${c.name}`,
     type: 'project',
     require: { php: '^8.2', 'cakephp/app': '^5.1' },
+    'require-dev': { 'cakephp/debug_kit': '^5.0' },
     autoload: { 'psr-4': { 'App\\': 'src/' } },
     scripts: { 'post-install-cmd': ['@php setup.php'], 'post-update-cmd': ['@php setup.php'] },
     config: { 'optimize-autoloader': true, 'sort-packages': true, 'allow-plugins': { 'cakephp/plugin-installer': true } }
@@ -346,6 +356,8 @@ foreach (['tmp/cache/models', 'tmp/cache/persistent', 'tmp/cache/views', 'tmp/se
     if (!is_dir(__DIR__ . '/' . $dir)) mkdir(__DIR__ . '/' . $dir, 0777, true);
 }
 `),
+  // DebugKit and Bake are dev-only packages: load them when present, never fail without them.
+  'config/plugins.php': `<?php\n\nreturn [\n    'DebugKit' => ['onlyDebug' => true, 'optional' => true],\n    'Bake' => ['onlyCli' => true, 'optional' => true],\n    'Migrations' => ['onlyCli' => true],\n];\n`,
   'config/routes.php': `<?php\ndeclare(strict_types=1);\n\nuse Cake\\Routing\\Route\\DashedRoute;\nuse Cake\\Routing\\RouteBuilder;\n\nreturn function (RouteBuilder $routes): void {\n    $routes->setRouteClass(DashedRoute::class);\n    $routes->scope('/', function (RouteBuilder $builder): void {\n        $builder->connect('/', ['controller' => 'Status', 'action' => 'index']);\n        $builder->connect('/health', ['controller' => 'Status', 'action' => 'health']);\n        $builder->fallbacks();\n    });\n};\n`,
   'src/Controller/StatusController.php': `<?php\ndeclare(strict_types=1);\n\nnamespace App\\Controller;\n\nuse Cake\\Http\\Response;\n\nclass StatusController extends AppController\n{\n    public function index(): Response\n    {\n        return $this->json(['service' => '${c.name}', 'framework' => 'CakePHP 5', 'status' => 'online']);\n    }\n\n    public function health(): Response\n    {\n        return $this->json(['status' => 'healthy']);\n    }\n\n    private function json(array $data): Response\n    {\n        return $this->response->withType('application/json')->withStringBody((string)json_encode($data));\n    }\n}\n`,
   '.gitignore': GITIGNORE.php + '/tmp/*\n/logs/*\n/config/app_local.php\n',
@@ -365,10 +377,10 @@ const hanami: Starter = c => {
     'config/app.rb': `# frozen_string_literal: true\n\nrequire "hanami"\n\nmodule ${mod}\n  class App < Hanami::App\n  end\nend\n`,
     'config/routes.rb': `# frozen_string_literal: true\n\nmodule ${mod}\n  class Routes < Hanami::Routes\n    root to: "home.index"\n    get "/health", to: "home.health"\n  end\nend\n`,
     'config/settings.rb': `# frozen_string_literal: true\n\nmodule ${mod}\n  class Settings < Hanami::Settings\n  end\nend\n`,
-    'config/puma.rb': `# frozen_string_literal: true\n\nport ENV.fetch("PORT", ${c.port})\nbind "tcp://0.0.0.0:#{ENV.fetch('PORT', ${c.port})}"\nworkers 0\nthreads 0, 5\n`,
+    'config/puma.rb': `# frozen_string_literal: true\n\nbind "tcp://0.0.0.0:#{ENV.fetch('PORT', ${c.port})}"\nworkers 0\nthreads 0, 5\n`,
     'app/action.rb': `# frozen_string_literal: true\n\nrequire "hanami/action"\n\nmodule ${mod}\n  class Action < Hanami::Action\n    format :json\n  end\nend\n`,
-    'app/actions/home/index.rb': `# frozen_string_literal: true\n\nmodule ${mod}\n  module Actions\n    module Home\n      class Index < ${mod}::Action\n        def handle(_request, response)\n          response.body = { service: "${c.name}", framework: "Hanami 2", status: "online" }.to_json\n        end\n      end\n    end\n  end\nend\n`,
-    'app/actions/home/health.rb': `# frozen_string_literal: true\n\nmodule ${mod}\n  module Actions\n    module Home\n      class Health < ${mod}::Action\n        def handle(_request, response)\n          response.body = { status: "healthy" }.to_json\n        end\n      end\n    end\n  end\nend\n`,
+    'app/actions/home/index.rb': `# frozen_string_literal: true\n\nmodule ${mod}\n  module Actions\n    module Home\n      class Index < ::${mod}::Action\n        def handle(_request, response)\n          response.body = { service: "${c.name}", framework: "Hanami 2", status: "online" }.to_json\n        end\n      end\n    end\n  end\nend\n`,
+    'app/actions/home/health.rb': `# frozen_string_literal: true\n\nmodule ${mod}\n  module Actions\n    module Home\n      class Health < ::${mod}::Action\n        def handle(_request, response)\n          response.body = { status: "healthy" }.to_json\n        end\n      end\n    end\n  end\nend\n`,
     'spec/requests/health_spec.rb': `# frozen_string_literal: true\n\nrequire "rack/test"\nENV["HANAMI_ENV"] ||= "test"\nrequire "hanami/prepare"\nrequire_relative "../../config/app"\n\nRSpec.describe "GET /health" do\n  include Rack::Test::Methods\n\n  def app = Hanami.app\n\n  it "reports healthy" do\n    get "/health"\n    expect(last_response.status).to eq(200)\n    expect(JSON.parse(last_response.body)).to eq("status" => "healthy")\n  end\nend\n`,
     'Rakefile': `# frozen_string_literal: true\n\nrequire "hanami/rake_tasks"\n`,
     '.gitignore': GITIGNORE.ruby + '.env*.local\n',
@@ -801,6 +813,111 @@ const androidCompose: Starter = c => {
   }
 }
 
+// ── Batch E: Feathers, Warp, Salvo, Iris, aiohttp, Bottle, Roda, Spring Boot (Kotlin) ──────────
+
+const feathers: Starter = c => {
+  const x = c.isTS ? 'ts' : 'js'
+  return {
+    'package.json': json({
+      name: c.name,
+      version: '0.1.0',
+      private: true,
+      type: 'module',
+      scripts: c.isTS
+        ? { dev: 'tsx watch src/index.ts', build: 'tsc', start: 'node dist/index.js', test: 'node --import tsx --test src/*.test.ts' }
+        : { dev: 'node --watch src/index.js', start: 'node src/index.js', test: 'node --test src/*.test.js' },
+      dependencies: { '@feathersjs/feathers': '^5.0.34', '@feathersjs/koa': '^5.0.34' },
+      devDependencies: c.isTS ? { '@types/node': '^22.0.0', tsx: '^4.20.0', typescript: '^5.9.0' } : {}
+    }),
+    ...(c.isTS ? { 'tsconfig.json': json({ compilerOptions: { target: 'ES2022', module: 'NodeNext', moduleResolution: 'NodeNext', strict: true, skipLibCheck: true, outDir: './dist', rootDir: './src' }, include: ['src'], exclude: ['src/**/*.test.ts'] }) } : {}),
+    [`src/app.${x}`]: `import { feathers } from '@feathersjs/feathers';\nimport { koa, rest, bodyParser, errorHandler } from '@feathersjs/koa';\n\nclass MessageService {\n  messages${c.isTS ? ': Array<{ id: number; text: string }>' : ''} = [];\n  async find() {\n    return this.messages;\n  }\n  async create(data${c.isTS ? ': { text: string }' : ''}) {\n    const message = { id: this.messages.length, text: data.text };\n    this.messages.push(message);\n    return message;\n  }\n}\n\nexport function createApp() {\n  const app = koa(feathers());\n  app.use(errorHandler());\n  app.use(bodyParser());\n  app.configure(rest());\n  app.use('messages', new MessageService());\n  app.use(async (ctx${c.isTS ? ': any' : ''}, next${c.isTS ? ': () => Promise<void>' : ''}) => {\n    if (ctx.path === '/health') ctx.body = { status: 'healthy' };\n    else if (ctx.path === '/') ctx.body = { service: '${c.name}', framework: 'Feathers 5', status: 'online' };\n    else await next();\n  });\n  return app;\n}\n`,
+    [`src/index.${x}`]: `import { createApp } from './app.js';\n\nconst port = Number(process.env.PORT) || ${c.port};\nconst app = createApp();\nawait app.listen(port);\nconsole.log(\`[LazyStack] ${c.name} (Feathers) on :\${port}\`);\n`,
+    [`src/app.test.${x}`]: `import { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { createApp } from './app.js';\n\ntest('messages service stores and lists messages', async () => {\n  const app = createApp();\n  await app.service('messages').create({ text: 'hello' });\n  const messages = await app.service('messages').find();\n  assert.equal(messages.length, 1);\n});\n`,
+    '.gitignore': GITIGNORE.node,
+    'README.md': readme(`${c.name} (Feathers 5)`, 'Feathers 5 API on Koa generated by LazyStack: a `messages` service exposed over REST at `/messages`, plus `/` and `/health`.', [
+      ['Develop', shell('npm install\nnpm run dev')],
+      ['Test', shell('npm test')]
+    ])
+  }
+}
+
+const rustService = (c: NativeContext, deps: string, main: string, framework: string) => ({
+  'Cargo.toml': `[package]\nname = "${c.snake}"\nversion = "0.1.0"\nedition = "2021"\npublish = false\n\n[dependencies]\n${deps}serde_json = "1"\ntokio = { version = "1", features = ["macros", "rt-multi-thread"] }\n`,
+  'src/main.rs': main,
+  '.gitignore': GITIGNORE.rust,
+  'README.md': readme(`${c.name} (${framework})`, `${framework} service generated by LazyStack.`, [
+    ['Develop', shell('cargo run')],
+    ['Test & build', shell('cargo test\ncargo build --release')]
+  ])
+})
+
+const warp: Starter = c => rustService(c, 'warp = "0.3"\n', `use warp::Filter;\n\nfn routes() -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {\n    let index = warp::path::end().map(|| warp::reply::json(&serde_json::json!({ "service": "${c.name}", "framework": "Warp", "status": "online" })));\n    let health = warp::path("health").and(warp::path::end()).map(|| warp::reply::json(&serde_json::json!({ "status": "healthy" })));\n    warp::get().and(index.or(health))\n}\n\n#[tokio::main]\nasync fn main() {\n    let port: u16 = std::env::var("PORT").ok().and_then(|p| p.parse().ok()).unwrap_or(${c.port});\n    println!("[LazyStack] ${c.name} (Warp) on :{port}");\n    warp::serve(routes()).run(([0, 0, 0, 0], port)).await;\n}\n\n#[cfg(test)]\nmod tests {\n    #[tokio::test]\n    async fn health_reports_healthy() {\n        let res = warp::test::request().path("/health").reply(&super::routes()).await;\n        assert_eq!(res.status(), 200);\n        assert_eq!(res.body(), r#"{"status":"healthy"}"#);\n    }\n}\n`, 'Warp')
+
+const salvo: Starter = c => rustService(c, 'salvo = "0.81"\n', `use salvo::prelude::*;\n\n#[handler]\nasync fn index(res: &mut Response) {\n    res.render(Json(serde_json::json!({ "service": "${c.name}", "framework": "Salvo", "status": "online" })));\n}\n\n#[handler]\nasync fn health(res: &mut Response) {\n    res.render(Json(serde_json::json!({ "status": "healthy" })));\n}\n\nfn router() -> Router {\n    Router::new().get(index).push(Router::with_path("health").get(health))\n}\n\n#[tokio::main]\nasync fn main() {\n    let port: u16 = std::env::var("PORT").ok().and_then(|p| p.parse().ok()).unwrap_or(${c.port});\n    println!("[LazyStack] ${c.name} (Salvo) on :{port}");\n    let acceptor = TcpListener::new(format!("0.0.0.0:{port}")).bind().await;\n    Server::new(acceptor).serve(router()).await;\n}\n`, 'Salvo')
+
+const iris: Starter = c => ({
+  'go.mod': `module ${c.snake}\n\ngo 1.24\n\nrequire github.com/kataras/iris/v12 v12.2.11\n`,
+  'main.go': `package main\n\nimport (\n\t"os"\n\n\t"github.com/kataras/iris/v12"\n)\n\nfunc newApp() *iris.Application {\n\tapp := iris.New()\n\tapp.Get("/", func(ctx iris.Context) {\n\t\tctx.JSON(iris.Map{"service": "${c.name}", "framework": "Iris", "status": "online"})\n\t})\n\tapp.Get("/health", func(ctx iris.Context) {\n\t\tctx.JSON(iris.Map{"status": "healthy"})\n\t})\n\treturn app\n}\n\nfunc main() {\n\tport := os.Getenv("PORT")\n\tif port == "" {\n\t\tport = "${c.port}"\n\t}\n\tnewApp().Listen(":" + port)\n}\n`,
+  'main_test.go': `package main\n\nimport (\n\t"testing"\n\n\t"github.com/kataras/iris/v12/httptest"\n)\n\nfunc TestHealth(t *testing.T) {\n\te := httptest.New(t, newApp())\n\te.GET("/health").Expect().Status(httptest.StatusOK).JSON().Object().Value("status").IsEqual("healthy")\n}\n`,
+  '.gitignore': GITIGNORE.go,
+  'README.md': readme(`${c.name} (Iris)`, 'Iris service generated by LazyStack, with an `iris/httptest` test.', [
+    ['Develop', shell('go mod tidy\ngo run .')],
+    ['Test & build', shell('go test ./...\ngo build -o server .')]
+  ])
+})
+
+const aiohttp: Starter = c => ({
+  'requirements.txt': py(['aiohttp>=3.10', 'pytest>=8.3', 'pytest-aiohttp>=1.0']),
+  'app.py': `import os\n\nfrom aiohttp import web\n\nroutes = web.RouteTableDef()\n\n\n@routes.get("/")\nasync def index(request):\n    return web.json_response({"service": "${c.name}", "framework": "aiohttp", "status": "online"})\n\n\n@routes.get("/health")\nasync def health(request):\n    return web.json_response({"status": "healthy"})\n\n\ndef create_app():\n    app = web.Application()\n    app.add_routes(routes)\n    return app\n\n\nif __name__ == "__main__":\n    web.run_app(create_app(), host="0.0.0.0", port=int(os.environ.get("PORT", ${c.port})))\n`,
+  'tests/test_app.py': `from app import create_app\n\n\nasync def test_health(aiohttp_client):\n    client = await aiohttp_client(create_app())\n    response = await client.get("/health")\n    assert response.status == 200\n    assert await response.json() == {"status": "healthy"}\n`,
+  'tests/__init__.py': '',
+  'pytest.ini': '[pytest]\nasyncio_mode = auto\n',
+  '.gitignore': GITIGNORE.python,
+  'README.md': readme(`${c.name} (aiohttp)`, 'aiohttp server generated by LazyStack: async routes and a `pytest-aiohttp` test.', [
+    ['Develop', shell(`python -m venv .venv && source .venv/bin/activate\npip install -r requirements.txt\npython app.py`)],
+    ['Test', shell('pytest')]
+  ])
+})
+
+const bottle: Starter = c => ({
+  'requirements.txt': py(['bottle>=0.13', 'pytest>=8.3', 'webtest>=3.0']),
+  'app.py': `import os\n\nfrom bottle import Bottle\n\napp = Bottle()\n\n\n@app.get("/")\ndef index():\n    return {"service": "${c.name}", "framework": "Bottle", "status": "online"}\n\n\n@app.get("/health")\ndef health():\n    return {"status": "healthy"}\n\n\nif __name__ == "__main__":\n    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", ${c.port})), reloader=os.environ.get("BOTTLE_RELOAD") == "1")\n`,
+  'tests/test_app.py': `from webtest import TestApp\n\nfrom app import app\n\n\ndef test_health():\n    response = TestApp(app).get("/health")\n    assert response.status_int == 200\n    assert response.json == {"status": "healthy"}\n`,
+  'tests/__init__.py': '',
+  '.gitignore': GITIGNORE.python,
+  'README.md': readme(`${c.name} (Bottle)`, 'Bottle micro-framework service generated by LazyStack: a single-file app and a WebTest test.', [
+    ['Develop', shell(`python -m venv .venv && source .venv/bin/activate\npip install -r requirements.txt\nBOTTLE_RELOAD=1 python app.py`)],
+    ['Test', shell('pytest')]
+  ])
+})
+
+const roda: Starter = c => ({
+  'Gemfile': `source "https://rubygems.org"\n\ngem "roda", "~> 3.95"\ngem "puma"\ngem "json"\n\ngroup :test do\n  gem "rack-test"\n  gem "minitest"\nend\n`,
+  'config.ru': `require_relative "app"\n\nrun App.freeze.app\n`,
+  'app.rb': `require "roda"\n\nclass App < Roda\n  plugin :json\n\n  route do |r|\n    r.root { { service: "${c.name}", framework: "Roda", status: "online" } }\n    r.get("health") { { status: "healthy" } }\n  end\nend\n`,
+  'test/app_test.rb': `require "minitest/autorun"\nrequire "rack/test"\nrequire "json"\nrequire_relative "../app"\n\nclass AppTest < Minitest::Test\n  include Rack::Test::Methods\n\n  def app = App.freeze.app\n\n  def test_health\n    get "/health"\n    assert_equal 200, last_response.status\n    assert_equal({ "status" => "healthy" }, JSON.parse(last_response.body))\n  end\nend\n`,
+  'Rakefile': `require "rake/testtask"\n\nRake::TestTask.new { |t| t.pattern = "test/**/*_test.rb" }\ntask default: :test\n`,
+  '.gitignore': GITIGNORE.ruby,
+  'README.md': readme(`${c.name} (Roda)`, 'Roda routing-tree service generated by LazyStack, with a Rack::Test test.', [
+    ['Develop', shell(`bundle install\nbundle exec puma -b tcp://0.0.0.0:${c.port}`)],
+    ['Test', shell('bundle exec ruby test/app_test.rb')]
+  ])
+})
+
+const springKotlin: Starter = c => ({
+  'settings.gradle.kts': `rootProject.name = "${c.name}"\n`,
+  'build.gradle.kts': `plugins {\n    kotlin("jvm") version "2.1.0"\n    kotlin("plugin.spring") version "2.1.0"\n    id("org.springframework.boot") version "3.5.6"\n    id("io.spring.dependency-management") version "1.1.7"\n}\n\ngroup = "${c.javaPackage.split('.').slice(0, -1).join('.')}"\nversion = "0.1.0"\n\njava { toolchain { languageVersion = JavaLanguageVersion.of(21) } }\n\nrepositories { mavenCentral() }\n\ndependencies {\n    implementation("org.springframework.boot:spring-boot-starter-web")\n    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")\n    implementation("org.jetbrains.kotlin:kotlin-reflect")\n    testImplementation("org.springframework.boot:spring-boot-starter-test")\n    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")\n    testRuntimeOnly("org.junit.platform:junit-platform-launcher")\n}\n\nkotlin { compilerOptions { freeCompilerArgs.addAll("-Xjsr305=strict") } }\n\ntasks.withType<Test> { useJUnitPlatform() }\n\ntasks.bootJar { archiveFileName.set("app.jar") }\n`,
+  [`src/main/kotlin/${c.javaPath}/Application.kt`]: `package ${c.javaPackage}\n\nimport org.springframework.boot.autoconfigure.SpringBootApplication\nimport org.springframework.boot.runApplication\nimport org.springframework.web.bind.annotation.GetMapping\nimport org.springframework.web.bind.annotation.RestController\n\n@SpringBootApplication\nclass Application\n\n@RestController\nclass StatusController {\n    @GetMapping("/")\n    fun index() = mapOf("service" to "${c.name}", "framework" to "Spring Boot (Kotlin)", "status" to "online")\n\n    @GetMapping("/health")\n    fun health() = mapOf("status" to "healthy")\n}\n\nfun main(args: Array<String>) {\n    runApplication<Application>(*args)\n}\n`,
+  [`src/test/kotlin/${c.javaPath}/StatusControllerTest.kt`]: `package ${c.javaPackage}\n\nimport kotlin.test.Test\nimport kotlin.test.assertEquals\n\nclass StatusControllerTest {\n    @Test\n    fun healthReportsHealthy() {\n        assertEquals("healthy", StatusController().health()["status"])\n    }\n}\n`,
+  'src/main/resources/application.properties': `server.port=\${PORT:${c.port}}\nspring.application.name=${c.name}\n`,
+  '.gitignore': GITIGNORE.gradle,
+  'README.md': readme(`${c.name} (Spring Boot, Kotlin)`, 'Spring Boot 3 service in Kotlin generated by LazyStack (Gradle Kotlin DSL, the start.spring.io layout).', [
+    ['Develop', shell('gradle bootRun')],
+    ['Test & package', shell('gradle test\ngradle bootJar && java -jar build/libs/app.jar')],
+    ['Requirements', 'JDK 21 and Gradle 8.10+. Add a wrapper with `gradle wrapper` if you want `./gradlew`.']
+  ])
+})
+
 export const v3Starters: Record<string, Starter> = {
   'node-nitro': nitro,
   'node-hapi': hapi,
@@ -821,7 +938,15 @@ export const v3Starters: Record<string, Starter> = {
   'node-payload': payload,
   'rust-loco': loco,
   'kotlin-compose-desktop': composeDesktop,
-  'android-compose': androidCompose
+  'android-compose': androidCompose,
+  'node-feathers': feathers,
+  'rust-warp': warp,
+  'rust-salvo': salvo,
+  'go-iris': iris,
+  'python-aiohttp': aiohttp,
+  'python-bottle': bottle,
+  'ruby-roda': roda,
+  'kotlin-spring': springKotlin
 }
 
 const mavenJar = (port: number, jar: string) => `FROM maven:3.9-eclipse-temurin-21 AS build
@@ -920,7 +1045,7 @@ WORKDIR /app
 COPY --from=vendor /app /app
 RUN npm install --no-audit --no-fund && npm run build
 
-FROM php:8.3-cli-alpine
+FROM php:8.4-cli-alpine
 WORKDIR /app
 COPY --from=assets /app /app
 RUN rm -rf node_modules && php artisan config:clear
@@ -938,6 +1063,21 @@ CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=${port}"]
       return { dockerfile: `FROM node:22-alpine AS build\nRUN apk add --no-cache libc6-compat\nWORKDIR /app\nCOPY package*.json ./\nRUN npm install --no-audit --no-fund\nCOPY . .\nENV PAYLOAD_SECRET=build-only-secret DATABASE_URI=file:./build.db NEXT_TELEMETRY_DISABLED=1\nRUN npm run build\n\nFROM node:22-alpine\nWORKDIR /app\nENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=${port} HOSTNAME=0.0.0.0 DATABASE_URI=file:/app/data/payload.db\nCOPY --from=build /app/public ./public\nCOPY --from=build /app/.next/standalone ./\nCOPY --from=build /app/.next/static ./.next/static\nRUN mkdir -p data\nEXPOSE ${port}\nCMD ["node", "server.js"]\n`, dockerignore: node + '.next\n*.db\n' }
     case 'rust-loco':
       return { dockerfile: `FROM rust:1-slim AS build\nRUN apt-get update && apt-get install -y --no-install-recommends pkg-config libssl-dev && rm -rf /var/lib/apt/lists/*\nWORKDIR /app\nCOPY . .\nRUN cargo build --release\n\nFROM debian:bookworm-slim\nWORKDIR /app\nCOPY --from=build /app/target/release/${_folderName.replace(/-/g, '_')}-cli ./server\nCOPY config ./config\nENV PORT=${port} LOCO_ENV=production\nEXPOSE ${port}\nCMD ["./server", "start"]\n`, dockerignore: 'target\n.git\n' }
+    case 'node-feathers':
+      return { dockerfile: `FROM node:24-alpine\nWORKDIR /app\nCOPY package*.json ./\nRUN npm install --no-audit --no-fund\nCOPY . .\nRUN npm test && npm run build --if-present\nENV PORT=${port}\nEXPOSE ${port}\nCMD ["npm", "start"]\n`, dockerignore: node }
+    case 'rust-warp':
+    case 'rust-salvo':
+      return { dockerfile: `FROM rust:1-slim AS build\nWORKDIR /app\nCOPY . .\nRUN cargo test --release && cargo build --release\n\nFROM debian:bookworm-slim\nCOPY --from=build /app/target/release/${_folderName.replace(/-/g, '_')} /server\nENV PORT=${port}\nEXPOSE ${port}\nCMD ["/server"]\n`, dockerignore: 'target\n.git\n' }
+    case 'go-iris':
+      return { dockerfile: `FROM golang:1.25-alpine AS build\nWORKDIR /src\nCOPY go.mod go.sum* ./\nRUN go mod download || true\nCOPY . .\nRUN go mod tidy && go test ./... && CGO_ENABLED=0 go build -o /server .\n\nFROM alpine:3.22\nCOPY --from=build /server /server\nENV PORT=${port}\nEXPOSE ${port}\nCMD ["/server"]\n`, dockerignore: '.git\n' }
+    case 'python-aiohttp':
+      return { dockerfile: pyImage(port, '["python", "app.py"]'), dockerignore: '.venv\n__pycache__\n.git\n' }
+    case 'python-bottle':
+      return { dockerfile: pyImage(port, '["python", "app.py"]'), dockerignore: '.venv\n__pycache__\n.git\n' }
+    case 'ruby-roda':
+      return { dockerfile: `FROM ruby:3.4-slim\nWORKDIR /app\nCOPY Gemfile* ./\nRUN bundle install\nCOPY . .\nRUN bundle exec ruby test/app_test.rb\nENV PORT=${port}\nEXPOSE ${port}\nCMD ["bundle", "exec", "puma", "-b", "tcp://0.0.0.0:${port}"]\n`, dockerignore: '.bundle\nvendor\n.git\n' }
+    case 'kotlin-spring':
+      return { dockerfile: `FROM gradle:8.14-jdk21 AS build\nWORKDIR /app\nCOPY . .\nRUN gradle --no-daemon -q test bootJar\n\nFROM eclipse-temurin:21-jre\nWORKDIR /app\nCOPY --from=build /app/build/libs/app.jar app.jar\nENV PORT=${port}\nEXPOSE ${port}\nCMD ["java", "-jar", "app.jar"]\n`, dockerignore: 'build\n.gradle\n.git\n' }
   }
   return undefined
 }
@@ -965,6 +1105,14 @@ export function v3DevCommand(techId: string, port: number, pyBin: string): strin
     case 'rust-loco': return 'cargo run -- start'
     case 'kotlin-compose-desktop': return 'gradle run'
     case 'android-compose': return 'gradle installDebug'
+    case 'node-feathers': return 'npm run dev'
+    case 'rust-warp':
+    case 'rust-salvo': return 'cargo run'
+    case 'go-iris': return 'go mod tidy && go run .'
+    case 'python-aiohttp': return `${pyBin} app.py`
+    case 'python-bottle': return `${pyBin} app.py`
+    case 'ruby-roda': return `bundle exec puma -b tcp://0.0.0.0:${port}`
+    case 'kotlin-spring': return 'gradle bootRun'
   }
   return undefined
 }
@@ -993,6 +1141,14 @@ export function v3ReadmeRunCommand(techId: string, port: number): string | undef
     case 'rust-loco': return 'cargo run -- start'
     case 'kotlin-compose-desktop': return 'gradle run'
     case 'android-compose': return 'gradle assembleDebug\nadb install app/build/outputs/apk/debug/app-debug.apk'
+    case 'node-feathers': return 'npm install\nnpm run dev'
+    case 'rust-warp':
+    case 'rust-salvo': return 'cargo run'
+    case 'go-iris': return 'go mod tidy\ngo run .'
+    case 'python-aiohttp':
+    case 'python-bottle': return `${venv}python app.py`
+    case 'ruby-roda': return `bundle install\nbundle exec puma -b tcp://0.0.0.0:${port}`
+    case 'kotlin-spring': return 'gradle bootRun'
   }
   return undefined
 }

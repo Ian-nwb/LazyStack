@@ -162,8 +162,8 @@ A strictly achromatic palette: near-black ink, pure white paper, and a short zin
 - **Unlit Grey** (unlit): lifecycle timeline steps not yet reached, comment lines in output panels.
 - **Zinc Ink** (mute-ink): the secondary line inside the white action block (and inside the outlined block on hover), where it sits on white.
 - **Output White** (output-text): body text inside output panels, and the pressed tone of the white action block on hover.
-- **Module Line** (module-line): the hairlines of the module grid overlay; also the lamp tint flashed in the hosting types keyframe.
-- **Hot Column** (hot) and **Lit Cell** (lit): the faint tint of the module column under the pointer, and the hosting type cell the walking lamp currently sits on.
+- **Module Line** (module-line): the lamp tint flashed in the hosting types keyframe. (The visible module grid overlay was removed in 3.0; the grid stays a layout system, not a drawing.)
+- **Lit Cell** (lit): the hosting type cell the walking lamp currently sits on.
 - **Row Hover** (row-hover): the hover tint of a ruled table row.
 - **Unfilled Rule** (rule-unfilled): the not-yet-read part of the lifecycle rule.
 
@@ -200,7 +200,7 @@ A strictly achromatic palette: near-black ink, pure white paper, and a short zin
 
 ## Layout
 
-A 12-column module grid (`repeat(12, 1fr)`) with an outer margin of clamp(20px, 2.8vw, 44px) and a gutter of clamp(8px, 0.9vw, 14px). Every section and row places content on these columns; the same grid is drawn as a fixed, pointer-transparent overlay of 12 hairline columns behind the content layer (`mix-blend-mode: difference`, Module Line borders). It draws down column by column on load, and on fine pointers the column under the cursor tints to Hot Column.
+A 12-column module grid (`repeat(12, 1fr)`) with an outer margin of clamp(20px, 2.8vw, 44px) and a gutter of clamp(8px, 0.9vw, 14px). Every section and row places content on these columns. The grid is a layout system only; it is not drawn on the page.
 
 The first viewport splits six and six: numeral, title, lede and actions on the left; the App Stack screenshot on the right, bleeding off the right edge, with its caption on the shared baseline. The action group is its own six-column subgrid: download block spans 4, the outlined Windows block spans 2, the npx line spans 6 under a hairline.
 
@@ -210,7 +210,7 @@ Vertical rhythm: sections are separated by a 1px top hairline and padded clamp(7
 
 Breakpoints:
 - **≤1100px**: nav hides; hero stacks to full width with the screenshot below the actions; statements drop beneath headlines; bodies span 2–12 with the 36px indent; hosting types reflow to 4 columns; closing actions go full width.
-- **≤640px**: the overlay shows 4 modules; the lifecycle rule moves to the margin (marks shrink to 32px) and content indents 34px; tables become stacked rows with inline `data-label`s; hosting types go to 2 columns; lists go single column.
+- **≤640px**: the lifecycle rule moves to the margin (marks shrink to 32px) and content indents 34px; tables become stacked rows with inline `data-label`s; hosting types go to 2 columns; lists go single column.
 
 ## Elevation & Depth
 
@@ -279,7 +279,7 @@ Under `prefers-reduced-motion: reduce` every animation and transition is removed
 
 ### Do:
 - **Do** keep every section on the ink sheet and reserve white for type, the mark, structural rules and one action block per viewport.
-- **Do** place everything on the 12-column grid using the margin and gutter clamps, and keep the module overlay visible.
+- **Do** place everything on the 12-column grid using the margin and gutter clamps. **Don't** draw the grid as visible lines: the overlay was removed at the user's request.
 - **Do** build sections from ruled rows: 2px white rule under heads, 1px Zinc Hairline between rows.
 - **Do** show only real screenshots and real CLI output, framed in 1px hairlines and captioned "Fig. n" with continuous numbering.
 - **Do** set catalog counts and stage names as display type with tight tracking (-0.045em to -0.06em) and short line heights (0.76–0.86).

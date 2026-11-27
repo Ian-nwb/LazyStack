@@ -1,5 +1,11 @@
 # LazyStack CLI changelog
 
+## 3.0.0
+
+- 28 new frameworks (170 total): Strapi, Payload, Directus, Laravel + Inertia, Laravel + Livewire, CodeIgniter, CakePHP, Jakarta EE (WildFly), Vaadin, Vert.x, Spring Boot (Kotlin), Android (Jetpack Compose), Compose Multiplatform desktop, Nitro, hapi, Feathers, Ember.js, Quart, Falcon, aiohttp, Bottle, Beego, Iris, Loco, Warp, Salvo, Hanami and Roda. `import` recognizes them.
+- Real JavaScript variants for Express, Fastify, Hono, Elysia, Deno, Next.js, Nuxt, Remix, Qwik City, Nitro, hapi and Feathers.
+- Fixes: JavaScript-flavor React, MUI, Solid and Inferno starters no longer contain TypeScript-only syntax; `dev` starts JavaFX, Swing, Kotlin/JS, SwiftUI, AssemblyScript, Apps Script and SQL migration apps with their own commands.
+
 ## 2.1.0
 
 - `lazystack dev` shows a dashboard (service health, filterable logs, restart, environment wiring) and starts apps in dependency order once their dependencies are healthy; `--plain` keeps plain logs. Databases start with `docker compose up --wait`, and app containers are no longer started next to the same apps on the host.

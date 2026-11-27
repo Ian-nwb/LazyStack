@@ -75,6 +75,7 @@ const NPM_RULES: Rule[] = [
   [/"@strapi\/strapi"/, 'node-strapi'],
   [/"nitropack"/, 'node-nitro'],
   [/"@hapi\/hapi"/, 'node-hapi'],
+  [/"@feathersjs\/feathers"/, 'node-feathers'],
   [/"ember-source"/, 'ember-app'],
   [/"@nestjs\/core"/, 'ts-nestjs'],
   [/"elysia"/, 'ts-elysia'],
@@ -95,6 +96,8 @@ const NPM_RULES: Rule[] = [
 ]
 const CARGO_RULES: Rule[] = [
   [/^\s*loco-rs\s*=/m, 'rust-loco'],
+  [/^\s*warp\s*=/m, 'rust-warp'],
+  [/^\s*salvo\s*=/m, 'rust-salvo'],
   [/^\s*rocket\s*=/m, 'rust-rocket'],
   [/^\s*dioxus\s*=/m, 'rust-dioxus'],
   [/^\s*slint\s*=/m, 'rust-slint'],
@@ -110,6 +113,7 @@ const GO_RULES: Rule[] = [
   [/a-h\/templ/, 'go-templ-htmx'],
   [/goravel\/framework/, 'go-goravel'],
   [/beego\/beego/, 'go-beego'],
+  [/kataras\/iris/, 'go-iris'],
   [/gin-gonic\/gin/, 'go-gin'],
   [/gofiber\/fiber/, 'go-fiber'],
   [/labstack\/echo/, 'go-echo'],
@@ -124,6 +128,8 @@ const PY_RULES: Rule[] = [
   [/^\s*gradio\b/im, 'python-gradio'],
   [/^\s*litestar\b/im, 'python-litestar'],
   [/^\s*quart\b/im, 'python-quart'],
+  [/^\s*aiohttp\b/im, 'python-aiohttp'],
+  [/^\s*bottle\b/im, 'python-bottle'],
   [/^\s*falcon\b/im, 'python-falcon'],
   [/^\s*sanic\b/im, 'python-sanic'],
   [/^\s*tornado\b/im, 'python-tornado'],
@@ -143,6 +149,7 @@ const JVM_RULES: Rule[] = [
   [/io\.vertx/, 'java-vertx'],
   [/com\.vaadin/, 'java-vaadin'],
   [/jakarta\.jakartaee-api|jakarta\.platform/, 'java-jakarta'],
+  [/kotlin\("plugin\.spring"\)/, 'kotlin-spring'],
   [/spring-boot/, 'java-springboot'],
   [/org\.openjfx|javafx/, 'java-javafx'],
   [/com\.android\.application[\s\S]*kotlin\.plugin\.compose|androidx\.compose/, 'android-compose'],
@@ -251,6 +258,7 @@ async function detectApp(dir: string, entries: string[]): Promise<{ techId: stri
     if (/cakephp\/(app|cakephp)/.test(composer)) return { techId: 'php-cakephp', confidence: 'high', evidence: 'composer requires CakePHP' }
     return { techId: 'vanilla-php', confidence: 'medium', evidence: 'composer.json without a known framework' }
   }
+  if (has('Gemfile') && /\broda\b/.test(await file('Gemfile'))) return { techId: 'ruby-roda', confidence: 'high', evidence: 'Gemfile requires roda' }
   if (has('Gemfile') && /\bhanami\b/.test(await file('Gemfile'))) return { techId: 'ruby-hanami', confidence: 'high', evidence: 'Gemfile requires hanami' }
   if (has('Gemfile') && /\bjekyll\b/.test(await file('Gemfile'))) return { techId: 'jekyll', confidence: 'high', evidence: 'Gemfile requires jekyll' }
   if (has('Gemfile') && /\bsinatra\b/.test(await file('Gemfile')) && !/\brails\b/.test(await file('Gemfile'))) return { techId: 'ruby-sinatra', confidence: 'high', evidence: 'Gemfile requires sinatra' }
