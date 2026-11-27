@@ -273,6 +273,14 @@ mongo_data/
     if (app.techId === 'electron-app') return 'npm start'
     if (app.techId === 'react-native-expo') return 'npx expo start'
     if (app.techId === 'bash-worker') return 'bash worker.sh'
+    // Each matches the run command in the app's own README; the npm fallback below would fail for them.
+    if (app.techId === 'java-javafx') return 'mvn javafx:run'
+    if (app.techId === 'java-swing') return 'mvn compile exec:java'
+    if (app.techId === 'kotlin-js') return 'gradle jsBrowserDevelopmentRun --continuous'
+    if (app.techId === 'swiftui-client') return 'open Package.swift'
+    if (app.techId === 'assemblyscript') return 'npm run asbuild && npm start'
+    if (app.techId === 'google-apps-script') return 'npm run push'
+    if (app.techId === 'sql-migrations') return 'echo Apply the SQL files in migrations/ with your database migration tool'
 
     // 15. Default: Node.js / TypeScript Web & API
     return 'npm run dev'

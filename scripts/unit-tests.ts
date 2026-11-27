@@ -439,3 +439,36 @@ test('dev orchestrator: apps start in dependency order once their dependencies a
     await new Promise<void>((done, fail) => { const probe = net.createServer().once('error', fail).listen(port, () => probe.close(() => done())) })
   }
 })
+
+// ---------------------------------------------------------------- JavaScript flavor
+
+test('javascript flavor: every emitted .js/.jsx file parses as plain JavaScript', async () => {
+  const { transformSync } = await import('esbuild')
+  const { getStarterFilesForTech } = await import('../electron/scaffolding/templates/appTemplates')
+  const failures: string[] = []
+  for (const tech of TECH_CATALOG.filter(item => item.supportsFlavor)) {
+    const files = getStarterFilesForTech(tech.id, 'app', tech.defaultPort || 3000, 'javascript') as Record<string, unknown>
+    for (const [file, content] of Object.entries(files)) {
+      if (!/\.(js|jsx|mjs|cjs)$/.test(file) || typeof content !== 'string') continue
+      try {
+        // A JS loader rejects TypeScript-only syntax such as `x!`, `as const` or type annotations.
+        transformSync(content, { loader: file.endsWith('x') ? 'jsx' : 'js', format: 'esm', logLevel: 'silent' })
+      } catch (error) {
+        failures.push(`${tech.id} ${file}: ${(error as Error).message.split('\n')[0]}`)
+      }
+    }
+  }
+  assert.deepEqual(failures, [])
+})
+
+test('javascript flavor: a framework that offers JavaScript writes no TypeScript source for it', async () => {
+  const { getStarterFilesForTech } = await import('../electron/scaffolding/templates/appTemplates')
+  const offenders: string[] = []
+  for (const tech of TECH_CATALOG.filter(item => item.supportsFlavor)) {
+    const files = getStarterFilesForTech(tech.id, 'app', tech.defaultPort || 3000, 'javascript') as Record<string, unknown>
+    // Tool config files (vite.config.ts, capacitor.config.ts) are fine; app source is not.
+    const ts = Object.keys(files).filter(file => /\.tsx?$/.test(file) && !/(\.config\.ts|\.d\.ts)$/.test(file))
+    if (ts.length) offenders.push(`${tech.id}: ${ts.join(', ')}`)
+  }
+  assert.deepEqual(offenders, [], 'drop supportsFlavor for TypeScript-only starters, or give them a JavaScript variant')
+})

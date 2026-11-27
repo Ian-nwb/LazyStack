@@ -277,7 +277,6 @@ export const TECH_CATALOG: TechItem[] = [
     defaultPort: 8000,
     description: 'Next-gen secure runtime with native TypeScript, Deno.serve(), and web standards.',
     badgeColor: 'bg-teal-500/20 text-teal-300 border-teal-500/40',
-    supportsFlavor: true,
     requires: [
       { binary: 'deno', label: 'Deno Runtime', installHint: 'https://deno.land or curl -fsSL https://deno.land/install.sh | sh' }
     ]
@@ -292,7 +291,6 @@ export const TECH_CATALOG: TechItem[] = [
     serverlessAdapter: true,
     description: 'Next-gen fullstack Deno web framework with instant loading and client islands.',
     badgeColor: 'bg-teal-500/20 text-teal-300 border-teal-500/40',
-    supportsFlavor: true,
     requires: [
       { binary: 'deno', label: 'Deno Runtime', installHint: 'https://deno.land or curl -fsSL https://deno.land/install.sh | sh' }
     ]
@@ -306,7 +304,6 @@ export const TECH_CATALOG: TechItem[] = [
     defaultPort: 3000,
     description: 'Ergonomic, type-safe backend framework designed specifically for Bun runtime speed.',
     badgeColor: 'bg-pink-500/20 text-pink-300 border-pink-500/40',
-    supportsFlavor: true,
     requires: [
       { binary: 'bun', label: 'Bun Runtime', installHint: 'https://bun.sh or curl -fsSL https://bun.sh/install | bash' }
     ]
@@ -461,7 +458,6 @@ export const TECH_CATALOG: TechItem[] = [
     defaultPort: 3000,
     description: 'Classic fast, unopinionated, minimalist web framework for Node.js.',
     badgeColor: 'bg-green-500/20 text-green-300 border-green-500/40',
-    supportsFlavor: true,
     requires: [
       { binary: 'node', label: 'Node.js Runtime', installHint: 'https://nodejs.org or nvm install --lts' },
       { binary: 'npm', label: 'npm (Node PM)', installHint: 'Installed with Node.js' }
@@ -476,7 +472,6 @@ export const TECH_CATALOG: TechItem[] = [
     defaultPort: 3000,
     description: 'Extremely fast Node.js web framework focused on low overhead and schema validation.',
     badgeColor: 'bg-green-500/20 text-green-300 border-green-500/40',
-    supportsFlavor: true,
     requires: [
       { binary: 'node', label: 'Node.js Runtime', installHint: 'https://nodejs.org or nvm install --lts' },
       { binary: 'npm', label: 'npm (Node PM)', installHint: 'Installed with Node.js' }
@@ -491,7 +486,6 @@ export const TECH_CATALOG: TechItem[] = [
     defaultPort: 3000,
     description: 'Progressive Node.js framework for scalable enterprise server-side applications.',
     badgeColor: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
-    supportsFlavor: true,
     requires: [
       { binary: 'node', label: 'Node.js Runtime', installHint: 'https://nodejs.org or nvm install --lts' },
       { binary: 'npm', label: 'npm (Node PM)', installHint: 'Installed with Node.js' }
@@ -507,7 +501,6 @@ export const TECH_CATALOG: TechItem[] = [
     serverlessAdapter: true,
     description: 'Ultrafast, lightweight standards-based web framework for Node, Bun, and Deno.',
     badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
-    supportsFlavor: true,
     requires: [
       { binary: 'node', label: 'Node.js Runtime', installHint: 'https://nodejs.org or nvm install --lts' },
       { binary: 'npm', label: 'npm (Node PM)', installHint: 'Installed with Node.js' }
@@ -525,7 +518,6 @@ export const TECH_CATALOG: TechItem[] = [
     serverlessAdapter: true,
     description: 'Production React framework with SSR, Server Components, and API routes.',
     badgeColor: 'bg-sky-500/20 text-sky-300 border-sky-500/40',
-    supportsFlavor: true,
     requires: [
       { binary: 'node', label: 'Node.js Runtime', installHint: 'https://nodejs.org or nvm install --lts' },
       { binary: 'npm', label: 'npm (Node PM)', installHint: 'Installed with Node.js' }
@@ -541,7 +533,6 @@ export const TECH_CATALOG: TechItem[] = [
     serverlessAdapter: true,
     description: 'The intuitive Vue meta-framework with auto-imports, file-based routing, and SSR.',
     badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
-    supportsFlavor: true,
     requires: [
       { binary: 'node', label: 'Node.js Runtime', installHint: 'https://nodejs.org or nvm install --lts' },
       { binary: 'npm', label: 'npm (Node PM)', installHint: 'Installed with Node.js' }
@@ -557,7 +548,6 @@ export const TECH_CATALOG: TechItem[] = [
     serverlessAdapter: true,
     description: 'Fast, resilient React fullstack framework focused on web standards and nested loaders.',
     badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
-    supportsFlavor: true,
     requires: [
       { binary: 'node', label: 'Node.js Runtime', installHint: 'https://nodejs.org or nvm install --lts' },
       { binary: 'npm', label: 'npm (Node PM)', installHint: 'Installed with Node.js' }
@@ -683,7 +673,6 @@ export const TECH_CATALOG: TechItem[] = [
     staticOutput: true,
     description: 'Enterprise TypeScript SPA with signals, hydration, and modular architecture.',
     badgeColor: 'bg-red-500/20 text-red-300 border-red-500/40',
-    supportsFlavor: true,
     requires: [
       { binary: 'node', label: 'Node.js Runtime', installHint: 'https://nodejs.org or nvm install --lts' },
       { binary: 'npm', label: 'npm (Node PM)', installHint: 'Installed with Node.js' }
@@ -715,7 +704,6 @@ export const TECH_CATALOG: TechItem[] = [
     serverlessAdapter: true,
     description: 'Resumable, instant-loading web app architecture with zero-hydration cost.',
     badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40',
-    supportsFlavor: true,
     requires: [
       { binary: 'node', label: 'Node.js Runtime', installHint: 'https://nodejs.org or nvm install --lts' },
       { binary: 'npm', label: 'npm (Node PM)', installHint: 'Installed with Node.js' }

@@ -5,6 +5,16 @@ All notable changes to LazyStack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- **JavaScript projects with React + Vite, React + MUI, SolidJS or Inferno crashed on start**: their `.jsx` entry files kept TypeScript-only syntax (`document.getElementById('root')!`, `} as const`), which is a syntax error in JavaScript. This hit the MERN preset's client when JavaScript was chosen. A unit test now parses every JavaScript-flavor file as plain JavaScript.
+- **`lazystack dev` ran `npm run dev` for apps without that script**: JavaFX, Swing, Kotlin/JS, SwiftUI, AssemblyScript, Google Apps Script and SQL migrations now start with the command from their own README (`mvn javafx:run`, `mvn compile exec:java`, `gradle jsBrowserDevelopmentRun --continuous`, `npm run asbuild && npm start`, `npm run push`, ...).
+- **The Kotlin/JS README said `./gradlew`**, but the starter has no Gradle wrapper; it now uses `gradle` and explains how to add a wrapper.
+
+### Changed
+- **The TypeScript / JavaScript choice is only offered where it changes the output.** Express, Fastify, Hono, NestJS, Elysia, Deno, Fresh, Next.js, Nuxt, Remix, Angular and Qwik City always generated TypeScript, even with JavaScript selected; they no longer show the choice. A unit test keeps every framework that offers JavaScript free of TypeScript source.
+
 ## [2.1.0] - 2026-11-25
 
 ### Added

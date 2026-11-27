@@ -393,7 +393,7 @@ public class Main {
     files['settings.gradle.kts'] = `pluginManagement { repositories { gradlePluginPortal(); mavenCentral() } }\ndependencyResolutionManagement { repositoriesMode.set(RepositoriesMode.PREFER_PROJECT); repositories { mavenCentral() } }\nrootProject.name = "${folderName}"\n`
     files['build.gradle.kts'] = `plugins { kotlin("multiplatform") version "2.2.20" }\nkotlin { js { browser(); binaries.executable() } }\n`
     files['src/jsMain/kotlin/Main.kt'] = `import kotlinx.browser.document\n\nfun main() { document.body?.innerHTML = "<main style='font-family:sans-serif;padding:3rem'><h1>${folderName}</h1><p>Kotlin/JS browser frontend</p></main>" }\n`
-    files['README.md'] = `# ${folderName} (Kotlin/JS)\n\nBuild the browser bundle with \`./gradlew jsBrowserDevelopmentWebpack\`. Serve the generated output under \`build/dist/js/developmentExecutable\`. Requires JDK and Gradle. Docs: https://kotlinlang.org/docs/js-get-started.html\n`
+    files['README.md'] = `# ${folderName} (Kotlin/JS)\n\nRun it with \`gradle jsBrowserDevelopmentRun --continuous\` (a dev server with live reload), or build the bundle with \`gradle jsBrowserDevelopmentWebpack\` and serve \`build/dist/js/developmentExecutable\`. Requires a JDK and Gradle; this starter has no Gradle wrapper, so add one with \`gradle wrapper\` if you want \`./gradlew\`. Docs: https://kotlinlang.org/docs/js-get-started.html\n`
     return files
   }
 
@@ -2524,7 +2524,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+ReactDOM.createRoot(document.getElementById('root')${isTS ? '!' : ''}).render(
   <React.StrictMode>
     <App />
   </React.StrictMode>
@@ -2723,7 +2723,7 @@ export default defineConfig({
 import { render } from 'solid-js/web';
 import App from './App';
 
-render(() => <App />, document.getElementById('root')!);
+render(() => <App />, document.getElementById('root')${isTS ? '!' : ''});
 `
     files[`src/App.${isTS ? 'tsx' : 'jsx'}`] = `export default function App() {
   return (
@@ -2833,7 +2833,7 @@ const btnStyle = {
   height: '2.25rem',
   fontSize: '1.25rem',
   cursor: 'pointer',
-} as const
+}${isTS ? ' as const' : ''}
 `
     files['index.html'] = `<!DOCTYPE html>
 <html lang="en">
