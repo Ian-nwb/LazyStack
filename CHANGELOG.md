@@ -5,19 +5,6 @@ All notable changes to LazyStack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
-### Added
-- Every generated app README now has a **Run locally** section (prerequisites and the exact commands) when its starter didn't already show one; 36 frameworks gained it, including Haskell, C, C++, Zig, .NET, Rails, Phoenix, Laravel, Flutter and Deno.
-- `lazystack dev` creates each Python app's `.venv` and installs `requirements.txt` on first run, so a fresh project starts without manual setup.
-
-### Changed
-- Python instructions use one cross-platform virtualenv snippet (`python3 -m venv .venv`, with the Windows `py` and `.venv\Scripts\activate` forms inline); `vanilla-python` now uses a venv too.
-- The project README gives a concrete local command for all 170 frameworks; none fall back to "see the app-local README" any more.
-
-### Fixed
-- The SwiftUI client starter wrote its view to a folder literally named `Sources/${folderName}`.
-
 ## [3.0.0] - 2026-11-27
 
 LazyStack 3.0 adds 28 frameworks, real JavaScript variants, a startup screen and a black-and-white look across the app, and fixes starters that crashed in JavaScript.
@@ -33,16 +20,22 @@ LazyStack 3.0 adds 28 frameworks, real JavaScript variants, a startup screen and
   - `lazystack import` recognizes all of them.
 - **Real JavaScript variants** for Express, Fastify, Hono, Elysia, Deno, Next.js, Nuxt, Remix and Qwik City (plus Nitro, hapi and Feathers). Choosing JavaScript used to be ignored for them; they now generate `.js`/`.jsx` sources without TypeScript tooling. NestJS, Angular and Fresh stay TypeScript-only, as the frameworks themselves are.
 - **A startup screen**: the mark draws itself over the module grid with "LazyStack 3.0" and the live framework count while the app loads.
+- Every generated app README now has a **Run locally** section (prerequisites and the exact commands) when its starter didn't already show one; 36 frameworks gained it, including Haskell, C, C++, Zig, .NET, Rails, Phoenix, Laravel, Flutter and Deno.
+- `lazystack dev` creates each Python app's `.venv` and installs `requirements.txt` on first run, so a fresh project starts without manual setup.
+- `lazystack dev` also installs JavaScript (npm, pnpm, yarn or bun), PHP (Composer), Ruby (Bundler), Elixir (Mix) and Dart/Flutter dependencies the first time an app runs, before migrations.
 
 ### Changed
 - **The app matches the showcase**: neutral blacks instead of blue-tinted greys, a paper-and-ink light theme instead of the cream one, the self-hosted Archivo typeface and the system monospace font. The app no longer loads fonts from Google, so it looks the same offline.
 - **The TypeScript / JavaScript choice is only offered where it changes the output.** A unit test keeps every framework that offers JavaScript free of TypeScript source.
+- Python instructions use one cross-platform virtualenv snippet (`python3 -m venv .venv`, with the Windows `py` and `.venv\Scripts\activate` forms inline); `vanilla-python` now uses a venv too.
+- The project README gives a concrete local command for all 170 frameworks; none fall back to "see the app-local README" any more.
 
 ### Fixed
 - **JavaScript projects with React + Vite, React + MUI, SolidJS or Inferno crashed on start**: their `.jsx` entry files kept TypeScript-only syntax (`document.getElementById('root')!`, `} as const`), which is a syntax error in JavaScript. This hit the MERN preset's client when JavaScript was chosen. A unit test now parses every JavaScript-flavor file as plain JavaScript.
 - **`lazystack dev` ran `npm run dev` for apps without that script**: JavaFX, Swing, Kotlin/JS, SwiftUI, AssemblyScript, Google Apps Script and SQL migrations now start with the command from their own README (`mvn javafx:run`, `mvn compile exec:java`, `gradle jsBrowserDevelopmentRun --continuous`, `npm run asbuild && npm start`, `npm run push`, ...).
 - **The Kotlin/JS README said `./gradlew`**, but the starter has no Gradle wrapper; it now uses `gradle` and explains how to add a wrapper.
 - **The Deno Dockerfile hardcoded `main.ts`**; it now starts through `deno task start`, so it works for both dialects.
+- The SwiftUI client starter wrote its view to a folder literally named `Sources/${folderName}`.
 
 ## [2.1.0] - 2026-11-25
 

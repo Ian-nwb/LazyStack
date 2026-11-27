@@ -490,9 +490,13 @@ test('app READMEs: every framework says how to run it locally, and Python ones s
   assert.deepEqual(noVenv, [], 'these Python READMEs skip the virtualenv')
 })
 
-test('dev orchestrator: creates a Python app virtualenv before migrations and launches', () => {
+test('dev orchestrator: sets up Python virtualenvs and installs app dependencies before migrations and launches', () => {
   const main = DEV_ORCHESTRATOR_RUNTIME.slice(DEV_ORCHESTRATOR_RUNTIME.indexOf('async function main()'))
   assert.ok(DEV_ORCHESTRATOR_RUNTIME.includes("' -m venv .venv'"), 'runtime creates .venv')
   assert.ok(DEV_ORCHESTRATOR_RUNTIME.includes('-m pip install -r requirements.txt'), 'runtime installs requirements')
   assert.ok(main.indexOf('preparePythonEnvs()') > -1 && main.indexOf('preparePythonEnvs()') < main.indexOf('runMigrations()'), 'venv is ready before Django migrations run')
+  assert.ok(main.indexOf('prepareDependencies()') > -1 && main.indexOf('prepareDependencies()') < main.indexOf('runMigrations()'), 'dependencies are installed before Laravel/Prisma migrations run')
+  for (const command of ["' install'", "'composer install'", "'bundle install'", "'mix deps.get'", "' pub get'"]) {
+    assert.ok(DEV_ORCHESTRATOR_RUNTIME.includes(command), 'runtime installs dependencies with ' + command)
+  }
 })

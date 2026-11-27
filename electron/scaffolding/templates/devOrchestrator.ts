@@ -123,6 +123,40 @@ function preparePythonEnvs() {
   }
 }
 
+// Other ecosystems: install an app's dependencies once, when its manifest has never been installed.
+// (Go, Rust, JVM and .NET fetch dependencies as part of their run command, so they need nothing here.)
+function hasNodeModules(dir) {
+  for (let at = dir; ; at = dirname(at)) {
+    if (existsSync(resolve(at, 'node_modules'))) return true;
+    if (at === rootDir || dirname(at) === at) return false;
+  }
+}
+function prepareDependencies() {
+  for (const service of CONFIG.services) {
+    const dir = resolve(rootDir, service.path);
+    const has = file => existsSync(resolve(dir, file));
+    const install = (label, command) => {
+      say('Installing ' + label + ' dependencies for ' + service.name + ' (' + command + ')...');
+      try { execSync(command, { cwd: dir, stdio: 'inherit' }); }
+      catch (error) { say('Notice: ' + command + ' failed for ' + service.name + ': ' + error.message); }
+    };
+    if (has('package.json') && !hasNodeModules(dir)) {
+      const lock = file => has(file) || existsSync(resolve(rootDir, file));
+      const tool = /^bun /.test(service.cmd) || lock('bun.lockb') || lock('bun.lock') ? 'bun'
+        : lock('pnpm-lock.yaml') ? 'pnpm' : lock('yarn.lock') ? 'yarn' : 'npm';
+      install('JavaScript', tool + ' install');
+    }
+    if (has('composer.json') && !has('vendor')) install('PHP', 'composer install');
+    if (has('Gemfile')) {
+      let satisfied = false;
+      try { execSync('bundle check', { cwd: dir, stdio: 'ignore' }); satisfied = true; } catch (error) { /* not installed yet */ }
+      if (!satisfied) install('Ruby', 'bundle install');
+    }
+    if (has('mix.exs') && !has('deps')) install('Elixir', 'mix deps.get');
+    if (has('pubspec.yaml') && !has('.dart_tool')) install('Dart', (/^flutter /.test(service.cmd) ? 'flutter' : 'dart') + ' pub get');
+  }
+}
+
 // ── 3. First-boot migrations ──────────────────────────────────────────────
 function runMigrations() {
   for (const service of CONFIG.services) {
@@ -457,6 +491,7 @@ async function main() {
   console.log(C.bold + 'LazyStack dev · ' + CONFIG.project + C.reset);
   await startInfrastructure();
   preparePythonEnvs();
+  prepareDependencies();
   runMigrations();
   if (!services.length) { say('No apps to start.'); return; }
   if (!PLAIN) enterDashboard();
