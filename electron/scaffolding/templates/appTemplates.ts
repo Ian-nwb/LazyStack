@@ -1154,7 +1154,7 @@ end
   }
 }
 `
-    files['nuxt.config.ts'] = `// https://nuxt.com/docs/api/configuration/nuxt-config
+    files[`nuxt.config.${isTS ? 'ts' : 'js'}`] = `// https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2024-04-03',
   devtools: { enabled: true }
@@ -1245,26 +1245,24 @@ export default defineConfig({
   },
   "devDependencies": {
     "@remix-run/dev": "^2.12.0",
-    "@types/react": "^18.2.20",
+${isTS ? `    "@types/react": "^18.2.20",
     "@types/react-dom": "^18.2.7",
     "typescript": "^5.1.0",
-    "vite": "^5.1.0",
-    "vite-tsconfig-paths": "^4.2.1"
+    ` : '    '}"vite": "^5.1.0"${isTS ? `,
+    "vite-tsconfig-paths": "^4.2.1"` : ''}
   }
 }
 `
-    files['vite.config.ts'] = `import { vitePlugin as remix } from "@remix-run/dev";
+    files[`vite.config.${isTS ? 'ts' : 'js'}`] = `import { vitePlugin as remix } from "@remix-run/dev";
 import { defineConfig } from "vite";
-import tsconfigPaths from "vite-tsconfig-paths";
-
+${isTS ? 'import tsconfigPaths from "vite-tsconfig-paths";\n' : ''}
 export default defineConfig({
   plugins: [
-    remix(),
-    tsconfigPaths(),
+    remix(),${isTS ? '\n    tsconfigPaths(),' : ''}
   ],
 });
 `
-    files['app/root.tsx'] = `import {
+    files[`app/root.${isTS ? 'tsx' : 'jsx'}`] = `import {
   Links,
   Meta,
   Outlet,
@@ -1272,7 +1270,7 @@ export default defineConfig({
   ScrollRestoration,
 } from "@remix-run/react";
 
-export function Layout({ children }: { children: React.ReactNode }) {
+export function Layout({ children }${isTS ? ': { children: React.ReactNode }' : ''}) {
   return (
     <html lang="en">
       <head>
@@ -1294,7 +1292,7 @@ export default function App() {
   return <Outlet />;
 }
 `
-    files['app/routes/_index.tsx'] = `export default function Index() {
+    files[`app/routes/_index.${isTS ? 'tsx' : 'jsx'}`] = `export default function Index() {
   return (
     <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ border: '1px solid #27272e', padding: '2rem', borderRadius: '12px', background: '#141418', textAlign: 'center' }}>
@@ -1644,15 +1642,15 @@ end
     "next": "^15.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
-  },
+  }${isTS ? `,
   "devDependencies": {
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "typescript": "^5.6.0"
-  }
+  }` : ''}
 }
 `
-    files['tsconfig.json'] = `{
+    if (isTS) files['tsconfig.json'] = `{
   "compilerOptions": {
     "target": "ES2017",
     "lib": ["dom", "dom.iterable", "esnext"],
@@ -1674,9 +1672,11 @@ end
   "exclude": ["node_modules"]
 }
 `
-    files['src/app/layout.tsx'] = `export const metadata = { title: '${folderName}' };
+    else files['jsconfig.json'] = `{ "compilerOptions": { "paths": { "@/*": ["./src/*"] } } }
+`
+    files[`src/app/layout.${isTS ? 'tsx' : 'jsx'}`] = `export const metadata = { title: '${folderName}' };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({ children }${isTS ? ': { children: React.ReactNode }' : ''}) {
   return (
     <html lang="en">
       <body style={{ margin: 0, background: '#09090b', color: '#fff', fontFamily: 'sans-serif' }}>
@@ -1686,7 +1686,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   );
 }
 `
-    files['src/app/page.tsx'] = `export default function Home() {
+    files[`src/app/page.${isTS ? 'tsx' : 'jsx'}`] = `export default function Home() {
   return (
     <main style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ border: '1px solid #27272e', padding: '2rem', borderRadius: '12px', background: '#141418', textAlign: 'center' }}>
@@ -1697,7 +1697,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   );
 }
 `
-    files['src/app/api/health/route.ts'] = `export async function GET() {
+    files[`src/app/api/health/route.${isTS ? 'ts' : 'js'}`] = `export async function GET() {
   return Response.json({ service: "${folderName}", framework: "Next.js 15", status: "online" });
 }
 `
@@ -2312,12 +2312,12 @@ server.listen(port, () => {
   "name": "${folderName}",
   "version": "1.0.0",
   "type": "module",
-  "scripts": { "dev": "tsx watch src/index.ts", "build": "tsc", "start": "node dist/index.js" },
-  "dependencies": { "express": "^5.0.0" },
-  "devDependencies": { "@types/express": "^5.0.0", "@types/node": "^22.0.0", "tsx": "^4.19.0", "typescript": "^5.6.0" }
+  "scripts": ${isTS ? '{ "dev": "tsx watch src/index.ts", "build": "tsc", "start": "node dist/index.js" }' : '{ "dev": "node --watch src/index.js", "start": "node src/index.js" }'},
+  "dependencies": { "express": "^5.0.0" }${isTS ? `,
+  "devDependencies": { "@types/express": "^5.0.0", "@types/node": "^22.0.0", "tsx": "^4.19.0", "typescript": "^5.6.0" }` : ''}
 }
 `
-    files['src/index.ts'] = `import express from 'express';
+    files[`src/index.${isTS ? 'ts' : 'js'}`] = `import express from 'express';
 const app = express();
 const port = process.env.PORT || ${port};
 
@@ -2327,7 +2327,7 @@ app.get('/', (req, res) => {
 
 app.listen(port, () => console.log(\`[LazyStack] ${folderName} (Express) on :\${port}\`));
 `
-    files['tsconfig.json'] = `{ "compilerOptions": { "target": "ESNext", "module": "NodeNext", "moduleResolution": "NodeNext", "outDir": "./dist", "rootDir": "./src", "strict": true, "esModuleInterop": true, "skipLibCheck": true }, "include": ["src/**/*"] }
+    if (isTS) files['tsconfig.json'] = `{ "compilerOptions": { "target": "ESNext", "module": "NodeNext", "moduleResolution": "NodeNext", "outDir": "./dist", "rootDir": "./src", "strict": true, "esModuleInterop": true, "skipLibCheck": true }, "include": ["src/**/*"] }
 `
     return files
   }
@@ -2337,12 +2337,12 @@ app.listen(port, () => console.log(\`[LazyStack] ${folderName} (Express) on :\${
   "name": "${folderName}",
   "version": "1.0.0",
   "type": "module",
-  "scripts": { "dev": "tsx watch src/index.ts", "build": "tsc", "start": "node dist/index.js" },
-  "dependencies": { "fastify": "^5.0.0" },
-  "devDependencies": { "@types/node": "^22.0.0", "tsx": "^4.19.0", "typescript": "^5.6.0" }
+  "scripts": ${isTS ? '{ "dev": "tsx watch src/index.ts", "build": "tsc", "start": "node dist/index.js" }' : '{ "dev": "node --watch src/index.js", "start": "node src/index.js" }'},
+  "dependencies": { "fastify": "^5.0.0" }${isTS ? `,
+  "devDependencies": { "@types/node": "^22.0.0", "tsx": "^4.19.0", "typescript": "^5.6.0" }` : ''}
 }
 `
-    files['src/index.ts'] = `import Fastify from 'fastify';
+    files[`src/index.${isTS ? 'ts' : 'js'}`] = `import Fastify from 'fastify';
 const fastify = Fastify({ logger: true });
 
 fastify.get('/', async () => ({ service: '${folderName}', framework: 'Fastify 5', status: 'online' }));
@@ -2351,7 +2351,7 @@ fastify.listen({ port: ${port}, host: '0.0.0.0' }).then(() => {
   console.log(\`[LazyStack] ${folderName} (Fastify) on :${port}\`);
 });
 `
-    files['tsconfig.json'] = `{ "compilerOptions": { "target": "ESNext", "module": "NodeNext", "moduleResolution": "NodeNext", "outDir": "./dist", "rootDir": "./src", "strict": true, "esModuleInterop": true, "skipLibCheck": true }, "include": ["src/**/*"] }
+    if (isTS) files['tsconfig.json'] = `{ "compilerOptions": { "target": "ESNext", "module": "NodeNext", "moduleResolution": "NodeNext", "outDir": "./dist", "rootDir": "./src", "strict": true, "esModuleInterop": true, "skipLibCheck": true }, "include": ["src/**/*"] }
 `
     return files
   }
@@ -2420,11 +2420,11 @@ serve({ fetch: app.fetch, port: ${port} }, () => {
   "name": "${folderName}",
   "version": "1.0.0",
   "type": "module",
-  "scripts": { "dev": "bun run --watch src/index.ts", "start": "bun src/index.ts" },
+  "scripts": { "dev": "bun run --watch src/index.${isTS ? 'ts' : 'js'}", "start": "bun src/index.${isTS ? 'ts' : 'js'}" },
   "dependencies": { "elysia": "^1.1.0" }
 }
 `
-    files['src/index.ts'] = `import { Elysia } from 'elysia';
+    files[`src/index.${isTS ? 'ts' : 'js'}`] = `import { Elysia } from 'elysia';
 
 new Elysia()
   .get('/', () => ({ service: '${folderName}', framework: 'Elysia (Bun)', status: 'online' }))
@@ -2874,21 +2874,21 @@ Inferno uses the same JSX syntax as React but renders with near-native DOM speed
   "scripts": {
     "dev": "vite --port ${port} --host",
     "build": "qwik build preview",
-    "build.client": "vite build",
-    "build.types": "tsc --incremental --noEmit"
+    "build.client": "vite build"${isTS ? `,
+    "build.types": "tsc --incremental --noEmit"` : ''}
   },
   "dependencies": {
     "@builder.io/qwik": "^1.10.0",
     "@builder.io/qwik-city": "^1.10.0"
   },
   "devDependencies": {
-    "typescript": "^5.6.0",
+${isTS ? `    "typescript": "^5.6.0",
     "@types/node": "^22.0.0",
-    "vite": "^6.0.0"
+` : ''}    "vite": "^6.0.0"
   }
 }
 `
-    files['vite.config.ts'] = `import { defineConfig } from 'vite';
+    files[`vite.config.${isTS ? 'ts' : 'js'}`] = `import { defineConfig } from 'vite';
 import { qwikCity } from '@builder.io/qwik-city/vite';
 import { qwikVite } from '@builder.io/qwik/optimizer';
 
@@ -2900,7 +2900,7 @@ export default defineConfig({
   }
 });
 `
-    files['tsconfig.json'] = `{
+    if (isTS) files['tsconfig.json'] = `{
   "compilerOptions": {
     "target": "ES2022",
     "module": "ESNext",
@@ -2913,7 +2913,7 @@ export default defineConfig({
   }
 }
 `
-    files['src/routes/index.tsx'] = `import { component$ } from '@builder.io/qwik';
+    files[`src/routes/index.${isTS ? 'tsx' : 'jsx'}`] = `import { component$ } from '@builder.io/qwik';
 export default component$(() => (
   <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', background: '#09090b', color: '#fff', fontFamily: 'sans-serif' }}>
     <div style={{ border: '1px solid #27272e', padding: '2rem', borderRadius: '12px', background: '#141418', textAlign: 'center' }}>

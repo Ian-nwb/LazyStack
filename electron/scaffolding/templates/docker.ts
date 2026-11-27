@@ -875,10 +875,10 @@ CMD ["./server"]
       dockerfile: `FROM denoland/deno:alpine-2.0.0
 WORKDIR /app
 COPY . .
-RUN deno cache main.ts
+RUN deno cache main.*
 EXPOSE ${port}
 ENV PORT=${port}
-CMD ${techId === 'deno-fresh' ? '["run", "-A", "main.ts"]' : '["run", "--allow-net", "--allow-env", "main.ts"]'}
+CMD ${techId === 'deno-fresh' ? '["run", "-A", "main.ts"]' : '["task", "start"]'}
 `,
       dockerignore: `.git\n`
     }

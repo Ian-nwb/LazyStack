@@ -248,7 +248,7 @@ mongo_data/
     // 11. Deno & Bun
     if (app.techId === 'deno-fresh') return 'deno task dev'
     if (app.techId === 'deno-native') return 'deno task dev'
-    if (app.techId === 'ts-elysia') return 'bun run src/index.ts'
+    if (app.techId === 'ts-elysia') return 'bun run dev'
 
     // 12. Java, Kotlin, Scala, Clojure
     if (app.techId === 'java-springboot') return 'mvn spring-boot:run'
