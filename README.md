@@ -483,10 +483,11 @@ docs/                Framework layouts, release guides and release plans
 showcase/            Project website
 ```
 
-## Ideas under consideration
+## Live Showcase
+* **Vercel:** [lazystack-showcase.vercel.app](https://lazystack-showcase.vercel.app)
+* **GitHub Pages:** [ian-nwb.github.io/LazyStack](https://ian-nwb.github.io/LazyStack/)
 
-See [ROADMAP.md](ROADMAP.md). 2.x: `lazystack upgrade` (three-way template merges), environment profiles and secrets, a `lazystack dev` dashboard and per-PR preview environments. 3.0: boot and stack tests for every starter, services wired into app code (OIDC, OpenTelemetry), templates as files and community template packs. Catalog additions under consideration: ClojureScript, ReScript, PureScript, Scala.js and Compose Multiplatform; Analog, Waku, Ember, Nitro, Encore.ts, Loco.rs, Vaadin, Laravel + Inertia/Livewire and headless CMSs (Payload, Strapi, Directus, Medusa); per-app ORM and UI-kit choices; gRPC/GraphQL/AsyncAPI codegen; Zitadel and Authentik; environment profiles, secrets (Vault, 1Password), a template registry, an AI blueprint drafter, Pulumi export, and a macOS build (sponsor me a Macbook for app signature).
-
+  
 ## Contributing
 
 Bug reports, framework requests and pull requests are welcome. See [CONTRIBUTING](.github/CONTRIBUTING.md) for how the code is organised and how to check a change.
