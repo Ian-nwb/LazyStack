@@ -1,0 +1,934 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>LazyStack</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 72 64'%3E%3Cstyle%3Epath%7Bfill:none;stroke:%23050505;stroke-width:4%7D.t%7Bfill:%23050505%7D@media(prefers-color-scheme:dark)%7Bpath%7Bstroke:%23fff%7D.t%7Bfill:%23fff%7D%7D%3C/style%3E%3Cpath class='t' d='M30 6 38.4 10.2 30 14.4 21.6 10.2Z M14.4 13.8 22.8 18 14.4 22.2 6 18Z M45.6 13.8 54 18 45.6 22.2 37.2 18Z M30 21.6 38.4 25.8 30 30 21.6 25.8Z'/%3E%3Cpath d='M14 32 38 44 62 32M6 46 30 58 54 46'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+:root {
+  --bg: #0a0a0a; --fg: #ffffff; --mute: #8f8f8f; --line: #1f1f1f; --line-strong: #3b3b3b; --dot: #262626;
+  --inv-bg: #ffffff; --inv-fg: #050505;
+  --ease: cubic-bezier(.16, 1, .3, 1);
+  --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #f4f4f0; --fg: #050505; --mute: #5b5b57; --line: #dcdcd6; --line-strong: #b4b4ae; --dot: #d5d5cf;
+    --inv-bg: #050505; --inv-fg: #f4f4f0; color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #f4f4f0; --fg: #050505; --mute: #5b5b57; --line: #dcdcd6; --line-strong: #b4b4ae; --dot: #d5d5cf;
+  --inv-bg: #050505; --inv-fg: #f4f4f0; color-scheme: light;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-display); font-size: 16px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  -webkit-font-smoothing: antialiased;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 40; background: var(--bg); }
+a { color: inherit; }
+code, pre, .mono { font-family: var(--font-mono); }
+code { font-size: .86em; }
+:focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; }
+.page { max-width: 1240px; margin-inline: auto; }
+.eyebrow { font-family: var(--font-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--mute); }
+.mute { color: var(--mute); }
+
+/* ---------- motion primitives ---------- */
+@keyframes rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+@keyframes imprint { from { clip-path: inset(0 0 88% 0); transform: translateY(8px); } to { clip-path: inset(0); transform: none; } }
+@keyframes tighten { from { letter-spacing: .03em; opacity: 0; } to { letter-spacing: -.05em; opacity: 1; } }
+@keyframes blink { 50% { opacity: 0; } }
+@keyframes drift { to { background-position: 16px 16px; } }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--fg) 55%, transparent); } 100% { box-shadow: 0 0 0 9px transparent; } }
+@keyframes draw { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes scan { 0% { opacity: 0; transform: translateX(-130%); } 18% { opacity: 1; } 82% { opacity: .8; } 100% { opacity: 0; transform: translateX(1100%); } }
+@keyframes scan2 { 0% { opacity: 0; transform: translateX(-130%); } 18% { opacity: 1; } 82% { opacity: .8; } 100% { opacity: 0; transform: translateX(1100%); } }
+@keyframes confirm { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
+
+/* scroll reveal: hidden only when JS is running */
+.js .rv:not(.in) { opacity: 0; }
+.rv.in { animation: rise 760ms var(--ease) calc(var(--i, 0) * 60ms) backwards; }
+.wordmark.rv.in { animation: imprint 1000ms var(--ease) backwards; }
+
+/* ---------- top bar ---------- */
+.bar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 50; background: var(--bg);
+  margin-inline: calc(-1 * max(16px, env(safe-area-inset-left, 0px))) calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
+  padding-inline: max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; padding-block: 14px;
+}
+.bar::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: var(--fg);
+  transform: scaleX(var(--p, 0)); transform-origin: left;
+}
+.bar .mark { font-family: var(--font-mono); font-weight: 700; font-size: 13px; letter-spacing: .04em; text-decoration: none; }
+.bar .mark::after { content: "_"; margin-left: 2px; animation: blink 1.1s steps(1) infinite; }
+.bar nav { display: flex; flex-wrap: wrap; gap: 4px 20px; }
+.bar nav a {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; text-decoration: none; color: var(--mute);
+  border-bottom: 1px solid transparent; padding-bottom: 1px; transition: color 120ms, border-color 120ms;
+}
+.bar nav a:hover, .bar nav a.on { color: var(--fg); border-bottom-color: var(--fg); }
+
+/* ---------- hero ---------- */
+.hero {
+  padding-block: clamp(40px, 8vw, 96px) clamp(40px, 6vw, 72px);
+  background-image: radial-gradient(var(--dot) 1px, transparent 1.3px); background-size: 16px 16px;
+  animation: drift 5s linear infinite;
+}
+.hero > * { animation-fill-mode: backwards; }
+.hero .kicker { margin: 0 0 clamp(20px, 3vw, 36px); animation: rise 700ms var(--ease) 50ms backwards; }
+h1 {
+  margin: 0; font-size: clamp(2.6rem, 9vw, 7.5rem); line-height: .92; letter-spacing: -.045em; font-weight: 900; text-wrap: balance;
+  animation: imprint 800ms var(--ease) both;
+}
+h1 .thin { font-weight: 200; display: inline-block; animation: tighten 1100ms var(--ease) 350ms both; }
+.hero-grid { margin-top: clamp(32px, 5vw, 64px); display: grid; grid-template-columns: 1fr; gap: 40px; }
+@media (min-width: 900px) {
+  .hero-grid { grid-template-columns: minmax(0, 6fr) minmax(0, 4fr); gap: 80px; }
+  .hero-grid .spec { grid-column: 2; }
+}
+.lead { margin: 0; max-width: 56ch; font-size: clamp(1.05rem, 1.6vw, 1.25rem); line-height: 1.5; animation: rise 800ms var(--ease) 450ms backwards; }
+.actions { margin-top: 28px; display: flex; flex-wrap: wrap; gap: 12px; animation: rise 800ms var(--ease) 600ms backwards; }
+.btn {
+  display: inline-block; font-family: var(--font-mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; text-decoration: none;
+  padding: 14px 22px; border: 1px solid var(--fg);
+  transition: background-color 150ms, color 150ms, transform 180ms var(--ease), box-shadow 180ms var(--ease);
+}
+.btn:hover { transform: translate(-3px, -3px); box-shadow: 3px 3px 0 var(--fg); }
+.btn:active { transform: translate(0, 0); box-shadow: 0 0 0 var(--fg); }
+.btn-solid { background: var(--fg); color: var(--bg); }
+.btn-solid:hover { background: var(--bg); color: var(--fg); }
+.btn-line { background: transparent; color: var(--fg); }
+.btn-line:hover { background: var(--fg); color: var(--bg); box-shadow: 3px 3px 0 var(--mute); }
+.spec { margin: 0; border-top: 1px solid var(--line-strong); background: var(--bg); }
+.spec div {
+  display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); gap: 16px; padding: 11px 0; border-bottom: 1px solid var(--line);
+  animation: rise 700ms var(--ease) calc(550ms + var(--i, 0) * 70ms) backwards;
+}
+.spec dt { font-family: var(--font-mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--mute); padding-top: 3px; }
+.spec dd { margin: 0; font-family: var(--font-mono); font-size: 13px; }
+.live::before { content: ""; display: inline-block; width: 7px; height: 7px; margin-right: 9px; border-radius: 50%; background: var(--fg); animation: pulse 1.8s ease-out infinite; }
+
+/* ---------- sections ---------- */
+.sec {
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; padding-block: clamp(48px, 7vw, 88px);
+  border-top: 1px solid var(--line-strong); scroll-margin-top: 56px;
+}
+@media (min-width: 900px) { .sec { grid-template-columns: 200px minmax(0, 1fr); gap: 56px; } }
+.sec-side { display: flex; flex-direction: column; gap: 6px; align-self: start; }
+.sec-side .count { font-family: var(--font-mono); font-size: 13px; }
+h2 { margin: 0 0 28px; max-width: 18ch; font-size: clamp(2rem, 4.6vw, 3.6rem); line-height: .98; letter-spacing: -.04em; font-weight: 800; text-wrap: balance; }
+h2 .thin { font-weight: 200; }
+.sec p { max-width: 62ch; margin: 0 0 16px; }
+.note { font-family: var(--font-mono); font-size: 12px; color: var(--mute); max-width: 70ch; }
+
+.rows { margin: 0; border-top: 1px solid var(--line-strong); }
+.row {
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px 32px; padding: 16px 12px; margin-inline: -12px; border-bottom: 1px solid var(--line);
+  transition: background-color 120ms, color 120ms;
+}
+@media (min-width: 760px) { .row { grid-template-columns: 220px minmax(0, 1fr); } }
+.row dt, .row .k { font-family: var(--font-mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; font-weight: 700; padding-top: 3px; transition: transform 240ms var(--ease); }
+.row dd, .row .v { margin: 0; min-width: 0; }
+.row .v p { margin: 0; }
+@media (hover: hover) {
+  .row:hover { background: var(--inv-bg); color: var(--inv-fg); }
+  .row:hover dt, .row:hover .k { transform: translateX(6px); }
+  .row:hover .mute { color: inherit; opacity: .65; }
+  .row:hover .t { border-color: var(--inv-fg); }
+}
+
+.tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.t { font-family: var(--font-mono); font-size: 12px; padding: 3px 8px; border: 1px solid var(--line-strong); transition: transform 160ms var(--ease), background-color 120ms, color 120ms; }
+@media (hover: hover) { .t:hover { transform: translateY(-2px); background: var(--fg); color: var(--bg); } .row:hover .t:hover { background: var(--inv-fg); color: var(--inv-bg); } }
+.sub { margin: 10px 0 0; font-family: var(--font-mono); font-size: 12px; color: var(--mute); }
+
+.scroll { overflow-x: auto; border-top: 1px solid var(--line-strong); }
+table { width: 100%; border-collapse: collapse; font-size: 15px; }
+th, td { text-align: left; vertical-align: top; padding: 13px 12px 13px 0; border-bottom: 1px solid var(--line); }
+th { font-family: var(--font-mono); font-size: 11px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: var(--mute); }
+td:first-child { font-weight: 700; white-space: nowrap; padding-right: 32px; }
+td code { white-space: nowrap; }
+tr.pick td { font-weight: 800; }
+tr.pick td:first-child::before { content: "\2192\00a0"; font-family: var(--font-mono); }
+@media (hover: hover) {
+  tbody tr { transition: background-color 120ms, color 120ms; }
+  tbody tr:hover { background: var(--inv-bg); color: var(--inv-fg); }
+  tbody tr:hover td { border-color: var(--inv-bg); }
+  tbody tr td:first-child { padding-left: 10px; }
+}
+@media (hover: none) { td:first-child { padding-left: 0; } }
+
+.code { border: 1px solid var(--line-strong); margin: 0 0 20px; min-width: 0; transition: border-color 160ms; }
+.code:hover { border-color: var(--fg); }
+.code-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; border-bottom: 1px solid var(--line-strong); padding: 0 0 0 14px; }
+.code-head .eyebrow { padding: 10px 0; }
+.copy {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; background: transparent; color: var(--fg);
+  border: 0; border-left: 1px solid var(--line-strong); padding: 10px 16px; cursor: pointer; transition: background-color 120ms, color 120ms; min-width: 8.5rem;
+}
+.copy.is-copied { background: var(--fg); color: var(--bg); animation: confirm 240ms var(--ease) both; }
+.copy:hover { background: var(--fg); color: var(--bg); }
+pre { margin: 0; padding: 16px 14px; overflow-x: auto; font-size: 13px; line-height: 1.7; tab-size: 2; }
+pre .c { color: var(--mute); }
+.tree { border: 1px solid var(--line-strong); margin: 0 0 32px; }
+.tree pre { font-size: 13.5px; }
+
+/* ---------- download (dark) ---------- */
+.dl-rows { position: relative; margin: 0 0 28px; }
+.dl-rows::before {
+  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: var(--fg);
+  transform: scaleX(0); transform-origin: left; z-index: 2;
+}
+.dl.is-visible .dl-rows::before { animation: draw 1100ms var(--ease) forwards; }
+.dl-row {
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px 24px; align-items: center;
+  position: relative; isolation: isolate; overflow: hidden; padding: 18px 12px; margin-inline: -12px;
+  border-bottom: 1px solid var(--line-strong); transition: background-color 200ms;
+}
+@media (min-width: 760px) { .dl-row { grid-template-columns: 200px minmax(0, 1fr) auto; } }
+.dl-row .plat { font-family: var(--font-mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; font-weight: 700; }
+.dl-row .pkg { font-size: clamp(1.4rem, 3vw, 2.1rem); font-weight: 800; letter-spacing: -.03em; line-height: 1.05; transition: transform 320ms var(--ease); }
+.dl-row .pkg .thin { font-weight: 200; }
+.dl-row.none .pkg { color: var(--mute); }
+.dl-row:not(.none)::after {
+  content: ""; position: absolute; z-index: 1; inset-block: 0; left: 0; width: clamp(48px, 9vw, 112px); pointer-events: none; opacity: 0; transform: translateX(-130%);
+  background: color-mix(in srgb, var(--fg) 8%, transparent); border-inline: 1px solid color-mix(in srgb, var(--fg) 22%, transparent);
+  backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+}
+.dl.is-visible .dl-row:not(.none)::after { animation: scan 1100ms var(--ease) both; }
+.dl.is-visible .dl-row:nth-child(2)::after { animation-delay: 140ms; }
+@media (hover: hover) {
+  .dl-row:not(.none):hover { background: color-mix(in srgb, var(--fg) 5%, transparent); }
+  .dl-row:not(.none):hover .pkg { transform: translateX(10px); }
+  .dl.is-visible .dl-row:not(.none):hover::after { animation: scan2 900ms var(--ease) both; }
+}
+.dl-cols { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0 40px; margin-top: 8px; }
+@media (min-width: 900px) { .dl-cols { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.dl ul { margin: 0 0 20px; padding: 0; list-style: none; border-top: 1px solid var(--line-strong); }
+.dl li { padding: 11px 0; border-bottom: 1px solid var(--line); font-size: 15px; transition: padding-left 240ms var(--ease), color 160ms; }
+@media (hover: hover) { .dl li:hover { padding-left: 10px; } }
+.dl h3 { margin: 0 0 12px; font-family: var(--font-mono); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; font-weight: 700; }
+
+/* ---------- screens ---------- */
+.shot { margin: 0; min-width: 0; border: 1px solid var(--line-strong); background: var(--bg);
+  transition: border-color 160ms, transform 220ms var(--ease), box-shadow 220ms var(--ease); }
+.shot a { display: block; overflow: hidden; border-bottom: 1px solid var(--line-strong); background: #09090b; }
+.shot img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; object-position: top; transition: transform 700ms var(--ease); }
+.shot figcaption { display: grid; gap: 4px; padding: 12px 14px 14px; }
+.shot .k { font-family: var(--font-mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; font-weight: 700; }
+.shot .d { font-size: 14px; line-height: 1.45; color: var(--mute); }
+.shot-lead { margin-bottom: 20px; }
+.shots { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; }
+@media (min-width: 760px) { .shots { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+@media (hover: hover) {
+  .shot:hover { border-color: var(--fg); transform: translate(-3px, -3px); box-shadow: 3px 3px 0 var(--fg); }
+  .shot:hover img { transform: scale(1.015); }
+}
+
+/* proposals */
+.props { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line-strong); display: grid; grid-template-columns: minmax(0, 1fr); column-gap: 40px; }
+@media (min-width: 760px) { .props { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.props li { padding: 12px 0; border-bottom: 1px solid var(--line); color: var(--mute); font-size: 15px; display: flex; gap: 12px; transition: color 160ms, padding-left 240ms var(--ease); }
+.props li::before { content: "+"; font-family: var(--font-mono); color: var(--fg); display: inline-block; transition: transform 360ms var(--ease); }
+@media (hover: hover) { .props li:hover { color: var(--fg); padding-left: 8px; } .props li:hover::before { transform: rotate(90deg); } }
+
+footer { border-top: 1px solid var(--line-strong); padding-block: 40px calc(32px + env(safe-area-inset-bottom, 0px)); }
+.wordmark { margin: 0 0 28px; font-size: clamp(2.5rem, 12vw, 10rem); line-height: .82; letter-spacing: -.06em; font-weight: 900; text-transform: uppercase; overflow-wrap: anywhere; }
+.wordmark .thin { font-weight: 200; }
+.foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px 32px; font-family: var(--font-mono); font-size: 12px; color: var(--mute); }
+.foot nav { display: flex; flex-wrap: wrap; gap: 6px 20px; }
+.foot a { text-decoration: none; border-bottom: 1px solid var(--line-strong); transition: color 120ms, border-color 120ms; }
+.foot a:hover { color: var(--fg); border-bottom-color: var(--fg); }
+
+/* ---------- round 2 motion ---------- */
+@keyframes marq { to { transform: translateX(-50%); } }
+@keyframes pop { from { opacity: 0; transform: scale(.8) translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes sweepline { 0% { transform: scaleX(0); opacity: 1; } 65% { transform: scaleX(1); opacity: 1; } 100% { transform: scaleX(1); opacity: 0; } }
+@keyframes nudgeX { 50% { transform: translateX(5px); } }
+@keyframes ring { 0%, 65% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--fg) 45%, transparent); } 100% { box-shadow: 0 0 0 14px transparent; } }
+
+.hero { position: relative; }
+.hero > * { position: relative; }
+.hero::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background-image: radial-gradient(var(--fg) 1px, transparent 1.3px); background-size: 16px 16px; opacity: .7;
+  -webkit-mask-image: radial-gradient(200px circle at var(--mx, -999px) var(--my, -999px), #000, transparent);
+  mask-image: radial-gradient(200px circle at var(--mx, -999px) var(--my, -999px), #000, transparent);
+  animation: drift 5s linear infinite;
+}
+.hero h1 { translate: 0 calc(var(--sy, 0) * -.1px); }
+.hero .lead { translate: 0 calc(var(--sy, 0) * -.04px); }
+h1 .thin, .wordmark .thin { transition: font-weight 700ms var(--ease); }
+@media (hover: hover) { h1:hover .thin, .wordmark:hover .thin { font-weight: 900; } }
+
+.ticker { margin-top: -1px; border-top: 1px solid var(--line-strong); animation: rise 800ms var(--ease) 900ms backwards;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent); mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent); }
+.ticker-row { overflow: hidden; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.ticker-row.rev { color: var(--mute); }
+.ticker-track { display: flex; width: max-content; animation: marq 38s linear infinite; }
+.ticker-row.rev .ticker-track { animation-direction: reverse; animation-duration: 46s; }
+.ticker-row:hover .ticker-track { animation-play-state: paused; }
+.ticker span { font-family: var(--font-mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; padding-right: 28px; white-space: nowrap; transition: color 120ms; }
+.ticker span::after { content: "/"; margin-left: 28px; color: var(--mute); }
+.ticker-row.rev span:hover, .ticker-row span:hover { color: var(--fg); }
+
+.sec { position: relative; }
+.sec::before { content: ""; position: absolute; top: -1px; left: 0; width: 100%; height: 1px; background: var(--fg); transform: scaleX(0); transform-origin: left; pointer-events: none; }
+.sec.seen::before { animation: sweepline 1500ms var(--ease) forwards; }
+.sec-side .count { font-variant-numeric: tabular-nums; }
+
+.w { display: inline-block; overflow: hidden; vertical-align: top; padding: 0 .04em .1em; margin: 0 -.04em -.1em; }
+.w > span { display: inline-block; transition: transform 900ms var(--ease) calc(var(--wi, 0) * 70ms); }
+.js h2:not(.in) .w > span { transform: translateY(112%); }
+.sec h2.rv.in { animation: none; }
+.js .sec h2.rv:not(.in) { opacity: 1; }
+
+.row.in .t { animation: pop 520ms var(--ease) calc(180ms + var(--ti, 0) * 28ms) backwards; }
+tr.pick td:first-child::before { display: inline-block; animation: nudgeX 1.6s ease-in-out infinite; }
+.dl-row:not(.none) .btn:not(:hover) { animation: ring 2.8s ease-out 1.6s infinite; }
+
+/* ---------- logo ---------- */
+@keyframes logodraw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes topfill { from { fill-opacity: 0; } to { fill-opacity: 1; } }
+@keyframes slide { from { transform: translateX(-6px); } to { transform: translateX(6px); } }
+@keyframes numflash { from { -webkit-text-stroke-color: var(--fg); } }
+
+.logo { display: block; width: 100%; height: auto; overflow: visible; color: var(--fg); }
+.logo .l { fill: none; stroke: currentColor; stroke-width: var(--sw, 3); stroke-linejoin: miter; stroke-linecap: butt; stroke-dasharray: 1 2; stroke-dashoffset: 1; }
+.logo .l-top { fill: currentColor; fill-opacity: 0; translate: calc(var(--lx, 0) * -5px) 0; }
+.logo .l-mid { translate: calc(var(--lx, 0) * 5px) calc(var(--sp, 0) * 5px); }
+.logo .l-bot { translate: calc(var(--lx, 0) * -5px) calc(var(--sp, 0) * 10px); }
+.logo .l { transition: translate 500ms var(--ease); }
+.logo:hover, .mark:hover .logo, .flogo:hover .logo { --sp: 1; }
+:is(.logo.go, .flogo.in .logo) .l-bot { animation: logodraw 900ms var(--ease) var(--d, 0ms) both, slide 9s ease-in-out calc(var(--d, 0ms) + 2200ms) infinite alternate-reverse; }
+:is(.logo.go, .flogo.in .logo) .l-mid { animation: logodraw 900ms var(--ease) calc(var(--d, 0ms) + 140ms) both, slide 7s ease-in-out calc(var(--d, 0ms) + 2200ms) infinite alternate; }
+:is(.logo.go, .flogo.in .logo) .l-top { animation: logodraw 900ms var(--ease) calc(var(--d, 0ms) + 280ms) both, topfill 500ms ease calc(var(--d, 0ms) + 1150ms) both; }
+.mark { display: inline-flex; align-items: center; gap: 10px; }
+.mark .logo-sm { display: block; width: 26px; --sw: 5; }
+.hero > .hero-logo { position: absolute; top: clamp(24px, 5vw, 64px); right: 0; width: clamp(120px, 20vw, 250px); --sw: 2.6; translate: 0 calc(var(--sy, 0) * .15px); }
+@media (max-width: 700px) { .hero > .hero-logo { position: relative; top: auto; width: 76px; margin-bottom: 22px; } }
+.flogo { width: clamp(72px, 10vw, 120px); margin-bottom: 28px; --sw: 2.6; }
+
+/* ---------- section numerals ---------- */
+.page { counter-reset: sec; }
+.sec { counter-increment: sec; }
+.sec-side::before {
+  content: "0" counter(sec); font-size: clamp(3.2rem, 6vw, 5.5rem); font-weight: 900; line-height: .9; letter-spacing: -.05em; margin-bottom: 12px;
+  color: transparent; -webkit-text-stroke: 1px var(--line-strong); transition: -webkit-text-stroke-color 300ms, transform 420ms var(--ease);
+}
+.sec.seen .sec-side::before { animation: numflash 1600ms ease-out both; }
+@media (hover: hover) { .sec:hover .sec-side::before { -webkit-text-stroke-color: var(--fg); transform: translateX(6px); } }
+
+/* ---------- magnetic buttons ---------- */
+.btn { translate: var(--bx, 0px) var(--by, 0px);
+  transition: background-color 150ms, color 150ms, transform 180ms var(--ease), box-shadow 180ms var(--ease), translate 220ms var(--ease); }
+
+@media (prefers-reduced-motion: reduce) {
+  .js h2:not(.in) .w > span { transform: none; }
+  .hero::before { display: none; }
+  .logo .l { stroke-dashoffset: 0; }
+  .logo .l-top { fill-opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .js .rv:not(.in) { opacity: 1; }
+  .dl-rows::before { transform: none; }
+  .dl-row:not(.none)::after { display: none; }
+}
+</style>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body>
+<div class="page">
+
+  <header class="bar">
+    <a class="mark" href="#top"><span class="logo-sm" data-logo aria-hidden="true"></span>LAZYSTACK/3.0.0</a>
+    <nav aria-label="Sections">
+      <a href="#screens">Screens</a>
+      <a href="#features">Features</a>
+      <a href="#layouts">Layouts</a>
+      <a href="#catalog">Catalog</a>
+      <a href="#cli">CLI</a>
+      <a href="#download">Download</a>
+      <a href="https://github.com/Ian-nwb/LazyStack">GitHub &#8599;</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="hero-logo" data-logo aria-hidden="true"></div>
+      <p class="eyebrow kicker">Desktop stack builder + command-line scaffolder</p>
+      <h1>Mix the stack.<br><span class="thin">Scaffold the rest.</span></h1>
+
+      <div class="hero-grid">
+        <div>
+          <p class="lead">Pick frameworks, databases and an architecture layout. LazyStack writes the project: framework-native app folders, Docker Compose, <code>.env</code>, a reverse proxy, deployment files and one command that runs the whole stack. 170 frameworks, 45 databases and services, 15 layouts.</p>
+          <div class="actions">
+            <a class="btn btn-solid" href="#download">Download v3.0.0 &#8595;</a>
+            <a class="btn btn-line" href="https://github.com/Ian-nwb/LazyStack">View source &#8599;</a>
+          </div>
+        </div>
+        <dl class="spec">
+          <div><dt>Version</dt><dd>3.0.0</dd></div>
+          <div><dt>Status</dt><dd class="live">v3.0.0 Released</dd></div>
+          <div><dt>Platforms</dt><dd>Linux x64, Windows x64</dd></div>
+          <div><dt>Builds</dt><dd>AppImage, portable EXE</dd></div>
+          <div><dt>CLI</dt><dd>lazystack v3.0.0 (npm)</dd></div>
+          <div><dt>Catalog</dt><dd>170 frameworks · 45 services · 15 layouts</dd></div>
+          <div><dt>From source</dt><dd>Node.js 22+, npm 10+</dd></div>
+          <div><dt>License</dt><dd>MIT</dd></div>
+        </dl>
+      </div>
+    </section>
+
+    <div class="ticker" aria-hidden="true">
+      <div class="ticker-row"><div class="ticker-track">
+        <span>React 19</span><span>Vue 3</span><span>Angular 18</span><span>SolidJS</span><span>Qwik City</span><span>HTMX</span><span>Inferno</span><span>AssemblyScript</span><span>Next.js 15</span><span>Nuxt 3</span><span>Remix</span><span>SvelteKit</span><span>Astro</span><span>FastAPI</span><span>Go Chi</span><span>Rust Axum</span><span>Yew</span><span>Leptos</span><span>GPUI</span><span>Spring Boot</span><span>Laravel 11</span><span>Phoenix LiveView</span><span>Expo SDK 58</span><span>Capacitor</span><span>.NET MAUI</span><span>Dioxus</span><span>Bevy</span><span>SwiftUI</span><span>Tauri</span><span>Flutter</span><span>Google Apps Script</span>
+      </div></div>
+      <div class="ticker-row rev"><div class="ticker-track">
+        <span>PostgreSQL 16</span><span>MySQL 8.4</span><span>MongoDB 7</span><span>Redis 7</span><span>Valkey 8</span><span>ClickHouse</span><span>SurrealDB</span><span>Neo4j</span><span>Qdrant</span><span>Supabase</span><span>Firebase</span><span>Neon</span><span>Turso</span><span>Playwright</span><span>Vitest</span><span>Jest</span><span>k6</span><span>Storybook</span><span>Docker Compose</span>
+      </div></div>
+    </div>
+
+    <!-- SCREENS -->
+    <section class="sec" id="screens">
+      <div class="sec-side">
+        <span class="eyebrow">Screens</span>
+        <span class="count">5 views</span>
+      </div>
+      <div>
+        <h2>See the stack <span class="thin">before it exists.</span></h2>
+        <p>Build the stack on one screen, check the diagram, then scaffold. LazyStack lists anything it can't set up for you and installs every app's packages. Screens from v1.2.2.</p>
+        <figure class="shot shot-lead">
+          <a href="assets/screens/stack.webp"><img src="assets/screens/stack.webp" width="1600" height="1000" alt="LazyStack app stack with a React client, a FastAPI service and an Expo app, each with role, run mode, port and prerequisite checks"></a>
+          <figcaption><span class="k">App stack</span><span class="d">Add apps, then set each one's folder, role, run mode and port. Prerequisites are checked on your machine.</span></figcaption>
+        </figure>
+        <div class="shots">
+          <figure class="shot">
+            <a href="assets/screens/picker.webp"><img src="assets/screens/picker.webp" width="1600" height="1000" loading="lazy" alt="Framework picker filtered to desktop and mobile clients, including Capacitor and .NET MAUI"></a>
+            <figcaption><span class="k">Framework picker</span><span class="d">170 frameworks, filtered by role, with installed toolchains ticked.</span></figcaption>
+          </figure>
+          <figure class="shot">
+            <a href="assets/screens/diagram.webp"><img src="assets/screens/diagram.webp" width="1600" height="1000" loading="lazy" alt="Service diagram linking three apps to PostgreSQL and Redis"></a>
+            <figcaption><span class="k">Service diagram</span><span class="d">Apps, connections and the databases each one uses, exportable as SVG.</span></figcaption>
+          </figure>
+          <figure class="shot">
+            <a href="assets/screens/manual-setup.webp"><img src="assets/screens/manual-setup.webp" width="1600" height="1000" loading="lazy" alt="Manual setup popup listing the steps to run an Expo app on a phone or emulator"></a>
+            <figcaption><span class="k">Manual setup</span><span class="d">After scaffolding, the steps LazyStack can't do for you, with commands and docs.</span></figcaption>
+          </figure>
+          <figure class="shot">
+            <a href="assets/screens/install.webp"><img src="assets/screens/install.webp" width="1600" height="1000" loading="lazy" alt="Project generated dialog with Node.js and Python packages installed"></a>
+            <figcaption><span class="k">Install &amp; run</span><span class="d">Install every ecosystem's packages with live progress, then start the stack in Docker.</span></figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section class="sec" id="features">
+      <div class="sec-side">
+        <span class="eyebrow">Features</span>
+        <span class="count">13 capabilities</span>
+      </div>
+      <div>
+        <h2>One blueprint, <span class="thin">every layer.</span></h2>
+        <dl class="rows">
+          <div class="row"><dt>Mix application roles</dt><dd>Generate frontend clients, backend services, full-stack apps, background workers, mobile/desktop clients, and automation scripts all in one cohesive project.</dd></div>
+          <div class="row"><dt>87-framework catalog</dt><dd>Low-level systems (Assembly, C, C++, Zig), modern JS/TS, Python, Go, Rust, JVM, .NET, PHP, Ruby, Elixir, desktop and mobile (Expo, Capacitor, .NET MAUI, Tauri, Flutter, Bevy), and Google Workspace scripting.</dd></div>
+          <div class="row"><dt>Architecture layouts</dt><dd>Pick one of 15 layouts, from a standard monorepo to Polyglot, DDD or CQRS, or set your own root directories, extra folders, and per-app paths.</dd></div>
+          <div class="row"><dt>One-command dev</dt><dd>The generated dev orchestrator starts databases in Docker, then every app on the host in dependency order once the apps it calls are healthy, with a terminal dashboard for health, filterable logs, restarts and environment wiring. Install Packages sets up every ecosystem's dependencies with live progress.</dd></div>
+          <div class="row"><dt>Framework-native folders</dt><dd>Each app gets what its own initializer would create (<code>create-expo-app</code>, <code>django-admin startproject</code>, <code>dotnet new maui</code>, start.spring.io, and more), with a passing test, <code>.gitignore</code> and README. Blueprint previews show the exact files.</dd></div>
+          <div class="row"><dt>Service connections</dt><dd>Configure API URLs, environment variable names, health checks, and startup dependencies between interconnected microservices.</dd></div>
+          <div class="row"><dt>Database setup</dt><dd>Add self-hosted databases or managed cloud providers, set per-service database scope, and get local credentials generated into <code>.env</code>. Attach an admin UI per database: Adminer, pgAdmin, Prisma Studio, phpMyAdmin, Mongo Express or Redis Commander.</dd></div>
+          <div class="row"><dt>Testing suites</dt><dd>Choose opt-in tools per app: unit/component (Jest, Vitest, pytest), API integration (Supertest, Bruno), browser E2E (Playwright, Cypress), performance (k6), contract (Pact), UI (Storybook), and security (OWASP ZAP).</dd></div>
+          <div class="row"><dt>Infrastructure output</dt><dd>Docker Compose, Nginx, Apache, Caddy or Traefik routing, environment files, Kubernetes manifests, a Helm chart, Terraform for AWS, GCP and DigitalOcean, and GitHub Actions workflows.</dd></div>
+          <div class="row"><dt>Hosting planner</dt><dd>See what kind of hosting each app needs (static/CDN, serverless, BaaS, PaaS, self-hosted PaaS, managed containers, Kubernetes, cloud VM, VPS or bare metal), why, the alternatives, example services and which generated files to use. Apps stay local only until you choose; the choice is saved in the blueprint, written to <code>docs/hosting.md</code> and printed by <code>lazystack hosting</code>.</dd></div>
+          <div class="row"><dt>Setup guidance</dt><dd>After scaffolding, LazyStack points you to each app's README and lists any manual first-run steps it cannot do for you, such as Flutter platform folders, Apps Script sign-in, Tauri or Bevy system libraries, and cloud database keys, with the exact commands to run.</dd></div>
+          <div class="row"><dt>Open existing projects</dt><dd>Point LazyStack at a folder you already have. It reads lazystack.json or detects frameworks, Compose databases and the proxy from your files, shows the stack as a diagram, and adds new apps and services after a change preview. Your app code is never overwritten; regenerated infrastructure is backed up first.</dd></div>
+          <div class="row"><dt>Blueprints + CLI</dt><dd>Create, search, validate, and preview JSON blueprints, run prerequisite doctor checks, scaffold from the terminal without opening the desktop app, and <code>lazystack upgrade</code> generated projects to pull in template fixes with a three-way merge.</dd></div>
+        </dl>
+      </div>
+    </section>
+
+    <!-- LAYOUTS -->
+    <section class="sec" id="layouts">
+      <div class="sec-side">
+        <span class="eyebrow">Layouts</span>
+        <span class="count">15 architectures</span>
+      </div>
+      <div>
+        <h2>Choose where <span class="thin">things live.</span></h2>
+        <p>Every layout is a starting point. The Polyglot layout splits a project by role, so clients, services, workers, and deployment files each get their own root.</p>
+
+        <div class="tree">
+          <div class="code-head"><span class="eyebrow">Polyglot layout, illustrative</span></div>
+<pre><code>my-app/
+├── frontend/
+│   └── clients/     browser clients
+├── backend/
+│   ├── services/    API services
+│   └── workers/     background workers
+├── deploy/          deployment files
+├── .env             generated database credentials <span class="c">(keep private)</span>
+└── .env.example     safe placeholders</code></pre>
+        </div>
+
+        <div class="scroll">
+          <table>
+            <thead><tr><th>Layout</th><th>Directory focus</th></tr></thead>
+            <tbody>
+              <tr><td>Standard Monorepo</td><td><code>apps/</code>, <code>packages/</code>, <code>infra/</code></td></tr>
+              <tr><td>Microservices Decoupled</td><td><code>services/</code>, <code>shared/contracts/</code>, isolated service data</td></tr>
+              <tr><td>Domain-Driven Design</td><td><code>domains/</code>, <code>core/</code>, bounded contexts</td></tr>
+              <tr class="pick"><td>Polyglot</td><td><code>frontend/clients/</code>, <code>backend/services/</code>, <code>backend/workers/</code>, <code>deploy/</code></td></tr>
+              <tr><td>Modular Monolith</td><td><code>modules/</code>, <code>libs/</code>, shared deployment</td></tr>
+              <tr><td>Hexagonal / Ports &amp; Adapters</td><td><code>services/</code>, shared <code>core/</code> and <code>adapters/</code></td></tr>
+              <tr><td>Serverless &amp; Cloud-Native</td><td><code>functions/</code>, <code>web/</code>, shared packages, cloud infrastructure</td></tr>
+              <tr><td>Event-Driven Services</td><td><code>services/</code>, <code>consumers/</code>, <code>events/</code>, and broker infrastructure</td></tr>
+              <tr><td>Data Platform</td><td>Pipelines, ingestion services, dashboards, and schemas</td></tr>
+              <tr><td>AI / ML &amp; LLM Platform</td><td><code>models/</code>, <code>agents/</code>, <code>services/inference/</code>, DSPy/LangChain <code>prompts/</code></td></tr>
+              <tr><td>Clean Architecture / Onion</td><td><code>domain/</code>, <code>usecases/</code>, <code>adapters/</code>, <code>services/</code> with concentric boundaries</td></tr>
+              <tr><td>CQRS &amp; Event Sourcing</td><td><code>services/commands/</code>, <code>services/projections/</code>, <code>events/</code> contracts</td></tr>
+              <tr><td>JAMstack &amp; Edge Platform</td><td><code>sites/</code>, <code>edge/workers/</code>, <code>edge/schedulers/</code>, <code>deploy/</code> edge runtimes</td></tr>
+              <tr><td>Mobile &amp; Cross-Platform</td><td><code>apps/mobile/</code>, <code>apps/web/</code>, <code>apps/desktop/</code>, shared <code>packages/ui/</code></td></tr>
+              <tr><td>Custom Structure</td><td>User-defined roots, custom folders, and per-app paths</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- CATALOG -->
+    <section class="sec" id="catalog">
+      <div class="sec-side">
+        <span class="eyebrow">Catalog</span>
+        <span class="count">170 frameworks + 45 services</span>
+      </div>
+      <div>
+        <h2>Frameworks, databases, <span class="thin">test tools.</span></h2>
+        <p>The tool list adapts to the selected stack. You can compose multi-language services and select multiple test suites per app.</p>
+
+        <div class="rows">
+          <div class="row"><div class="k">Systems (6)</div><div class="v"><ul class="tags">
+            <li class="t">Assembly (x86_64 NASM)</li><li class="t">C (libmicrohttpd / POSIX)</li><li class="t">C++ (Drogon)</li><li class="t">Zig (HTTP / Zap)</li><li class="t">Goose (Vanilla)</li><li class="t">Goose (HTTP)</li>
+          </ul><p class="sub">High-performance systems programming and low-level HTTP services.</p></div></div>
+          <div class="row"><div class="k">Frontend (14)</div><div class="v"><ul class="tags">
+            <li class="t">React 19 + Vite</li><li class="t">React + MUI</li><li class="t">Vue 3 + Vite</li><li class="t">Angular 18+</li><li class="t">SolidJS + Vite</li><li class="t">Qwik + Qwik City</li><li class="t">HTMX + Modern Web</li><li class="t">Inferno (React-Compatible)</li><li class="t">Lit (Web Components)</li><li class="t">Kotlin/JS Frontend</li><li class="t">Rust Yew</li><li class="t">Rust Leptos</li><li class="t">Rust Dioxus</li><li class="t">Vanilla HTML5/CSS/JS</li>
+          </ul></div></div>
+          <div class="row"><div class="k">Backend (36)</div><div class="v"><ul class="tags">
+            <li class="t">Go Goravel</li><li class="t">Go Chi</li><li class="t">Go Echo</li><li class="t">Go Gin</li><li class="t">Go Fiber</li><li class="t">Go net/http</li><li class="t">Rust Axum</li><li class="t">Rust Actix-Web</li><li class="t">Rust Poem OpenAPI</li><li class="t">Python FastAPI</li><li class="t">Python Flask</li><li class="t">Python WSGI</li><li class="t">Node.js Express</li><li class="t">Node.js Fastify</li><li class="t">Node.js NestJS</li><li class="t">Node.js Hono</li><li class="t">Node.js http</li><li class="t">Deno 2.0 (Oak)</li><li class="t">Bun (ElysiaJS)</li><li class="t">C# ASP.NET Core</li><li class="t">Java Spring Boot 3</li><li class="t">Java JDK HttpServer</li><li class="t">Kotlin Ktor</li><li class="t">Elixir Phoenix LiveView</li><li class="t">Swift Vapor 4</li><li class="t">PHP (Vanilla)</li><li class="t">Scala Play</li><li class="t">Clojure Ring</li><li class="t">OCaml Dream</li><li class="t">Julia Genie.jl</li><li class="t">Lua OpenResty</li><li class="t">R Plumber API</li><li class="t">Erlang Cowboy</li><li class="t">Nim HappyX</li><li class="t">Crystal Kemal</li><li class="t">Haskell Scotty/Servant</li>
+          </ul></div></div>
+          <div class="row"><div class="k">Fullstack (17)</div><div class="v"><ul class="tags">
+            <li class="t">Next.js (App Router)</li><li class="t">Nuxt 3</li><li class="t">Remix / Router v7</li><li class="t">SvelteKit</li><li class="t">Astro</li><li class="t">PHP Laravel 11</li><li class="t">PHP Symfony 7</li><li class="t">Ruby on Rails 7/8</li><li class="t">TanStack Start</li><li class="t">SolidStart</li><li class="t">C# Blazor Server/WASM</li><li class="t">Python Django</li><li class="t">Deno Fresh</li><li class="t">Reflex (Python UI)</li><li class="t">NiceGUI (Python Web)</li><li class="t">Anvil (Python Fullstack)</li><li class="t">Dart (Jaspr)</li>
+          </ul></div></div>
+          <div class="row"><div class="k">Mobile &amp; Desktop (13)</div><div class="v"><ul class="tags">
+            <li class="t">React Native (Expo SDK 58)</li><li class="t">Capacitor</li><li class="t">Ionic (Capacitor)</li><li class="t">.NET MAUI</li><li class="t">Dart (Flutter)</li><li class="t">Tauri (Rust + Web)</li><li class="t">Electron Desktop</li><li class="t">SwiftUI Apple Client</li><li class="t">Rust GPUI</li><li class="t">Rust Slint</li><li class="t">Rust Bevy</li><li class="t">JavaFX</li><li class="t">Java Swing</li>
+          </ul></div></div>
+          <div class="row"><div class="k">Scripting &amp; Tools (4)</div><div class="v"><ul class="tags">
+            <li class="t">AssemblyScript (Wasm)</li><li class="t">Google Apps Script (clasp)</li><li class="t">Bash Worker / CLI</li><li class="t">SQL Migration &amp; Seeder</li>
+          </ul><p class="sub">WebAssembly modules, Google Workspace scripts, and database initialization pipelines.</p></div></div>
+          <div class="row"><div class="k">Self-hosted DBs (17)</div><div class="v"><ul class="tags">
+            <li class="t">PostgreSQL 16</li><li class="t">MySQL 8.4 LTS</li><li class="t">MariaDB 11</li><li class="t">MongoDB 7</li><li class="t">Redis 7</li><li class="t">Valkey 8</li><li class="t">SQLite</li><li class="t">ClickHouse OLAP</li><li class="t">SurrealDB v2</li><li class="t">Neo4j Graph</li><li class="t">Qdrant Vector DB</li><li class="t">Meilisearch</li><li class="t">MinIO S3</li><li class="t">ScyllaDB</li><li class="t">RabbitMQ Broker</li><li class="t">Apache Kafka (KRaft)</li><li class="t">PocketBase</li>
+          </ul></div></div>
+          <div class="row"><div class="k">Cloud &amp; BaaS (8)</div><div class="v"><ul class="tags">
+            <li class="t">Supabase</li><li class="t">Firebase</li><li class="t">PlanetScale</li><li class="t">Neon Postgres</li><li class="t">Turso libSQL</li><li class="t">Upstash</li><li class="t">Appwrite</li><li class="t">Convex</li>
+          </ul></div></div>
+          <div class="row"><div class="k">DB admin UIs (6)</div><div class="v"><ul class="tags">
+            <li class="t">Prisma Studio</li><li class="t">pgAdmin</li><li class="t">Adminer</li><li class="t">phpMyAdmin</li><li class="t">Mongo Express</li><li class="t">Redis Commander</li>
+          </ul></div></div>
+          <div class="row"><div class="k">Unit &amp; component</div><div class="v"><ul class="tags">
+            <li class="t">Jest</li><li class="t">Vitest</li><li class="t">Testing Library</li><li class="t">pytest</li><li class="t">Go testing</li><li class="t">PHPUnit</li><li class="t">JUnit</li>
+          </ul></div></div>
+          <div class="row"><div class="k">API &amp; integration</div><div class="v"><ul class="tags">
+            <li class="t">Supertest</li><li class="t">Newman</li><li class="t">Bruno</li><li class="t">REST Assured</li><li class="t">Swagger UI + OpenAPI lint</li>
+          </ul></div></div>
+          <div class="row"><div class="k">Browser end-to-end</div><div class="v"><ul class="tags">
+            <li class="t">Playwright</li><li class="t">Cypress</li><li class="t">WebdriverIO</li><li class="t">Puppeteer</li>
+          </ul></div></div>
+          <div class="row"><div class="k">UI development</div><div class="v"><ul class="tags"><li class="t">Storybook</li></ul></div></div>
+          <div class="row"><div class="k">Performance</div><div class="v"><ul class="tags"><li class="t">k6</li><li class="t">Artillery</li></ul></div></div>
+          <div class="row"><div class="k">Contract &amp; schema</div><div class="v"><ul class="tags"><li class="t">Pact</li><li class="t">Swagger / OpenAPI validation</li></ul></div></div>
+          <div class="row"><div class="k">Security</div><div class="v"><ul class="tags"><li class="t">OWASP ZAP</li></ul></div></div>
+        </div>
+        <p class="note" style="margin-top:18px">Missing a test tool? Add a custom one by name and package.</p>
+      </div>
+    </section>
+
+    <!-- CLI -->
+    <section class="sec" id="cli">
+      <div class="sec-side">
+        <span class="eyebrow">CLI</span>
+        <span class="count">13 commands</span>
+      </div>
+      <div>
+        <h2>Scaffold from <span class="thin">the terminal.</span></h2>
+        <p>The <code>lazystack</code> CLI uses the same generator as the desktop app. Create blueprints from presets, search the catalog, validate and preview a stack, check your toolchains, scaffold it, and add apps to projects you already have.</p>
+
+        <div class="code">
+          <div class="code-head"><span class="eyebrow">Quick start with npx</span><button class="copy" type="button" data-copy="c0">Copy</button></div>
+<pre id="c0">npx lazystack init --preset fastapi-react --name my-api
+npx lazystack search playwright
+npx lazystack validate --config lazystack.json
+npx lazystack plan --config lazystack.json
+npx lazystack doctor --config lazystack.json
+npx lazystack scaffold --config lazystack.json --out ./generated</pre>
+        </div>
+
+        <p><code>init</code> guides you through stack selection interactively. <code>plan</code> and <code>scaffold --dry-run</code> preview without writing files; <code>scaffold --force</code> opts into updating an existing non-empty directory.</p>
+
+        <div class="code">
+          <div class="code-head"><span class="eyebrow">Catalog exploration &amp; presets</span><button class="copy" type="button" data-copy="c1">Copy</button></div>
+<pre id="c1">lazystack list
+lazystack presets
+lazystack search --json redis</pre>
+        </div>
+
+        <div class="code">
+          <div class="code-head"><span class="eyebrow">Export blueprint config, then scaffold</span><button class="copy" type="button" data-copy="c2">Copy</button></div>
+<pre id="c2">lazystack export --preset modern-mern --name my-app --out lazystack.json
+lazystack scaffold --config lazystack.json --out ./generated</pre>
+        </div>
+
+        <div class="code">
+          <div class="code-head"><span class="eyebrow">Existing projects</span><button class="copy" type="button" data-copy="c7">Copy</button></div>
+<pre id="c7">lazystack import --dir ./my-project                    <span class="c"># detect apps, databases and proxy</span>
+lazystack add --dir ./my-project --tech csharp-maui --name mobile --dry-run
+lazystack apply --dir ./my-project --config edited.json</pre>
+        </div>
+
+        <div class="code">
+          <div class="code-head"><span class="eyebrow">Scaffold straight from a preset</span><button class="copy" type="button" data-copy="c3">Copy</button></div>
+<pre id="c3">lazystack scaffold --preset t3-stack --name my-fullstack-app --out ./generated</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- DOWNLOAD -->
+    <section class="sec dl" id="download">
+      <div class="sec-side">
+        <span class="eyebrow">Download</span>
+        <span class="count">v3.0.0</span>
+      </div>
+      <div>
+        <h2>Get <span class="thin">v3.0.0.</span></h2>
+        <p>Portable builds for Linux and Windows. No installer: download, make it executable on Linux, and run.</p>
+
+        <div class="dl-rows">
+          <div class="dl-row">
+            <span class="plat">Linux x64</span>
+            <span class="pkg">AppImage</span>
+            <a class="btn btn-solid" href="https://github.com/Ian-nwb/LazyStack/releases/download/v3.0.0/LazyStack-3.0.0.AppImage">Download &#8595;</a>
+          </div>
+          <div class="dl-row">
+            <span class="plat">Windows x64</span>
+            <span class="pkg">Portable <span class="thin">EXE</span></span>
+            <a class="btn btn-solid" href="https://github.com/Ian-nwb/LazyStack/releases/download/v3.0.0/LazyStack.3.0.0.exe">Download &#8595;</a>
+          </div>
+          <div class="dl-row none">
+            <span class="plat">macOS</span>
+            <span class="pkg">No package</span>
+            <span class="plat mute">sponsor me a Macbook for app signature</span>
+          </div>
+        </div>
+
+        <div class="dl-cols">
+          <div>
+            <h3>Before you run stacks</h3>
+            <ul>
+              <li>Docker Engine or Docker Desktop with Docker Compose, to run generated container stacks.</li>
+              <li>The runtime or toolchain that the templates you select require.</li>
+              <li>Node.js 20+ and npm 10+, only if you run or build LazyStack from source.</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Run from source</h3>
+            <div class="code">
+              <div class="code-head"><span class="eyebrow">Dev mode</span><button class="copy" type="button" data-copy="c4">Copy</button></div>
+<pre id="c4">git clone https://github.com/Ian-nwb/LazyStack.git
+cd LazyStack
+npm install
+npm run dev</pre>
+            </div>
+            <div class="code">
+              <div class="code-head"><span class="eyebrow">Desktop app</span><button class="copy" type="button" data-copy="c5">Copy</button></div>
+<pre id="c5">npm run build
+npm start</pre>
+            </div>
+          </div>
+        </div>
+
+        <h3 style="margin-top:12px">Build the packages yourself</h3>
+        <div class="code">
+          <div class="code-head"><span class="eyebrow">Linux AppImage + Windows portable EXE</span><button class="copy" type="button" data-copy="c6">Copy</button></div>
+<pre id="c6">npm run dist:linux    <span class="c"># release/3.0.0/LazyStack-3.0.0.AppImage</span>
+npm run dist:win      <span class="c"># release/3.0.0/LazyStack.3.0.0.exe</span>
+npm run dist:release  <span class="c"># build both targets</span></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROPOSALS -->
+    <section class="sec" id="roadmap">
+      <div class="sec-side">
+        <span class="eyebrow">Changelog</span>
+        <span class="count">v3.0.0</span>
+      </div>
+      <div>
+        <h2>What shipped <span class="thin">in 3.0.0.</span></h2>
+        <p>v3.0.0 adds 28 frameworks (170 in total), real JavaScript variants and a startup screen. v2.1.0 adds the dev dashboard, <code>lazystack upgrade</code>, a hosting planner and a new logo. v2.0.1 makes Docker builds fail when an app build fails. v1.5.0 adds the Goose language and Dart Jaspr, and fixes the host auditor for Flutter and Dart. v1.4.0 adds 6 databases and fixes three starters. v1.3.0 adds 28 frameworks, a port-conflict check and NATS. v1.2.2 fixes the Directory Contract tab. v1.2.1 offers 15 architecture layouts and 5 stack presets. v1.2.0 makes the Blueprint match the generated project. v1.1.3 fixes the reverse proxy gateway in generated projects. v1.1.2 made generated projects easier to run and added Capacitor, .NET MAUI and an Expo SDK 58 starter.</p>
+        <dl class="rows">
+          <div class="row"><dt>v3.0.0 · Released</dt><dd>Added: 28 frameworks (170 in total): Strapi, Payload and Directus; Laravel + Inertia and Laravel + Livewire, CodeIgniter and CakePHP; Jakarta EE on WildFly, Vaadin, Vert.x and Spring Boot in Kotlin; Android with Jetpack Compose and Compose Multiplatform; Nitro, hapi, Feathers and Ember.js; Quart, Falcon, aiohttp and Bottle; Beego and Iris; Loco, Warp and Salvo; Hanami and Roda. Real JavaScript variants for Express, Fastify, Hono, Next.js, Nuxt, Remix and more. A startup screen and a black-and-white app theme. Fixed: JavaScript React, MUI, Solid and Inferno starters no longer contain TypeScript-only syntax.</dd></div>
+          <div class="row"><dt>v2.1.0 · Released</dt><dd>Added: <code>lazystack dev</code> is a dashboard (service health, filterable logs, restart, environment wiring) that starts apps in dependency order once their dependencies are healthy; <code>lazystack upgrade</code> pulls template fixes into existing projects with a three-way merge; and a hosting planner. The Blueprint's Hosting tab, <code>lazystack hosting</code> and a generated <code>docs/hosting.md</code> suggest what kind of hosting each app needs (static/CDN, serverless, BaaS, PaaS, self-hosted PaaS, managed containers, Kubernetes, cloud VM, VPS or bare metal), with reasons, alternatives, example services and the generated files to use. Apps stay local only until you choose. Changed: a new black-and-white logo and app icon.</dd></div>
+          <div class="row"><dt>v2.0.1 · Released</dt><dd>Fixed: Docker builds now fail when an app's build or dependency install fails instead of producing an image that crashes at runtime (the Node, Ruby on Rails and Symfony Dockerfiles used <code>|| true</code>). The Rails image can compile native gems and Symfony allows its runtime Composer plugin.</dd></div>
+          <div class="row"><dt>v2.0.0 · Released</dt><dd>Added: 24 frameworks (F#, Elm and Perl as new languages; Quarkus, Micronaut, Javalin, Go templ + HTMX, Django Ninja, Dash, FastHTML, Slim, WordPress, Sinatra, Rocket, Hummingbird, Dart Frog, Razor Pages, React + Tailwind + shadcn/ui, Alpine.js, Starlight, Cloudflare Workers, WXT, MkDocs Material, R Shiny), 13 services (Keycloak, Mailpit, LocalStack, DynamoDB Local, Grafana LGTM, Ollama, Typesense, Elasticsearch, SeaweedFS, Temporal, TimescaleDB, pgvector, Dragonfly), mise.toml and a dev container in every project and real deploy targets (SSH + Compose, Fly.io, Render, GitLab CI). Fixed: MinIO (image left Docker Hub), R Plumber, .NET 10, auto-install on Linux and Windows (1.5.2).</dd></div>
+          <div class="row"><dt>v1.5.1 · Released</dt><dd>Fixed: the Host Auditor showed installed tools (npm, Go, Cargo and others) as missing until Re-Audit Host was pressed. Audits are now shared between tabs, run at most 8 checks at a time, and count a tool found on PATH as installed when its version check is only slow.</dd></div>
+          <div class="row"><dt>v1.5.0 · Released</dt><dd>Added: Goose (Vanilla) and Goose (HTTP) starters for the Goose language, Dart Jaspr with server rendering, and host-auditor checks for every toolchain the catalog needs (Goose, Jaspr, Serverpod, Dart, Gleam, Elixir, Ruby, Hugo, V and more). Fixed: Flutter and Dart showed as missing when installed outside the default PATH, and user-level installers no longer run under sudo.</dd></div>
+          <div class="row"><dt>v1.4.0 · Released</dt><dd>Added: 6 databases (Memcached, Mosquitto, Redpanda, CockroachDB, OpenSearch, InfluxDB), NATS NUI and Kafka UI dashboards, broker examples for Rust and ASP.NET, a desktop UI that adapts to narrow windows, and a CI job that builds the 1.3 frameworks. Fixed: the Gleam, V and Blitz starters, and Kafka from Docker apps.</dd></div>
+          <div class="row"><dt>v1.3.0 · Released</dt><dd>Added: 28 frameworks (Svelte, Preact, Quasar, Gatsby, Vike, RedwoodJS, Blitz, Meteor, Next.js + tRPC, AdonisJS, Koa, Bun, Litestar, Sanic, Starlette, Tornado, Pyramid, Streamlit, Gradio, Hugo, Jekyll, Eleventy, Docusaurus, VitePress, Gleam, V, Dart Shelf, Serverpod), a static-site role with a build-then-nginx Docker pattern, a port-conflict check (<code>lazystack ports</code>, live banner with Auto-fix), NATS, and a Messaging &amp; caching group in the database picker.</dd></div>
+          <div class="row"><dt>v1.2.2 · Released</dt><dd>Fixed: the desktop app's Directory Contract tab and the layout preview showed "process is not defined" instead of the project tree (1.2.0 and 1.2.1). A new CI check runs the Blueprint planner without Node globals for every framework, database, proxy and layout.</dd></div>
+          <div class="row"><dt>v1.2.1 · Released</dt><dd>Changed: stack presets reduced to the five most common (T3 Next.js, FastAPI + React, Modern MERN, Go Echo + Vue 3, Rust Axum); 15 architecture layouts are offered (CLI and Tooling Monorepo was removed; blueprints that name it open as Custom and keep their folders). Fixed: the layout list in 1.2.0 was cut to 7 by mistake and the removed layouts are back.</dd></div>
+          <div class="row"><dt>v1.2.0 · Released</dt><dd>Changed: the Blueprint tree, README tree, service diagram and network topology are computed from the files and Compose services the generator writes; the diagrams were redrawn (gateway routes, host vs. Docker network, container ports); the architecture picker shows where each app role goes plus a live layout preview, and Custom mode edits the folder per role; layouts reduced from 16 to 7 (older blueprints open as Custom and keep their folders). Fixed: Swagger UI and a database admin UI could share one host port; Compose and app <code>.env</code> could disagree on a database hostname; an update dry run no longer edits <code>.env</code>.</dd></div>
+          <div class="row"><dt>v1.1.3 · Released</dt><dd>Fixed: generated Nginx, Apache, Caddy and Traefik gateways now start and route <code>/api/...</code> to the API without the prefix; each project gets its own Docker Compose name, so starting one no longer replaces another's containers; the gateway waits for the app containers. CI now boots a generated stack through all four proxies.</dd></div>
+          <div class="row"><dt>v1.1.2 · Released</dt><dd>Shipped: Install Packages fixed and now shows live progress (current step, output and a per-step summary); Start/Stop Stack works with Polyglot and custom infrastructure folders; a post-scaffold guide that lists the manual setup steps for frameworks that need them (Flutter, Apps Script, Tauri, Dioxus, Bevy and more) and for cloud databases; CLI support for cloud databases; new Capacitor and .NET MAUI starters and an Expo SDK 58 starter.</dd></div>
+          <div class="row"><dt>v1.1.1 · Released</dt><dd>Shipped: Dioxus, Slint and Bevy (Rust) plus JavaFX and Java Swing desktop starters; framework-native project folders for every framework, matching each official initializer; Open Existing Project to view an existing repository as a diagram and add apps to it without touching your code; and fixes for starters and Dockerfiles that previously failed to build.</dd></div>
+        </dl>
+        <p class="note" style="margin-top:18px">Older releases: <a href="https://github.com/Ian-nwb/LazyStack/blob/main/CHANGELOG.md">full changelog</a>.</p>
+        <p style="margin-top:32px">Longer-range ideas under consideration:</p>
+        <ul class="props">
+          <li>Local AI stack assistant that drafts blueprints from natural-language requests</li>
+          <li>Separate development, staging, and production profiles</li>
+          <li>OpenTelemetry, Prometheus, Grafana, and log collection</li>
+          <li>Database backup and restore workflows</li>
+          <li>Vault, 1Password, and cloud secret store integrations</li>
+          <li>Shareable plugin and template registry</li>
+          <li>Architecture migration assistant for evolving generated projects</li>
+          <li>More framework-specific unit, integration, contract, and browser test starters</li>
+          <li>CPU, memory, and storage sizing estimates</li>
+          <li>Team review and merge workflows for blueprint changes</li>
+          <li>Pulumi infrastructure export</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="flogo rv" data-logo aria-hidden="true"></div>
+    <p class="wordmark rv" aria-hidden="true">Lazy<span class="thin">Stack</span></p>
+    <div class="foot rv">
+      <span>MIT License &middot; v3.0.0 &middot; by Ian-nwb</span>
+      <nav aria-label="Project links">
+        <a href="https://github.com/Ian-nwb/LazyStack">Repository</a>
+        <a href="https://github.com/Ian-nwb/LazyStack/releases/tag/v3.0.0">Release v3.0.0</a>
+        <a href="https://github.com/Ian-nwb/LazyStack/blob/main/LICENSE">License</a>
+        <a href="https://github.com/Ian-nwb">Ian-nwb</a>
+      </nav>
+    </div>
+  </footer>
+</div>
+
+<script>
+(function () {
+  var $ = function (s, c) { return Array.prototype.slice.call((c || document).querySelectorAll(s)); };
+
+  // logo injection
+  var LOGO = '<svg class="logo" viewBox="0 0 72 64" aria-hidden="true" focusable="false">' +
+    '<path class="l l-bot" pathLength="1" d="M6 46 30 58 54 46"/>' +
+    '<path class="l l-mid" pathLength="1" d="M14 32 38 44 62 32"/>' +
+    '<path class="l l-top" pathLength="1" d="M30 6 38.4 10.2 30 14.4 21.6 10.2Z M14.4 13.8 22.8 18 14.4 22.2 6 18Z M45.6 13.8 54 18 45.6 22.2 37.2 18Z M30 21.6 38.4 25.8 30 30 21.6 25.8Z"/></svg>';
+  $('[data-logo]').forEach(function (el) {
+    el.innerHTML = LOGO;
+    var s = el.firstChild;
+    if (el.classList.contains('hero-logo')) s.style.setProperty('--d', '500ms');
+    if (!el.closest('.flogo')) s.classList.add('go');
+  });
+
+  // magnetic buttons
+  var rm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  $('.btn').forEach(function (b) {
+    b.addEventListener('pointermove', function (e) {
+      if (e.pointerType !== 'mouse' || rm) return;
+      var r = b.getBoundingClientRect();
+      b.style.setProperty('--bx', (((e.clientX - r.left) / r.width - .5) * 10).toFixed(1) + 'px');
+      b.style.setProperty('--by', (((e.clientY - r.top) / r.height - .5) * 8).toFixed(1) + 'px');
+    });
+    b.addEventListener('pointerleave', function () { b.style.removeProperty('--bx'); b.style.removeProperty('--by'); });
+  });
+
+  // nav text scramble
+  var CH = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/_<>';
+  $('.bar nav a').forEach(function (a) {
+    var txt = a.textContent, run = 0;
+    a.addEventListener('mouseenter', function () {
+      if (rm) return;
+      var id = ++run, f = 0;
+      (function s() {
+        if (id !== run) return;
+        f++;
+        var out = '';
+        for (var i = 0; i < txt.length; i++) out += (txt[i] === ' ' || i < f / 1.5) ? txt[i] : CH[Math.random() * CH.length | 0];
+        a.textContent = out;
+        if (f < txt.length * 1.5) setTimeout(s, 28); else a.textContent = txt;
+      })();
+    });
+    a.addEventListener('mouseleave', function () { run++; a.textContent = txt; });
+  });
+
+  // hero spec stagger index
+  $('.spec div').forEach(function (el, i) { el.style.setProperty('--i', i); });
+
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // h2 word-by-word mask reveal
+  function split(node, ctr) {
+    Array.prototype.slice.call(node.childNodes).forEach(function (n) {
+      if (n.nodeType === 3) {
+        var f = document.createDocumentFragment();
+        n.textContent.split(/(\s+)/).forEach(function (t) {
+          if (!t) return;
+          if (/^\s+$/.test(t)) { f.appendChild(document.createTextNode(' ')); return; }
+          var w = document.createElement('span'), i = document.createElement('span');
+          w.className = 'w'; i.textContent = t; i.style.setProperty('--wi', ctr.n++);
+          w.appendChild(i); f.appendChild(w);
+        });
+        node.replaceChild(f, n);
+      } else if (n.nodeType === 1) split(n, ctr);
+    });
+  }
+  $('.sec h2').forEach(function (h) { split(h, { n: 0 }); });
+
+  // tag pop stagger index
+  $('.tags').forEach(function (ul) { $('.t', ul).forEach(function (t, i) { t.style.setProperty('--ti', Math.min(i, 24)); }); });
+
+  // ticker: duplicate track for seamless loop
+  $('.ticker-track').forEach(function (t) { t.innerHTML += t.innerHTML; });
+
+  // count-up numbers
+  $('.sec-side .count').forEach(function (c) {
+    if (/^v/.test(c.textContent)) return;
+    c.innerHTML = c.textContent.replace(/\d+/g, function (n) { return '<span data-n="' + n + '">0</span>'; });
+  });
+  function countUp(sec) {
+    $('[data-n]', sec).forEach(function (s) {
+      var to = +s.getAttribute('data-n'), t0 = null;
+      if (reduce) { s.textContent = to; return; }
+      (function step(t) {
+        t0 = t0 || t;
+        var p = Math.min(1, (t - t0) / 1000);
+        s.textContent = Math.round(to * (1 - Math.pow(1 - p, 3)));
+        if (p < 1) requestAnimationFrame(step);
+      })(performance.now());
+    });
+  }
+  var secs = $('.sec');
+  if ('IntersectionObserver' in window) {
+    var sio = new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        if (e.isIntersecting) { e.target.classList.add('seen'); countUp(e.target); sio.unobserve(e.target); }
+      });
+    }, { threshold: 0.12 });
+    secs.forEach(function (s) { sio.observe(s); });
+  } else { secs.forEach(function (s) { s.classList.add('seen'); countUp(s); }); }
+
+  // hero spotlight on the dot grid
+  var hero = document.querySelector('.hero');
+  if (hero && window.matchMedia && matchMedia('(hover: hover)').matches) {
+    hero.addEventListener('pointermove', function (e) {
+      var r = hero.getBoundingClientRect();
+      hero.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+      hero.style.setProperty('--my', (e.clientY - r.top) + 'px');
+      hero.style.setProperty('--lx', ((e.clientX - r.left) / r.width * 2 - 1).toFixed(3));
+    });
+    hero.addEventListener('pointerleave', function () { hero.style.removeProperty('--mx'); hero.style.removeProperty('--my'); hero.style.removeProperty('--lx'); });
+  }
+
+  // scroll reveal with per-parent stagger
+  var sel = '.sec-side,.sec h2,.sec > div > p,.shot,.tree,.code,.row,tbody tr,.props li,.dl-row,.dl li,.dl h3,.dl-cols > div,.wordmark,.flogo,.foot';
+  var items = $(sel);
+  items.forEach(function (el) {
+    el.classList.add('rv');
+    var idx = $('.rv', el.parentNode).filter(function (n) { return n.parentNode === el.parentNode; }).indexOf(el);
+    el.style.setProperty('--i', Math.min(Math.max(idx, 0), 8));
+  });
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -5% 0px' });
+    items.forEach(function (el) { io.observe(el); });
+  } else {
+    items.forEach(function (el) { el.classList.add('in'); });
+  }
+
+  // download section: scan sweep + line draw
+  var dl = document.querySelector('.dl');
+  if (dl && 'IntersectionObserver' in window) {
+    var dio = new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) { dl.classList.add('is-visible'); dio.disconnect(); } });
+    }, { threshold: 0.18 });
+    dio.observe(dl);
+  } else if (dl) { dl.classList.add('is-visible'); }
+
+  // active nav link
+  var links = $('.bar nav a[href^="#"]');
+  if ('IntersectionObserver' in window) {
+    var nio = new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        links.forEach(function (a) { a.classList.toggle('on', a.getAttribute('href') === '#' + e.target.id); });
+      });
+    }, { rootMargin: '-45% 0px -50% 0px' });
+    $('main > section[id]').forEach(function (s) { nio.observe(s); });
+  }
+
+  // scroll progress line
+  var bar = document.querySelector('.bar'), tick = false;
+  function prog() {
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    bar.style.setProperty('--p', h > 0 ? Math.min(1, window.scrollY / h) : 0);
+    if (hero && !reduce) hero.style.setProperty('--sy', Math.min(window.scrollY, 900));
+    tick = false;
+  }
+  window.addEventListener('scroll', function () { if (!tick) { tick = true; requestAnimationFrame(prog); } }, { passive: true });
+  prog();
+
+  // copy buttons
+  $('[data-copy]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var pre = document.getElementById(btn.getAttribute('data-copy'));
+      if (!pre) return;
+      function done(ok) {
+        btn.textContent = ok ? 'Copied' : 'Select + copy';
+        btn.classList.toggle('is-copied', ok);
+        setTimeout(function () { btn.textContent = 'Copy'; btn.classList.remove('is-copied'); }, 1600);
+      }
+      function fallback() {
+        var ok = false;
+        try {
+          var r = document.createRange(); r.selectNodeContents(pre);
+          var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+          ok = document.execCommand('copy');
+        } catch (e) {}
+        done(ok);
+      }
+      try { navigator.clipboard.writeText(pre.innerText).then(function () { done(true); }, fallback); }
+      catch (e) { fallback(); }
+    });
+  });
+})();
+</script>
+</body>
+</html>
