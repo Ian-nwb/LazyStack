@@ -186,7 +186,11 @@ export const CartBuilder: React.FC<CartBuilderProps> = ({ apps, setApps, databas
       ? true
       : selectedCategory === 'experimental'
         ? tech.experimental === true
-        : tech.category === selectedCategory
+        : selectedCategory === 'mobile'
+          ? tech.mobile === true
+          : selectedCategory === 'mobile-desktop'
+            ? tech.category === 'mobile-desktop' && !tech.mobile
+            : tech.category === selectedCategory
     const isFirstOccurrence = arr.findIndex(t => t.id === tech.id) === idx
     return matchesSearch && matchesCategory && isFirstOccurrence
   })
@@ -640,7 +644,8 @@ export const CartBuilder: React.FC<CartBuilderProps> = ({ apps, setApps, databas
                   { id: 'frontend', label: 'Frontend' },
                   { id: 'backend', label: 'Backend' },
                   { id: 'fullstack', label: 'Fullstack' },
-                  { id: 'mobile-desktop', label: 'Client' },
+                  { id: 'mobile', label: 'Mobile' },
+                  { id: 'mobile-desktop', label: 'Desktop' },
                   { id: 'scripting', label: 'Scripting' },
                   { id: 'experimental', label: 'Experimental' },
                 ].map(cat => (

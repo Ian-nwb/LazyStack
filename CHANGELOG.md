@@ -5,6 +5,11 @@ All notable changes to LazyStack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.1] - 2026-11-28
+
+### Changed
+- **The framework picker has a Mobile filter.** Flutter, React Native (Expo), Ionic, Capacitor, .NET MAUI, SwiftUI and Android (Jetpack Compose) now sit under Mobile, apart from Frontend, Backend and the rest. The old Client filter is now Desktop and lists desktop apps, the Bevy game engine and the WXT browser extension.
+
 ## [3.0.0] - 2026-11-27
 
 LazyStack 3.0 adds 28 frameworks, real JavaScript variants, a startup screen and a black-and-white look across the app, and fixes starters that crashed in JavaScript.

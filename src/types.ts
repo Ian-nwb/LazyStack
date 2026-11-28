@@ -39,6 +39,8 @@ export interface TechItem {
   requires?: TechRequirement[]
   /** Desktop/mobile/hosted apps that run on the host only and never get a Docker service */
   hostOnly?: boolean
+  /** Targets phones and tablets (iOS, Android). The picker shows these under Mobile instead of Desktop. */
+  mobile?: boolean
   /** Builds to plain files (HTML/JS/CSS) that a CDN can serve without a server process. */
   staticOutput?: boolean
   /** Has an official adapter or runtime for serverless/edge platforms (Vercel, Netlify, Cloudflare, Lambda). */

@@ -29,14 +29,14 @@
 
 LazyStack is a desktop app and a command-line tool for starting polyglot projects. Combine a React client, a FastAPI service, a Go worker and an Expo app with PostgreSQL and Redis, choose an architecture layout, and get a project where every app follows its framework's own conventions and the whole stack starts with `npm run dev`.
 
-**Current version: 3.0.0.** 28 new frameworks (170 in total), including Strapi, Payload, Directus, Laravel with Inertia or Livewire, CodeIgniter, CakePHP, Jakarta EE, Vaadin, Vert.x, Spring Boot in Kotlin and Android with Jetpack Compose, each built and booted before release; real JavaScript variants for Express, Next.js, Nuxt, Remix and more; and a startup screen with a black-and-white look across the app. 2.1.0 added the `lazystack dev` dashboard, `lazystack upgrade` and the [hosting planner](#hosting-planner). See the [changelog](CHANGELOG.md).
+**Current version: 3.0.1.** 28 new frameworks (170 in total), including Strapi, Payload, Directus, Laravel with Inertia or Livewire, CodeIgniter, CakePHP, Jakarta EE, Vaadin, Vert.x, Spring Boot in Kotlin and Android with Jetpack Compose, each built and booted before release; real JavaScript variants for Express, Next.js, Nuxt, Remix and more; and a startup screen with a black-and-white look across the app. 2.1.0 added the `lazystack dev` dashboard, `lazystack upgrade` and the [hosting planner](#hosting-planner). See the [changelog](CHANGELOG.md).
 
 ## Download
 
 | Platform | Package |
 | --- | --- |
-| Linux x64 | [`LazyStack-3.0.0.AppImage`](https://github.com/Ian-nwb/LazyStack/releases/download/v3.0.0/LazyStack-3.0.0.AppImage) |
-| Windows x64 | [`LazyStack.3.0.0.exe`](https://github.com/Ian-nwb/LazyStack/releases/download/v3.0.0/LazyStack.3.0.0.exe) (portable) |
+| Linux x64 | [`LazyStack-3.0.1.AppImage`](https://github.com/Ian-nwb/LazyStack/releases/download/v3.0.1/LazyStack-3.0.1.AppImage) |
+| Windows x64 | [`LazyStack.3.0.1.exe`](https://github.com/Ian-nwb/LazyStack/releases/download/v3.0.1/LazyStack.3.0.1.exe) (portable) |
 | macOS |package not yet available (sponsor me a Macbook for app signature) |
 
 The CLI is on npm: `npx lazystack --help`.

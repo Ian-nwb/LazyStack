@@ -762,6 +762,7 @@ export const TECH_CATALOG: TechItem[] = [
     name: 'SwiftUI Apple Client',
     language: 'Swift',
     category: 'mobile-desktop',
+    mobile: true,
     role: 'desktop-mobile',
     defaultPort: 0,
     description: 'Native Apple platform client starter using SwiftUI. Build and run with Xcode on macOS.',
@@ -792,6 +793,7 @@ export const TECH_CATALOG: TechItem[] = [
     name: 'Dart (Flutter Web & Multiplatform)',
     language: 'Dart',
     category: 'mobile-desktop',
+    mobile: true,
     role: 'desktop-mobile',
     defaultPort: 8080,
     description: 'Cross-platform native UI for Android, iOS, Linux, Windows, macOS, and Web.',
@@ -806,6 +808,7 @@ export const TECH_CATALOG: TechItem[] = [
     name: 'Ionic (Capacitor Mobile)',
     language: 'JS / TS',
     category: 'mobile-desktop',
+    mobile: true,
     role: 'desktop-mobile',
     defaultPort: 8100,
     description: 'Hybrid mobile & PWA suite powered by Capacitor.',
@@ -821,6 +824,7 @@ export const TECH_CATALOG: TechItem[] = [
     name: 'Capacitor (Web to Native)',
     language: 'JS / TS',
     category: 'mobile-desktop',
+    mobile: true,
     role: 'desktop-mobile',
     defaultPort: 5173,
     description: 'Vite web app wrapped in native Android and iOS shells with Capacitor, without a UI kit. The web build also runs in Docker.',
@@ -837,6 +841,7 @@ export const TECH_CATALOG: TechItem[] = [
     name: 'C# (.NET MAUI)',
     language: 'C#',
     category: 'mobile-desktop',
+    mobile: true,
     role: 'desktop-mobile',
     defaultPort: 0,
     description: 'Cross-platform native Android, iOS, macOS and Windows app with XAML and C# on .NET 10. Linux hosts can build the Android target only.',
@@ -867,6 +872,7 @@ export const TECH_CATALOG: TechItem[] = [
     name: 'React Native (Expo)',
     language: 'JS / TS',
     category: 'mobile-desktop',
+    mobile: true,
     role: 'desktop-mobile',
     defaultPort: 8081,
     description: 'Cross-platform iOS, Android, and Web apps with React Native powered by the Expo managed workflow and Expo Router.',
@@ -2290,6 +2296,7 @@ export const TECH_CATALOG: TechItem[] = [
     name: 'Android (Jetpack Compose)',
     language: 'Kotlin',
     category: 'mobile-desktop',
+    mobile: true,
     role: 'desktop-mobile',
     hostOnly: true,
     defaultPort: 0,
@@ -2410,6 +2417,11 @@ export const TECH_CATALOG: TechItem[] = [
     ]
   }
 ]
+
+/** True for apps that target phones and tablets (iOS, Android); the picker lists them under Mobile. */
+export function isMobileTech(techId: string): boolean {
+  return TECH_CATALOG.find(tech => tech.id === techId)?.mobile === true
+}
 
 /** True for desktop/mobile/hosted apps that LazyStack never runs as a Docker service. */
 export function isHostOnlyTech(techId: string): boolean {
