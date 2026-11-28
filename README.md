@@ -488,7 +488,7 @@ showcase/            Project website
 * **GitHub Pages:** [ian-nwb.github.io/LazyStack](https://ian-nwb.github.io/LazyStack/)
 
 ## Authors
-Ian Kenneth Sianghio - @Ian-nwb
+* **Ian Kenneth Sianghio** - [@Ian-nwb](https://github.com/Ian-nwb)
 
   
 ## Contributing
