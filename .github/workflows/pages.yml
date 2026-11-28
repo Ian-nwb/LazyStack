@@ -1,23 +1,42 @@
-name: Deploy showcase to gh-pages
+name: Deploy showcase to GitHub Pages
+
+# Repo Settings -> Pages -> Source must be "GitHub Actions".
+# The site is showcase/ as-is: index.html plus its assets/ folder.
 
 on:
   push:
     branches: ["main"]
+    paths:
+      - "showcase/**"
+      - ".github/workflows/pages.yml"
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Push showcase folder to gh-pages
-        uses: peaceiris/actions-gh-pages@v4
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./showcase
-          force_orphan: true
+          path: ./showcase
+
+  # Separate job so the artifact is finalized before deploy-pages looks it up.
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
