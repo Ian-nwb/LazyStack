@@ -487,6 +487,9 @@ showcase/            Project website
 * **Vercel:** [lazystack-showcase.vercel.app](https://lazystack-showcase.vercel.app)
 * **GitHub Pages:** [ian-nwb.github.io/LazyStack](https://ian-nwb.github.io/LazyStack/)
 
+## Authors
+Ian Kenneth Sianghio - @Ian-nwb
+
   
 ## Contributing
 
