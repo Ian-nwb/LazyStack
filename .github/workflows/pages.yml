@@ -27,10 +27,15 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
+      - name: Package showcase archive
+        run: tar -cvf artifact.tar -C ./showcase .
+
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-artifact@v4
         with:
-          path: './showcase'
+          name: github-pages
+          path: artifact.tar
+          retention-days: 1
 
       - name: Deploy to GitHub Pages
         id: deployment
