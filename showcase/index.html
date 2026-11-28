@@ -114,6 +114,22 @@ code, pre, kbd, samp { font-family: var(--mono); }
 .npx { grid-column: span 6; display: flex; align-items: center; justify-content: space-between; gap: 14px; border-top: 1px solid var(--rule); padding-top: 14px; }
 .npx code { font-size: 1rem; }
 .npx code::before { content: "$ "; color: var(--mute); }
+/* macOS: no build, so a cardboard sign instead of a button. */
+.mac {
+  grid-column: span 6; display: flex; align-items: center; gap: 14px 18px; flex-wrap: wrap;
+  padding: 12px 16px; border: 1px dashed var(--rule); color: var(--mute); font-size: .875rem;
+}
+.mac-os { font-family: var(--mono); font-size: .75rem; font-weight: 700; letter-spacing: .04em; color: var(--paper); }
+.mac-why { flex: 1 1 26ch; }
+.mac-sign {
+  flex: none; padding: 6px 12px 7px; background: #c8a46e; color: #1c1408; transform: rotate(-2.5deg);
+  font: 800 .9375rem/1 var(--display); letter-spacing: -.01em; text-transform: uppercase;
+  box-shadow: 2px 3px 0 rgba(0, 0, 0, .45); cursor: default; user-select: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .mac-sign { transition: transform .35s var(--ease); }
+  .mac:hover .mac-sign { transform: rotate(3deg) scale(1.06); }
+}
 .copy {
   font: 700 .8125rem/1 var(--display); letter-spacing: .02em; color: inherit; background: none; border: 1px solid currentColor;
   padding: 9px 12px; cursor: pointer; transition: background .2s, color .2s; min-width: 76px;
@@ -224,6 +240,7 @@ pre.out .b { color: var(--paper); font-weight: 700; }
 .close .actions { grid-column: 1 / 13; grid-row: auto; grid-template-columns: repeat(12, 1fr); margin-top: clamp(36px, 6vh, 64px); }
 .close .dl { grid-column: span 5; }
 .close .alt { grid-column: span 3; }
+.close .mac { grid-column: span 12; }
 .close .npx { grid-column: span 4; border-top: 0; border: 1px solid var(--rule); padding: 16px 18px; min-height: 92px; align-items: flex-end; }
 .req { grid-column: 1 / 13; margin-top: 28px; color: var(--mute); max-width: 82ch; }
 .foot { margin-top: clamp(80px, 12vh, 140px); border-top: 1px solid var(--rule); padding: 22px 0 30px; font-size: .875rem; color: var(--mute); align-items: center; }
@@ -255,13 +272,13 @@ pre.out .b { color: var(--paper); font-weight: 700; }
   .fig-diagram, .term, .upgrade .diff { padding-left: 36px; }
   .cat-langs, .cat-side, .plain h2, .plain .say { grid-column: 1 / 13; }
   .cat-side { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
-  .close .dl, .close .alt, .close .npx { grid-column: span 12; }
+  .close .dl, .close .alt, .close .npx, .close .mac { grid-column: span 12; }
 }
 @media (max-width: 640px) {
   .meta .gh { display: none; }
   .hero { min-height: auto; }
   .hero h1 .n { font-size: clamp(7.5rem, 44vw, 11rem); }
-  .dl, .alt, .npx { grid-column: span 6; }
+  .dl, .alt, .npx, .mac { grid-column: span 6; }
   .stage .mark { left: calc(var(--m) - 14px); width: 32px; height: 32px; }
   .stage h2, .stage .say, .tree, .fig-diagram, .fig-pick, .timeline, .term, .upgrade .report, .upgrade .diff, .host .body > .table { grid-column: 1 / 13; padding-left: 34px; }
   .types { grid-column: 1 / 13; margin-left: 34px; grid-template-columns: 1fr 1fr; }
@@ -358,7 +375,8 @@ pre.out { position: relative; }
 /* Actions: the white block wipes in, the rest rises. */
 .motion .rv:not(.in) .dl { clip-path: inset(0 100% 0 0); }
 .motion .rv.in .dl { animation: reveal 1s cubic-bezier(.77, 0, .18, 1) var(--d, .2s) both; }
-.motion .rv:not(.in) .alt, .motion .rv:not(.in) .npx { opacity: 0; }
+.motion .rv:not(.in) .alt, .motion .rv:not(.in) .npx, .motion .rv:not(.in) .mac { opacity: 0; }
+.motion .rv.in .mac { animation: lift .9s var(--ease) calc(var(--d, .2s) + .26s) both; }
 .motion .rv.in .alt { animation: lift .9s var(--ease) calc(var(--d, .2s) + .2s) both; }
 .motion .rv.in .npx { animation: lift .9s var(--ease) calc(var(--d, .2s) + .32s) both; }
 
@@ -431,6 +449,7 @@ pre.out { position: relative; }
           <svg viewBox="0 0 28 28" aria-hidden="true"><path d="M14 3v17M6 13l8 8 8-8M4 25h20" fill="none" stroke="currentColor" stroke-width="2.5"/></svg>
         </a>
         <a class="alt" data-os="windows" href="https://github.com/Ian-nwb/LazyStack/releases/download/v3.0.1/LazyStack.3.0.1.exe"><strong>Windows</strong><span>portable .exe</span></a>
+        <div class="mac"><span class="mac-os">macOS</span><span class="mac-why">No build yet. Signing a Mac app takes a Mac and $99 a year, and I have neither. Sponsor me a MacBook and it ships.</span><span class="mac-sign" title="Any MacBook. Even the one with the butterfly keyboard.">Will code for MacBook</span></div>
         <div class="npx"><code>npx lazystack</code><button class="copy" type="button" data-copy="npx lazystack">Copy</button></div>
       </div>
       <p class="cap-row">Desktop app for Linux and Windows. The same generator is a CLI on npm. Everything runs on your machine; nothing to sign up for.</p>
@@ -717,8 +736,9 @@ Backups: .lazystack/backup/upgrade-2026-11-25T01-02-14Z</pre>
         </a>
         <a class="alt" data-os="windows" href="https://github.com/Ian-nwb/LazyStack/releases/download/v3.0.1/LazyStack.3.0.1.exe"><strong>Windows</strong><span>portable .exe, unsigned</span></a>
         <div class="npx"><code>npx lazystack</code><button class="copy" type="button" data-copy="npx lazystack">Copy</button></div>
+        <div class="mac"><span class="mac-os">macOS</span><span class="mac-why">No build yet. Signing a Mac app takes a Mac and $99 a year, and I have neither. Sponsor me a MacBook and it ships.</span><span class="mac-sign" title="Any MacBook. Even the one with the butterfly keyboard.">Will code for MacBook</span></div>
       </div>
-      <p class="req">To run generated projects you need Docker and the toolchains of the frameworks you pick; the Host Auditor and <code>lazystack doctor</code> show what’s missing. No macOS build yet. Windows may warn on first launch because the build isn’t signed.</p>
+      <p class="req">To run generated projects you need Docker and the toolchains of the frameworks you pick; the Host Auditor and <code>lazystack doctor</code> show what’s missing. Windows may warn on first launch because the build isn’t signed.</p>
     </div>
     <div class="row foot">
       <p class="l">LazyStack 3.0.1 · MIT License · by Ian-nwb</p>
